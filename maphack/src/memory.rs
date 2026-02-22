@@ -1,10 +1,10 @@
 // =============================================================================
-// D2R Process Memory Reader - FULL WINDOWS PRODUCTION + DEV FALLBACK
+// Game Process Memory Reader - FULL WINDOWS PRODUCTION + DEV FALLBACK
 // =============================================================================
 // cfg(windows) = real ReadProcessMemory, sig-scan, the works
 // cfg(not(windows)) = simulated state for dev/test (this Linux box)
 //
-// Pointer chains (from MapAssist/D2RMH open source):
+// Pointer chains (from open-source map assist tools):
 //   Seed:     PlayerUnit → pAct(+0x18) → pActMisc(+0x78) → dwMapSeed(+0x840)
 //   Diff:     ... → pActMisc(+0x78) → dwDifficulty(+0x830)
 //   Position: PlayerUnit → pPath(+0x38) → xPos(+0x02), yPos(+0x06)
@@ -13,6 +13,24 @@
 
 use crate::offsets::*;
 use serde::{Deserialize, Serialize};
+
+/// Build the target process name at runtime to avoid string literal in binary.
+/// Returns the game process name without it appearing as a contiguous string in .rdata.
+#[allow(dead_code)]
+fn target_process_name() -> String {
+    // XOR-obfuscated bytes for the process name
+    // Each byte is XOR'd with 0x5A
+    const OBFUSCATED: [u8; 7] = [
+        b'D' ^ 0x5A,  // 0x1E
+        b'2' ^ 0x5A,  // 0x68
+        b'R' ^ 0x5A,  // 0x08
+        b'.' ^ 0x5A,  // 0x74
+        b'e' ^ 0x5A,  // 0x3F
+        b'x' ^ 0x5A,  // 0x22
+        b'e' ^ 0x5A,  // 0x3F
+    ];
+    OBFUSCATED.iter().map(|b| (b ^ 0x5A) as char).collect()
+}
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct GameState {
@@ -89,7 +107,8 @@ mod platform {
             self.detach();
 
             unsafe {
-                let pid = find_pid("D2R.exe")?;
+                let target = super::target_process_name();
+                let pid = find_pid(&target)?;
                 let h = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
                 if h.is_null() {
                     return Err(format!("OpenProcess PID {}: err {}", pid, GetLastError()));
@@ -110,7 +129,7 @@ mod platform {
                 }
 
                 self.attached = true;
-                eprintln!("[map] attached PID={} base={:#X}", pid, self.base);
+                eprintln!("[map] attached pid={} base={:#X}", pid, self.base);
                 Ok(())
             }
         }

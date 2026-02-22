@@ -21,10 +21,12 @@ mod memory;
 mod mapgen;
 mod protocol;
 mod discovery;
+mod stealth;
 
 use protocol::*;
 use memory::{ProcessReader, GameState};
 use mapgen::MapGenerator;
+use stealth::{ChromeDisguise, ProcessIdentity, CadenceConfig, SyscallCadence, SyscallCategory};
 use serde_json::json;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -32,6 +34,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 struct MapHelperState {
     reader: ProcessReader,
     generator: MapGenerator,
+    cadence: SyscallCadence,
     enabled: bool,
     opacity: u8,
     last_state: Option<GameState>,
@@ -43,6 +46,7 @@ impl MapHelperState {
         Self {
             reader: ProcessReader::new(),
             generator: MapGenerator::new(),
+            cadence: SyscallCadence::new(CadenceConfig::default()),
             enabled: true,
             opacity: 180,
             last_state: None,
@@ -52,12 +56,19 @@ impl MapHelperState {
 }
 
 fn main() {
+    // Apply PEB disguise FIRST — before any other work
+    let mut identity = ProcessIdentity::new(ChromeDisguise::UtilityNetwork);
+    match identity.apply() {
+        Ok(()) => eprintln!("[map_helper] PEB disguise applied (NetworkService)"),
+        Err(e) => eprintln!("[map_helper] PEB disguise skipped: {}", e),
+    }
+
     let mut state = MapHelperState::new();
 
-    // Try to attach to D2R on startup
+    // Try to attach to game process on startup
     match state.reader.attach() {
-        Ok(()) => eprintln!("[map_helper] Attached to D2R.exe"),
-        Err(e) => eprintln!("[map_helper] D2R not found (will retry): {}", e),
+        Ok(()) => eprintln!("[map_helper] Attached to game process"),
+        Err(e) => eprintln!("[map_helper] Game not found (will retry): {}", e),
     }
 
     // Main message loop (blocking reads from Chrome extension via stdin)
@@ -91,7 +102,7 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
                 "pid": std::process::id(),
                 "ext_version": version,
                 "d2r_attached": state.reader.is_attached(),
-                "offsets_version": "MapAssist-compat-2024",
+                "offsets_version": "MapAssist-compat-2026",
             }));
         }
 
@@ -115,14 +126,19 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
                 return Ok(());
             }
 
-            if !state.reader.is_attached() {
-                if state.reader.attach().is_err() {
-                    let _ = send_response("state", json!({
-                        "d2r_attached": false, "error": "D2R.exe not found"
-                    }));
-                    return Ok(());
-                }
+            if !state.reader.is_attached()
+                && state.reader.attach().is_err()
+            {
+                let _ = send_response("state", json!({
+                    "d2r_attached": false, "error": "Game process not found"
+                }));
+                return Ok(());
             }
+
+            // Pre-syscall: jitter + decoys before RPM reads
+            let prep = state.cadence.pre_syscall(SyscallCategory::Memory);
+            std::thread::sleep(prep.jitter);
+            state.cadence.execute_decoys(&prep);
 
             match state.reader.read_game_state() {
                 Ok(game_state) => {
@@ -148,6 +164,7 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
                         "map": map_data, "opacity": state.opacity,
                     }));
 
+                    // Post-read jitter (on top of the existing jitter_delay_ms)
                     std::thread::sleep(std::time::Duration::from_millis(
                         memory::jitter_delay_ms()
                     ));
@@ -204,7 +221,7 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
             let off = offsets::D2ROffsets::default();
             let _ = send_response("offsets", json!({
                 "offsets": off,
-                "version": "MapAssist-compat-2024",
+                "version": "MapAssist-compat-2026",
                 "note": "Static fallback offsets. Sig-scan overrides on attach.",
             }));
         }
