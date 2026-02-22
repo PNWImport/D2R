@@ -1,0 +1,265 @@
+# Changelog — D2R Automation Suite
+
+All notable changes to this project are documented here.
+
+---
+
+## [1.0.0] — 2026-02-22
+
+### Initial Release: Complete D2R Bot Suite (Rust + Chrome)
+
+#### Rust Vision Agent (`botter/`)
+- **Frame capture** (DXGI Desktop Duplication)
+  - 25 Hz continuous capture with skip/burst mode
+  - Lock-free sharded buffer (16 shards, ~192 bytes, zero contention)
+  - Concurrent producer/consumer with ABA protection
+
+- **Vision pipeline** (pixel-based, no memory access)
+  - Enemy detection: count, nearest position, health bar reading
+  - Boss/champion/normal/immune classification (health bar width heuristic)
+  - Loot detection: item quality classification, text hash dedup
+  - Buff tracking: 16 bitfield for active buff indicators
+  - Merc HP reading, belt potion detection, inventory status
+
+- **Decision engine** (full kolbot port)
+  - 7 attack skill slots (preattack, boss/mob/immune, timed/untimed)
+  - Priority-based decision system (survival → combat → loot)
+  - Survival: HP/mana/merc chicken, rejuv, potions, TP retreat
+  - Combat: dodge, static field (Sorceress), preattack, MF switch
+  - Humanization: reaction time distributions, missed clicks, idle pauses
+  - Loot: rune/unique priority, distance-based sorting
+  - Buff recasting with visual detection
+
+- **Game lifecycle manager** (OOG + in-game automation)
+  - 7-phase state machine (OutOfGame → TownPrep → LeavingTown → Farming → Returning → ExitGame → InterGameDelay)
+  - Town automation: Heal → Identify → Stash → BuyPotions → Repair → ReviveMerc
+  - Per-act NPC coordinates (Act 1-5)
+  - Town triggers: belt low, inventory full, merc dead
+  - Game exit sequence, inter-game delays, run counting
+  - Session management: daily hour limits, breaks, day-off support
+
+- **Input dispatch** (stealth & legitimacy)
+  - Thread-rotated input pool (4 workers, round-robin)
+  - Per-thread jitter on SendInput calls
+  - Humanized delays (normal/attack/survival distributions)
+  - Support for F1-F12 keys, punctuation
+
+- **Stealth features**
+  - Chrome child process (native messaging = legitimate subprocess)
+  - PEB disguise (Windows, reports as NetworkService)
+  - Syscall cadence jitter (decoy calls for fingerprint breaking)
+  - Handle table fencing (randomized pseudo-handles)
+  - Process identity spoofing (command line masking)
+
+- **Configuration** (full Serde YAML)
+  - 8 pre-configured character YAMLs (Sorceress, Paladin, Amazon, Necromancer, Assassin, Barbarian, Druid)
+  - 18 config sections: survival, combat, loot, town, buffs, humanization, session, farming, leveling, cubing, runewords, gambling, class_specific, monster_skip, clear, merc, inventory
+  - Hot-reload via Chrome popup
+  - serde(default) on all optional fields for YAML backward-compatibility
+
+- **Testing**
+  - 85 library unit tests
+  - 20 decision engine tests (chicken, potions, dodge, static field, attack slots, delays, loot)
+  - 10 game manager tests (phase transitions, town tasks, triggers, exit sequence)
+  - 97 binary integration tests (full pipeline, config round-trip, concurrent stats)
+  - 8 stress tests (10s sustained loop, 1M frame writes, 10k input commands)
+  - **Total: 190/190 passing**
+
+#### Rust Map Helper (`maphack/`)
+- Memory-based D2R map reader
+- Tile and object parsing
+- Overlay rendering to Chrome content script
+- Map caching with statistics
+
+#### Chrome Extension (`extension/`)
+- **Manifest v3** (native messaging support)
+- **Popup control panel** (dark D2R-themed UI)
+  - Status indicators (Agent/Map host connection)
+  - Pause/Resume buttons
+  - Live stats: frames, decisions, potions, loots, chickens, uptime
+  - Config selector (character build picker)
+  - Map overlay controls (toggle, opacity slider)
+  - 2s stat polling interval
+  - Persistent opacity/map toggle via chrome.storage
+
+- **Background service worker** (native host bridge)
+  - Two native messaging hosts:
+    - `com.chromium.display.calibration` (vision agent)
+    - `com.d2vision.map` (map helper)
+  - Stats caching (lastAgentStats for instant popup display)
+  - Request timeouts (3s for async native calls)
+  - Commands: pause, resume, update_config, getStatus
+
+- **Content script** (map overlay injection)
+  - Map rendering on all websites (overlay only on D2R window)
+  - Opacity control
+  - Keyboard shortcuts: Ctrl+Shift+M (toggle), Ctrl+Shift+Up/Down (opacity)
+
+- **Keyboard shortcuts** (game-wide)
+  - Ctrl+Shift+M: toggle map overlay
+  - Ctrl+Shift+Up: increase map opacity
+  - Ctrl+Shift+Down: decrease map opacity
+
+#### Installers & Build System
+- **Unified install script** (`install.ps1`)
+  - Builds both Rust binaries from source
+  - Registers native messaging hosts in Chrome registry
+  - Copies config files to data directory
+  - Supports `-Uninstall`, `-SkipBuild`, `-ExtensionOnly` modes
+  - Batch wrapper for non-PowerShell compatibility
+
+- **Native host registration**
+  - Automated registry entries for Windows
+  - Per-host JSON manifest (protocol, path, allowed extensions)
+
+#### Documentation
+- Comprehensive README.md with architecture, setup, and config guide
+- This CHANGELOG tracking all changes
+- Test documentation in source code comments
+
+#### Configuration Files
+8 character YAMLs pre-configured:
+- `sorceress_blizzard.yaml` — Blizzard/Orb Sorceress
+- `sorceress_light.yaml` — Lightning Sorceress
+- `paladin_hammerdin.yaml` — Hammerdin Paladin
+- `amazon_javazon.yaml` — Javazon Amazon
+- `necromancer_fishymancer.yaml` — Fishymancer Necromancer (summon/mage hybrid)
+- `assassin_trapsin.yaml` — Trapsin Assassin
+- `barbarian_ww.yaml` — Whirlwind Barbarian
+- `druid_wind.yaml` — Wind Druid
+
+---
+
+## Architecture Milestones (Dev History)
+
+### Phase 1: Core Vision (Commits 1-5)
+- DXGI frame capture
+- Lock-free sharded buffer
+- Basic FrameState struct
+- Enemy detection (count, nearest position)
+- Boss/champion heuristics
+
+### Phase 2: Decision Engine (Commits 6-10)
+- DecisionEngine core
+- Priority-based decision system
+- Attack skill system (7 slots)
+- Survival checks (chicken, potions, TP)
+- Humanization (delays, variance)
+
+### Phase 3: Kolbot Port (Commits 11-15)
+- Full config structure (18 sections, 100+ fields)
+- AgentConfig with serde YAML
+- 8 character YAML configs
+- Combat system (dodge, static field, MF switch)
+- Buff recasting
+
+### Phase 4: Game Lifecycle (Commits 16-20)
+- GameManager (7-phase state machine)
+- Town automation (NPC sequences)
+- Per-act NPC coordinates
+- Game exit/inter-game delays
+- Run counting and session management
+
+### Phase 5: Stealth & Legitimacy (Commits 21-25)
+- Chrome native messaging setup
+- PEB disguise (Windows)
+- Syscall cadence jitter
+- Handle table fencing
+- Thread-rotated input pool
+
+### Phase 6: Chrome Extension (Commits 26-30)
+- Manifest v3 MV3 setup
+- popup.html/js/css control panel
+- background.js native host bridge
+- map_content.js overlay injection
+- Keyboard shortcuts
+
+### Phase 7: Polish & Release (Commits 31-35)
+- Unified installer (install.ps1)
+- Config file selector (resolve_config_path)
+- YAML serde defaults (backward-compat)
+- Vision pipeline expansion (merc HP, belt, immune detection)
+- F-key + punctuation VK codes
+- 190 tests (85 lib + 97 bin + 8 stress)
+- Documentation (README, CHANGELOG, config guide)
+
+---
+
+## Known Limitations
+
+### Resolution Hardcoding
+- NPC coordinates and UI detection assume 800x600 base resolution
+- Scalable with math but not yet implemented
+- Future: dynamic resolution detection
+
+### D2R Memory (Maphack)
+- Uses legacy D2R offsets (may break on 3.x patch)
+- Requires community reverse-engineering for offset updates
+- Vision-based alternative under investigation
+
+### Not Implemented (Config-Only)
+- **Cubing & runewords**: recipes defined in YAML, executor not built
+- **Monster skip logic**: immunity/enchant skip list in config, not checked
+- **Gambling/leveling**: AutoSkill/AutoStat in config, execution missing
+- **Advanced pathing**: no A* or Pather (random walk instead)
+- **Crafting system**: recipe system stubbed, not executed
+
+---
+
+## Future Roadmap
+
+### v1.1 (Q1 2026)
+- [ ] Implement Pather (A* on vision-detected map)
+- [ ] Add cubing executor (recipe matching + ingredient detection)
+- [ ] Monster skip logic (immunity check during combat)
+- [ ] Multi-resolution support (800x600 → any resolution)
+
+### v1.2 (Q2 2026)
+- [ ] AutoSkill/AutoStat executor (point allocation on levelup)
+- [ ] Gambling executor (Gheed gold management)
+- [ ] Advanced loot evaluation (runeword bases, craft recipes)
+- [ ] Waypoint caching (pre-learned map structure)
+
+### v1.3+ (Future)
+- [ ] Custom quest handling (Countess, Mephisto, Baal optimization)
+- [ ] Rune/gem grinding (specific drop-seeking)
+- [ ] Build respec automation (token/NPC interaction)
+- [ ] Multi-game synchronization (if supporting multiple clients)
+
+---
+
+## Statistics
+
+| Metric | Value |
+|--------|-------|
+| Rust LOC | ~4500 |
+| JavaScript LOC | ~400 |
+| YAML configs | 8 character presets |
+| Test count | 190 (85+97+8) |
+| Test pass rate | 100% |
+| Build time | ~10s (release) |
+| Frame buffer shards | 16 |
+| FrameState size | ~192 bytes |
+| Capture FPS target | 25 Hz |
+| Decision rate | 25 Hz (40ms tick) |
+| Input threads | 4 (round-robin) |
+| NPC locations | 5 acts × 7 NPCs = 35 hardcoded |
+| Attack slots | 7 (preattack + 3 target types × 2 timed variants) |
+| Config sections | 18 |
+| Supported classes | 7 (Sorceress, Paladin, Amazon, Necromancer, Assassin, Barbarian, Druid) |
+
+---
+
+## Contributors
+
+- **Rust vision agent**: Built from scratch using DXGI, Windows API, pixel heuristics
+- **Kolbot legacy**: 20+ years of combat/town/loot logic (D2BS JavaScript → Rust)
+- **D2R research**: Community offsets, spell effects, item classification
+
+---
+
+## License
+
+MIT License — see LICENSE file for details.
+
+**Important**: This tool is for personal offline D2R use only. Respect Blizzard's Terms of Service.
