@@ -1,0 +1,112 @@
+# Blizzard Sorceress — D2R Vision Agent Config
+# Kolbot source: libs/config/Sorceress.js (blizzard variant)
+# Install: copy to C:\ProgramData\DisplayCalibration\config.yaml
+
+character_class: Sorceress
+build: blizzard
+
+# ── Survival (kolbot: Config.LifeChicken / UseHP / UseMP / etc.) ──────────────
+survival:
+  chicken_hp_pct: 30          # Config.LifeChicken = 30
+  hp_potion_pct: 75           # Config.UseHP = 75
+  hp_rejuv_pct: 40            # Config.UseRejuvHP = 40
+  mana_potion_pct: 30         # Config.UseMP = 30
+  mana_rejuv_pct: 0           # Config.UseRejuvMP = 0 (sorc has mana shield option)
+  tp_retreat_pct: 35
+  merc_chicken_hp_pct: 0
+  hp_potion_cooldown_ms: 1000
+  mana_potion_cooldown_ms: 1000
+  rejuv_cooldown_ms: 300
+  min_belt_column: [3, 3, 3, 0]   # Config.MinColumn; BeltColumn = ["hp","hp","mp","rv"]
+
+# ── Combat (map your in-game hotkeys here) ────────────────────────────────────
+# Kolbot: Config.AttackSkill[1] = boss primary, [3] = mob primary, [5] = immune fallback
+combat:
+  primary_skill_key: "f"        # Blizzard (right-click skill → F key in-game)
+  secondary_skill_key: "g"      # Frozen Orb  (immune fallback, AttackSkill[5])
+  teleport_key: "t"             # Teleport
+  preattack_key: null           # AttackSkill[0] — none for blizzard
+  immunity_fallback_key: "g"    # AttackSkill[5] — orb for cold immune
+  boss_priority: true
+  kite_threshold: 6             # Config default
+  cast_interval_ms: 200
+  max_attack_count: 300
+  use_merc_stomp: true
+  static_field:
+    hotkey: "e"                 # Bind Static Field to E
+    until_hp_pct: 50            # Static until boss at 50% HP
+    max_casts: 5
+
+# ── Buffs / Precasts ──────────────────────────────────────────────────────────
+# Config.UseEnergyShield = false for blizzard sorc (she uses life)
+# Buff keys must match your in-game skill bar bindings
+buffs:
+  - name: "Frozen Armor"       # or Shiver/Chilling Armor — your preference
+    hotkey: "b"
+    visual_check: false
+    duration_secs: 240
+
+# ── Loot ──────────────────────────────────────────────────────────────────────
+loot:
+  pickup_qualities:
+    - Unique
+    - Set
+    - Rare
+    - Rune
+  skip_qualities:
+    - Normal
+    - Magic
+  gold_threshold: 5000
+  prioritize_runes_uniques: true
+  max_pickup_distance: 400
+
+# ── Town / Resupply ───────────────────────────────────────────────────────────
+town:
+  go_to_town_triggers:
+    belt_potions_below: 2
+    inventory_slots_below: 4
+    merc_dead: true
+    durability_low: true
+  task_order:
+    - revive_merc
+    - heal
+    - repair
+    - identify
+    - stash
+    - buy_potions
+  stash_rules:
+    always_stash: ["unique", "set", "rune"]
+    id_then_evaluate: ["rare_ring", "rare_amulet", "rare_circlet"]
+    always_sell: ["magic_non_charm"]
+
+# ── Humanization ─────────────────────────────────────────────────────────────
+humanization:
+  reaction_mean_ms: 280.0
+  reaction_stddev_ms: 90.0
+  survival_max_delay_ms: 150
+  attack_reaction_factor: 0.65
+  aim_variance_px: 12
+  potion_threshold_variance: 5
+  skill_miss_rate: 0.03
+  potion_forget_rate: 0.05
+  loot_hesitation_ms: 200
+  path_deviate_rate: 0.08
+  path_deviate_px: 40
+  idle_pause_min_ms: 1500
+  idle_pause_max_ms: 6000
+  idle_pause_rate: 0.02
+  aggression_drift_per_hour: 0.04
+  caution_drift_per_hour: 0.03
+
+# ── Session Schedule ──────────────────────────────────────────────────────────
+session:
+  max_daily_hours: 8.0
+  session_min_minutes: 60
+  session_max_minutes: 180
+  break_min_minutes: 30
+  break_max_minutes: 120
+  allowed_start_hour: 9
+  allowed_end_hour: 23
+  day_off: null
+  ladder_start_delay_hours: 48
+  short_break_rate: 0.12

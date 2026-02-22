@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Display Calibration Helper",
+  "version": "1.3.0",
+  "description": "Background helper for display calibration and color profile management.",
+  "permissions": [
+    "nativeMessaging",
+    "storage",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["map_content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "toggle-map": {
+      "suggested_key": { "default": "Ctrl+Shift+M" },
+      "description": "Toggle map overlay"
+    },
+    "increase-opacity": {
+      "suggested_key": { "default": "Ctrl+Shift+Up" },
+      "description": "Increase map opacity"
+    },
+    "decrease-opacity": {
+      "suggested_key": { "default": "Ctrl+Shift+Down" },
+      "description": "Decrease map opacity"
+    }
+  },
+  "minimum_chrome_version": "88"
+}

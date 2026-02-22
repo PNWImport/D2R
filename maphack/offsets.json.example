@@ -1,0 +1,13 @@
+{
+    "_comment": "D2R Map Helper - Offset Overrides",
+    "_version": "For D2R 3.1.1 (Reign of the Warlock) - Feb 2026",
+    "_howto": "Place this file next to chrome_map_helper.exe. Only include fields you want to override. Sig-scan runs first; these override sig-scan failures. Values can be hex strings (0x...) or integers.",
+
+    "player_hash_table": "0x2028E60",
+    "ui_settings": "0x20AD5F0",
+
+    "act_misc": {
+        "map_seed": "0x840",
+        "difficulty": "0x830"
+    }
+}

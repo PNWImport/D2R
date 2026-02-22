@@ -1,0 +1,9 @@
+{
+  "name": "com.chromium.display.calibration",
+  "description": "Display Calibration Native Messaging Host",
+  "path": "C:\\ProgramData\\DisplayCalibration\\chrome_helper.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://EXTENSION_ID_HERE/"
+  ]
+}

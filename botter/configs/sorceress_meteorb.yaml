@@ -1,0 +1,91 @@
+# MeteOrb Sorceress — D2R Vision Agent Config
+# Kolbot source: libs/config/Sorceress.js (meteorb variant)
+# Dual-element: Meteor/Fireball primary, Frozen Orb secondary
+# Install: copy to C:\ProgramData\DisplayCalibration\config.yaml
+
+character_class: Sorceress
+build: meteorb
+
+survival:
+  chicken_hp_pct: 30
+  hp_potion_pct: 75
+  hp_rejuv_pct: 40
+  mana_potion_pct: 30
+  mana_rejuv_pct: 0
+  tp_retreat_pct: 35
+  merc_chicken_hp_pct: 0
+  hp_potion_cooldown_ms: 1000
+  mana_potion_cooldown_ms: 1000
+  rejuv_cooldown_ms: 300
+  min_belt_column: [3, 3, 3, 0]
+
+combat:
+  primary_skill_key: "f"        # Meteor (right-click, AttackSkill[1]/[3])
+  secondary_skill_key: "g"      # Frozen Orb (fire immune fallback, AttackSkill[5])
+  teleport_key: "t"
+  preattack_key: "h"            # Fireball (AttackSkill[0] — pre-land hit)
+  immunity_fallback_key: "g"    # Orb vs fire immunes
+  boss_priority: true
+  kite_threshold: 6
+  cast_interval_ms: 200
+  max_attack_count: 300
+  use_merc_stomp: true
+  static_field:
+    hotkey: "e"
+    until_hp_pct: 50
+    max_casts: 5
+
+buffs:
+  - name: "Frozen Armor"
+    hotkey: "b"
+    visual_check: false
+    duration_secs: 240
+
+loot:
+  pickup_qualities: [Unique, Set, Rare, Rune]
+  skip_qualities: [Normal, Magic]
+  gold_threshold: 5000
+  prioritize_runes_uniques: true
+  max_pickup_distance: 400
+
+town:
+  go_to_town_triggers:
+    belt_potions_below: 2
+    inventory_slots_below: 4
+    merc_dead: true
+    durability_low: true
+  task_order: [revive_merc, heal, repair, identify, stash, buy_potions]
+  stash_rules:
+    always_stash: ["unique", "set", "rune"]
+    id_then_evaluate: ["rare_ring", "rare_amulet", "rare_circlet"]
+    always_sell: ["magic_non_charm"]
+
+humanization:
+  reaction_mean_ms: 280.0
+  reaction_stddev_ms: 90.0
+  survival_max_delay_ms: 150
+  attack_reaction_factor: 0.65
+  aim_variance_px: 12
+  potion_threshold_variance: 5
+  skill_miss_rate: 0.03
+  potion_forget_rate: 0.05
+  loot_hesitation_ms: 200
+  path_deviate_rate: 0.08
+  path_deviate_px: 40
+  idle_pause_min_ms: 1500
+  idle_pause_max_ms: 6000
+  idle_pause_rate: 0.02
+  aggression_drift_per_hour: 0.04
+  caution_drift_per_hour: 0.03
+
+session:
+  max_daily_hours: 8.0
+  session_min_minutes: 60
+  session_max_minutes: 180
+  break_min_minutes: 30
+  break_max_minutes: 120
+  allowed_start_hour: 9
+  allowed_end_hour: 23
+  day_off: null
+  ladder_start_delay_hours: 48
+  short_break_rate: 0.12
