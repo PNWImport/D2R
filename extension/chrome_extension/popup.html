@@ -195,9 +195,18 @@
     </div>
 
     <div class="section">
-      <div class="section-title">Act 3-5 & Misc</div>
+      <div class="section-title">Act 3</div>
       <label class="check"><input type="checkbox" data-cfg="Scripts.Stormtree"><span>Stormtree</span></label>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.Travincal"><span>Travincal</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.BattlemaidSarina"><span>Battlemaid Sarina</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.KurastTemples"><span>Kurast Temples</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Icehawk"><span>Icehawk</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Endugu"><span>Endugu</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Travincal" data-subs="opts-travincal"><span>Travincal</span></label>
+        <div id="opts-travincal" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Travincal.PortalLeech"><span>Portal Leech</span></label>
+        </div>
+      </div>
       <div class="script-entry">
         <label class="check"><input type="checkbox" data-cfg="Scripts.Mephisto" data-subs="opts-meph"><span>Mephisto</span></label>
         <div id="opts-meph" class="sub-opts">
@@ -206,6 +215,13 @@
           <label class="check"><input type="checkbox" data-cfg="Mephisto.TakeRedPortal" checked><span>Take Red Portal</span></label>
         </div>
       </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Act 4</div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.OuterSteppes"><span>Outer Steppes</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Izual"><span>Izual</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Hephasto"><span>Hephasto</span></label>
       <div class="script-entry">
         <label class="check"><input type="checkbox" data-cfg="Scripts.Diablo" data-subs="opts-diablo"><span>Diablo</span></label>
         <div id="opts-diablo" class="sub-opts">
@@ -216,13 +232,117 @@
           <label class="check"><input type="checkbox" data-cfg="Diablo.Fast"><span>Fast Run</span></label>
           <div class="setting-row"><label>Clear Radius</label><input type="number" data-cfg="Diablo.ClearRadius" class="input-xs" value="30"></div>
           <div class="setting-row"><label>Clear Type</label><input type="number" data-cfg="Diablo.ClearType" class="input-xs" value="0"></div>
+          <div class="setting-row"><label>Seal Order</label><input type="text" data-cfg="Diablo.SealOrder" class="input-full" value="vizier,seis,infector"></div>
         </div>
       </div>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.Pindleskin"><span>Pindleskin</span></label>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.Baal"><span>Baal</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Act 5</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Pindleskin" data-subs="opts-pindleskin"><span>Pindleskin</span></label>
+        <div id="opts-pindleskin" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Pindleskin.UseWaypoint"><span>Use Waypoint</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Pindleskin.KillNihlathak" checked><span>Kill Nihlathak</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Pindleskin.ViperQuit"><span>Viper Quit</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Nihlathak" data-subs="opts-nihlathak"><span>Nihlathak</span></label>
+        <div id="opts-nihlathak" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Nihlathak.ViperQuit"><span>Viper Quit</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Nihlathak.UseWaypoint"><span>Use Waypoint</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Eldritch" data-subs="opts-eldritch"><span>Eldritch</span></label>
+        <div id="opts-eldritch" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Eldritch.OpenChest" checked><span>Open Chest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Eldritch.KillShenk" checked><span>Kill Shenk</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Eldritch.KillDacFarren" checked><span>Kill Dac Farren</span></label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Eyeback"><span>Eyeback</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.SharpTooth"><span>SharpTooth</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.ThreshSocket"><span>Thresh Socket</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Abaddon"><span>Abaddon</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Frozenstein" data-subs="opts-frozenstein"><span>Frozenstein</span></label>
+        <div id="opts-frozenstein" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Frozenstein.ClearFrozenRiver" checked><span>Clear Frozen River</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Bonesaw" data-subs="opts-bonesaw"><span>Bonesaw</span></label>
+        <div id="opts-bonesaw" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Bonesaw.ClearDrifterCavern"><span>Clear Drifter Cavern</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Snapchip" data-subs="opts-snapchip"><span>Snapchip</span></label>
+        <div id="opts-snapchip" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Snapchip.ClearIcyCellar" checked><span>Clear Icy Cellar</span></label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Worldstone"><span>Worldstone</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Baal" data-subs="opts-baal"><span>Baal</span></label>
+        <div id="opts-baal" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Baal.SoulQuit"><span>Soul Quit</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Baal.DollQuit"><span>Doll Quit</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Baal.KillBaal" checked><span>Kill Baal</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Special & Team</div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.GetFade"><span>Get Fade</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.GetKeys"><span>Get Keys (T/H/D)</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.GetEssences" data-subs="opts-essences"><span>Get Essences</span></label>
+        <div id="opts-essences" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="GetEssences.RunDuriel"><span>Run Duriel</span></label>
+          <label class="check"><input type="checkbox" data-cfg="GetEssences.MoatMeph" checked><span>Moat Mephisto</span></label>
+          <label class="check"><input type="checkbox" data-cfg="GetEssences.FastDiablo" checked><span>Fast Diablo</span></label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Follower"><span>Follower</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.CrushTele"><span>Crush Tele</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Gamble"><span>Gamble</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Crafting"><span>Crafting</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.IPHunter" data-subs="opts-iphunter"><span>IP Hunter</span></label>
+        <div id="opts-iphunter" class="sub-opts">
+          <div class="setting-row"><label>IP List</label><input type="text" data-cfg="IPHunter.IPList" class="input-full" placeholder="165,201,64"></div>
+          <div class="setting-row"><label>Game Length (min)</label><input type="number" data-cfg="IPHunter.GameLength" class="input-xs" value="3"></div>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.ShopBot" data-subs="opts-shopbot"><span>Shop Bot</span></label>
+        <div id="opts-shopbot" class="sub-opts">
+          <div class="setting-row"><label>Shop NPC</label><input type="text" data-cfg="ShopBot.ShopNPC" class="input-full" placeholder="Anya"></div>
+          <div class="setting-row"><label>Cycle Delay (ms)</label><input type="number" data-cfg="ShopBot.CycleDelay" class="input-xs" value="0"></div>
+          <label class="check"><input type="checkbox" data-cfg="ShopBot.QuitOnMatch"><span>Quit on Match</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Misc Scripts</div>
       <label class="check"><input type="checkbox" data-cfg="Scripts.GhostBusters"><span>Ghost Busters</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.ChestMania"><span>Chest Mania</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.ClearAnyArea"><span>Clear Any Area</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.GemHunter"><span>Gem Hunter</span></label>
       <label class="check"><input type="checkbox" data-cfg="Scripts.WPGetter"><span>WP Getter</span></label>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.Questing"><span>Questing</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Questing" data-subs="opts-questing"><span>Questing</span></label>
+        <div id="opts-questing" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Questing.StopProfile"><span>Stop Profile on Done</span></label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Config.MFLeader"><span>MF Leader</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Config.BreakClearLevel"><span>Break Clear Level (MFHelper)</span></label>
       <label class="check"><input type="checkbox" data-cfg="Scripts.UserAddon"><span>User Addon</span></label>
     </div>
   </div>
@@ -244,41 +364,260 @@
           <option value="1">Profile Names</option>
         </select>
       </div>
+      <div class="setting-row">
+        <label>Quit Delay Min (s)</label>
+        <input type="number" data-cfg="QuitListDelay.0" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Quit Delay Max (s)</label>
+        <input type="number" data-cfg="QuitListDelay.1" class="input-sm" value="0">
+      </div>
     </div>
 
     <div class="section">
-      <div class="section-title">Baal</div>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.AutoBaal"><span>AutoBaal</span></label>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.BaalHelper"><span>BaalHelper</span></label>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.BaalAssistant"><span>BaalAssistant</span></label>
-      <div class="setting-row">
-        <label>Baal Wait (s)</label>
-        <input type="number" data-cfg="Baal.KillBaal" class="input-sm" value="1">
+      <div class="section-title">Battle Orders</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.BattleOrders" data-subs="opts-bo"><span>Battle Orders</span></label>
+        <div id="opts-bo" class="sub-opts">
+          <div class="setting-row">
+            <label>Mode</label>
+            <select data-cfg="BattleOrders.Mode" style="flex: 1;">
+              <option value="0" selected>Give BO</option>
+              <option value="1">Get BO</option>
+            </select>
+          </div>
+          <label class="check"><input type="checkbox" data-cfg="BattleOrders.Idle"><span>Idle After BO</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BattleOrders.QuitOnFailure"><span>Quit on Failure</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BattleOrders.SkipIfTardy" checked><span>Skip If Tardy</span></label>
+          <div class="setting-row"><label>Wait (s)</label><input type="number" data-cfg="BattleOrders.Wait" class="input-sm" value="10"></div>
+          <label class="textarea-label">Getters (one per line)</label>
+          <textarea class="textarea-cfg" data-cfg="BattleOrders.Getters" placeholder="Player names to wait for"></textarea>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.BoBarbHelper" data-subs="opts-bobarb"><span>BO Barb Helper</span></label>
+        <div id="opts-bobarb" class="sub-opts">
+          <div class="setting-row">
+            <label>Mode</label>
+            <select data-cfg="BoBarbHelper.Mode" style="flex: 1;">
+              <option value="-1" selected>Disabled</option>
+              <option value="0">Give BO</option>
+            </select>
+          </div>
+          <div class="setting-row"><label>Waypoint</label><input type="number" data-cfg="BoBarbHelper.Wp" class="input-sm" value="35"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Baal Leeching</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.AutoBaal" data-subs="opts-autobaal"><span>AutoBaal</span></label>
+        <div id="opts-autobaal" class="sub-opts">
+          <div class="setting-row">
+            <label>Find Shrine</label>
+            <select data-cfg="AutoBaal.FindShrine" style="flex: 1;">
+              <option value="0" selected>Disabled</option>
+              <option value="1">After Hot TP</option>
+              <option value="2">When Leader Found</option>
+            </select>
+          </div>
+          <label class="check"><input type="checkbox" data-cfg="AutoBaal.LongRangeSupport"><span>Long Range Support</span></label>
+          <div class="setting-row"><label>Leech X</label><input type="number" data-cfg="AutoBaal.LeechSpot.0" class="input-sm" value="15115"></div>
+          <div class="setting-row"><label>Leech Y</label><input type="number" data-cfg="AutoBaal.LeechSpot.1" class="input-sm" value="5050"></div>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.BaalHelper" data-subs="opts-baalhelper"><span>BaalHelper</span></label>
+        <div id="opts-baalhelper" class="sub-opts">
+          <div class="setting-row"><label>Wait (min)</label><input type="number" data-cfg="BaalHelper.Wait" class="input-sm" value="5"></div>
+          <label class="check"><input type="checkbox" data-cfg="BaalHelper.KillNihlathak"><span>Kill Nihlathak</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalHelper.FastChaos"><span>Fast Chaos</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalHelper.SoulQuit"><span>Soul Quit</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalHelper.DollQuit"><span>Doll Quit</span></label>
+          <div class="setting-row"><label>Hurt Baal %</label><input type="number" data-cfg="BaalHelper.HurtBaal" class="input-sm" value="0"></div>
+          <label class="check"><input type="checkbox" data-cfg="BaalHelper.KillBaal" checked><span>Kill Baal</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalHelper.SkipTP"><span>Skip TP</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.BaalAssistant" data-subs="opts-baalassist"><span>BaalAssistant</span></label>
+        <div id="opts-baalassist" class="sub-opts">
+          <div class="setting-row"><label>Wait (s)</label><input type="number" data-cfg="BaalAssistant.Wait" class="input-sm" value="120"></div>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.KillNihlathak"><span>Kill Nihlathak</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.FastChaos"><span>Fast Chaos</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.Helper" checked><span>Helper (Attack)</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.GetShrine"><span>Get Shrine</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.GetShrineWaitForHotTP"><span>Get Shrine After Hot TP</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.SkipTP"><span>Skip TP</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.WaitForSafeTP"><span>Wait for Safe TP</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.DollQuit"><span>Doll Quit</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.SoulQuit"><span>Soul Quit</span></label>
+          <div class="setting-row"><label>Hurt Baal %</label><input type="number" data-cfg="BaalAssistant.HurtBaal" class="input-sm" value="0"></div>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.KillBaal" checked><span>Kill Baal</span></label>
+        </div>
       </div>
     </div>
 
     <div class="section">
       <div class="section-title">Diablo & Chaos</div>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.DiabloHelper"><span>DiabloHelper</span></label>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.AutoChaos"><span>AutoChaos</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.DiabloHelper" data-subs="opts-diablohelper"><span>DiabloHelper</span></label>
+        <div id="opts-diablohelper" class="sub-opts">
+          <div class="setting-row"><label>Wait (min)</label><input type="number" data-cfg="DiabloHelper.Wait" class="input-sm" value="5"></div>
+          <div class="setting-row"><label>Clear Type</label><input type="number" data-cfg="DiabloHelper.ClearType" class="input-sm" value="0"></div>
+          <div class="setting-row"><label>Clear Radius</label><input type="number" data-cfg="DiabloHelper.ClearRadius" class="input-sm" value="30"></div>
+          <label class="check"><input type="checkbox" data-cfg="DiabloHelper.Entrance" checked><span>Start Entrance</span></label>
+          <label class="check"><input type="checkbox" data-cfg="DiabloHelper.SkipTP"><span>Skip TP</span></label>
+          <label class="check"><input type="checkbox" data-cfg="DiabloHelper.SkipIfBaal"><span>Skip if Baal</span></label>
+          <label class="check"><input type="checkbox" data-cfg="DiabloHelper.OpenSeals"><span>Open Seals</span></label>
+          <label class="check"><input type="checkbox" data-cfg="DiabloHelper.SafePrecast" checked><span>Safe Precast</span></label>
+          <label class="check"><input type="checkbox" data-cfg="DiabloHelper.RecheckSeals"><span>Recheck Seals</span></label>
+          <div class="setting-row"><label>Hurt Diablo %</label><input type="number" data-cfg="DiabloHelper.HurtDiablo" class="input-sm" value="0"></div>
+          <div class="setting-row"><label>Seal Order</label><input type="text" data-cfg="DiabloHelper.SealOrder" class="input-full" value="vizier,seis,infector"></div>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.AutoChaos" data-subs="opts-autochaos"><span>AutoChaos</span></label>
+        <div id="opts-autochaos" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="AutoChaos.Taxi"><span>Taxi</span></label>
+          <label class="check"><input type="checkbox" data-cfg="AutoChaos.FindShrine"><span>Find Shrine</span></label>
+          <label class="check"><input type="checkbox" data-cfg="AutoChaos.UseShrine"><span>Use Shrine</span></label>
+          <label class="check"><input type="checkbox" data-cfg="AutoChaos.Leech"><span>Leech (Hide)</span></label>
+          <label class="check"><input type="checkbox" data-cfg="AutoChaos.Ranged"><span>Ranged</span></label>
+          <label class="check"><input type="checkbox" data-cfg="AutoChaos.BO"><span>BO Only</span></label>
+          <label class="check"><input type="checkbox" data-cfg="AutoChaos.SealPrecast"><span>Seal Precast</span></label>
+          <div class="setting-row"><label>Seal Delay (s)</label><input type="number" data-cfg="AutoChaos.SealDelay" class="input-sm" value="0"></div>
+          <div class="setting-row"><label>Diablo HP %</label><input type="number" data-cfg="AutoChaos.Diablo" class="input-sm" value="0"></div>
+          <div class="setting-row"><label>Seal Order</label><input type="text" data-cfg="AutoChaos.SealOrder" class="input-full" value="1,2,3"></div>
+        </div>
+      </div>
       <label class="check"><input type="checkbox" data-cfg="Scripts.SealLeecher"><span>SealLeecher</span></label>
     </div>
 
     <div class="section">
       <div class="section-title">Leeching</div>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.TristramLeech"><span>TristramLeech</span></label>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.TravincalLeech"><span>TravincalLeech</span></label>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.Wakka"><span>Wakka (Walking Leech)</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.TristramLeech" data-subs="opts-tristramleech"><span>TristramLeech</span></label>
+        <div id="opts-tristramleech" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="TristramLeech.Helper"><span>Helper (Attack)</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.TravincalLeech" data-subs="opts-travleech"><span>TravincalLeech</span></label>
+        <div id="opts-travleech" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="TravincalLeech.Helper" checked><span>Helper (Attack)</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Wakka" data-subs="opts-wakka"><span>Wakka (Walking Leech)</span></label>
+        <div id="opts-wakka" class="sub-opts">
+          <div class="setting-row"><label>Wait (min)</label><input type="number" data-cfg="Wakka.Wait" class="input-sm" value="1"></div>
+          <div class="setting-row"><label>Stop at Level</label><input type="number" data-cfg="Wakka.StopAtLevel" class="input-sm" value="99"></div>
+          <label class="check"><input type="checkbox" data-cfg="Wakka.StopProfile"><span>Stop Profile</span></label>
+          <label class="check"><input type="checkbox" data-cfg="SkipIfBaal" checked><span>Skip if Baal</span></label>
+        </div>
+      </div>
       <label class="check"><input type="checkbox" data-cfg="Scripts.MFHelper"><span>MFHelper</span></label>
     </div>
 
     <div class="section">
-      <div class="section-title">Team Control</div>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.BattleOrders"><span>Battle Orders</span></label>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.ControlBot"><span>Control Bot</span></label>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.OrgTorch"><span>Org Torch</span></label>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.Rusher"><span>Rusher</span></label>
-      <label class="check"><input type="checkbox" data-cfg="Scripts.Rushee"><span>Rushee</span></label>
+      <div class="section-title">Org Torch</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.OrgTorch" data-subs="opts-orgtorch"><span>Org Torch</span></label>
+        <div id="opts-orgtorch" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="OrgTorch.MakeTorch" checked><span>Make Torch</span></label>
+          <label class="check"><input type="checkbox" data-cfg="OrgTorch.WaitForKeys" checked><span>Wait for Keys</span></label>
+          <div class="setting-row"><label>Wait Timeout (min)</label><input type="number" data-cfg="OrgTorch.WaitTimeout" class="input-sm" value="15"></div>
+          <label class="check"><input type="checkbox" data-cfg="OrgTorch.UseSalvation" checked><span>Use Salvation</span></label>
+          <label class="check"><input type="checkbox" data-cfg="OrgTorch.GetFade"><span>Get Fade</span></label>
+          <div class="setting-row"><label>Taxi Char</label><input type="text" data-cfg="OrgTorch.TaxiChar" class="input-full" placeholder="Taxi character name"></div>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.OrgTorchHelper" data-subs="opts-torchhelper"><span>Org Torch Helper</span></label>
+        <div id="opts-torchhelper" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="OrgTorchHelper.Taxi"><span>Taxi</span></label>
+          <label class="check"><input type="checkbox" data-cfg="OrgTorchHelper.Helper" checked><span>Helper (Attack)</span></label>
+          <label class="check"><input type="checkbox" data-cfg="OrgTorchHelper.UseWalkPath"><span>Use Walk Path</span></label>
+          <label class="check"><input type="checkbox" data-cfg="OrgTorchHelper.SkipTp"><span>Skip TP</span></label>
+          <label class="check"><input type="checkbox" data-cfg="OrgTorchHelper.GetFade"><span>Get Fade</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Rushing</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Rusher" data-subs="opts-rusher"><span>Rusher</span></label>
+        <div id="opts-rusher" class="sub-opts">
+          <div class="setting-row"><label>Wait Players</label><input type="number" data-cfg="Rusher.WaitPlayerCount" class="input-sm" value="0"></div>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.Cain"><span>Cain Quest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.Radament"><span>Radament Quest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.LamEsen"><span>Lam Esen Quest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.Izual"><span>Izual Quest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.Shenk"><span>Shenk Quest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.Anya"><span>Anya Quest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.HellAncients"><span>Hell Ancients</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.GiveWps"><span>Give WPs</span></label>
+          <div class="setting-row"><label>Last Run</label><input type="text" data-cfg="Rusher.LastRun" class="input-full" placeholder="End after this run"></div>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Rushee" data-subs="opts-rushee"><span>Rushee</span></label>
+        <div id="opts-rushee" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Rushee.Quester"><span>Quester</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rushee.Bumper"><span>Bumper</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Control Bot</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.ControlBot" data-subs="opts-controlbot"><span>Control Bot</span></label>
+        <div id="opts-controlbot" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.Bo" checked><span>Give BO</span></label>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.DropGold" checked><span>Drop Gold</span></label>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.Cows.MakeCows" checked><span>Make Cows</span></label>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.Cows.GetLeg" checked><span>Get Leg</span></label>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.Chant.Enchant" checked><span>Enchant</span></label>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.Chant.AutoEnchant" checked><span>Auto-Enchant</span></label>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.Wps.GiveWps" checked><span>Give WPs</span></label>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.Wps.SecurePortal" checked><span>Secure Portal</span></label>
+          <div class="note" style="margin: 4px 0;">Rush Quests:</div>
+          <div class="check-grid">
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Andy" checked><span>Andy</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Bloodraven" checked><span>Bloodraven</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Smith" checked><span>Smith</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Cain" checked><span>Cain</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Cube" checked><span>Cube</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Radament" checked><span>Radament</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Staff" checked><span>Staff</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Amulet" checked><span>Amulet</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Summoner" checked><span>Summoner</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Duriel" checked><span>Duriel</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Gidbinn" checked><span>Gidbinn</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.LamEsen" checked><span>Lam Esen</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Eye" checked><span>Eye</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Heart" checked><span>Heart</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Brain" checked><span>Brain</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Travincal" checked><span>Travincal</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Mephisto" checked><span>Mephisto</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Izual" checked><span>Izual</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Diablo" checked><span>Diablo</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Shenk" checked><span>Shenk</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Anya" checked><span>Anya</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Ancients" checked><span>Ancients</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Baal" checked><span>Baal</span></label>
+          </div>
+          <div class="setting-row"><label>End Message</label><input type="text" data-cfg="ControlBot.EndMessage" class="input-full" placeholder="Message before quit"></div>
+          <div class="setting-row"><label>Game Length (min)</label><input type="number" data-cfg="ControlBot.GameLength" class="input-sm" value="20"></div>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.NGVoting" checked><span>NG Voting</span></label>
+          <div class="setting-row"><label>Vote Cooldown (min)</label><input type="number" data-cfg="ControlBot.NGVoteCooldown" class="input-sm" value="3"></div>
+          <div class="setting-row"><label>Min Game Length (min)</label><input type="number" data-cfg="ControlBot.MinGameLength" class="input-sm" value="3"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -396,6 +735,38 @@
         <label class="check"><input type="checkbox" data-cfg="SkipAura.holyshock"><span>Holy Shock</span></label>
       </div>
     </div>
+
+    <div class="section">
+      <div class="section-title">Skip Exception</div>
+      <label class="textarea-label">Always kill these (name or classid, one per line)</label>
+      <textarea class="textarea-cfg" data-cfg="SkipException" placeholder="Grand Vizier of Chaos&#10;Lord De Seis&#10;Infector of Souls"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Charge Cast</div>
+      <div class="setting-row">
+        <label>Skill ID</label>
+        <input type="number" data-cfg="ChargeCast.skill" class="input-sm" value="-1">
+      </div>
+      <div class="setting-row">
+        <label>Spectype</label>
+        <input type="text" data-cfg="ChargeCast.spectype" class="input-sm" value="0x7">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Custom Attack</div>
+      <label class="textarea-label">Monster: [timed, untimed] (one per line)</label>
+      <textarea class="textarea-cfg" data-cfg="CustomAttack" placeholder="Baal: 38, -1"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Clear Path</div>
+      <div class="setting-row">
+        <label>Spectype</label>
+        <input type="number" data-cfg="ClearPath" class="input-sm" value="0">
+      </div>
+    </div>
   </div>
 
   <!-- TAB 5: HEALTH -->
@@ -417,6 +788,18 @@
       <div class="setting-row">
         <label>Iron Golem Chicken</label>
         <input type="number" data-cfg="IronGolemChicken" class="input-sm" value="30">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Ping Quit</div>
+      <div class="setting-row">
+        <label>Ping Threshold</label>
+        <input type="number" data-cfg="PingQuit.Ping" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Duration (s)</label>
+        <input type="number" data-cfg="PingQuit.Duration" class="input-sm" value="0">
       </div>
     </div>
 
@@ -953,10 +1336,6 @@
       <div class="setting-row">
         <label>SoJ Wait (min)</label>
         <input type="number" data-cfg="SoJWaitTime" class="input-sm" value="5">
-      </div>
-      <div class="setting-row">
-        <label>DClone Wait (s)</label>
-        <input type="number" data-cfg="DCloneWaitTime" class="input-sm" value="30">
       </div>
     </div>
 

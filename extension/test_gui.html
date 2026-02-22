@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <title>KZB GUI Test Harness</title>
   <style>
-    /* ── Page Layout ─────────────────────────────────────────── */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; }
     body {
@@ -13,43 +12,13 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #c8c8d4;
     }
-    .column {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow-y: auto;
-    }
-    .col-popup {
-      width: 384px;
-      flex-shrink: 0;
-      padding: 12px;
-      background: #111122;
-      border-right: 1px solid #2a2a44;
-    }
-    .col-controls {
-      flex: 1;
-      padding: 16px;
-      min-width: 360px;
-    }
-    .col-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #555;
-      margin-bottom: 10px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid #222;
-    }
+    .column { display: flex; flex-direction: column; height: 100vh; overflow-y: auto; }
+    .col-popup { width: 384px; flex-shrink: 0; padding: 12px; background: #111122; border-right: 1px solid #2a2a44; }
+    .col-controls { flex: 1; padding: 16px; min-width: 360px; }
+    .col-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #555; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #222; }
 
-    /* ── Popup Container ──────────────────────────────────────── */
-    #popup {
-      width: 360px;
-      max-height: none;
-      overflow-y: auto;
-      border-radius: 8px;
-    }
+    #popup-frame { width: 360px; border: none; border-radius: 8px; flex: 1; min-height: 600px; }
 
-    /* ── Test Controls ────────────────────────────────────────── */
     .scenario-group { margin-bottom: 16px; }
     .scenario-group h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #666; margin-bottom: 6px; }
     .test-btn {
@@ -59,7 +28,6 @@
     }
     .test-btn:hover { background: #222244; border-color: #4a4a66; color: #dde; }
     .test-btn.active { background: #1a2a1a; border-color: #40c040; color: #40c040; }
-
     .test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
 
     #log {
@@ -72,259 +40,25 @@
     .log-ok { color: #4a4; }
     .log-cmd { color: #a8a; }
 
-    /* Import popup.css styles inline */
-    #popup * {
-      box-sizing: border-box;
-    }
-
-    #popup {
-      font-size: 13px;
-      background: #1a1a2e;
-      color: #c8c8d4;
-      padding: 10px;
-      border: 1px solid #2a2a44;
-    }
-
-    #popup .header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 8px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid #2a2a44;
-      position: relative;
-    }
-
-    #popup .logo { max-width: 280px; max-height: 60px; width: auto; height: auto; margin-bottom: 4px; }
-    #popup .version { position: absolute; top: 4px; right: 0; font-size: 10px; color: #6a6a80; }
-
-    #popup .tab-bar {
-      display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 8px;
-      padding: 3px; background: #12122a; border-radius: 6px; border: 1px solid #2a2a44;
-    }
-    #popup .tab {
-      flex: 1; min-width: 0; padding: 5px 2px; background: transparent;
-      border: 1px solid transparent; border-radius: 4px; color: #6a6a80;
-      font-size: 10px; font-weight: 500; cursor: pointer; transition: all 0.12s;
-      text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    #popup .tab:hover { color: #aaa; background: #1a1a30; }
-    #popup .tab.active { background: #2a2a50; color: #e0c070; border-color: #3a3a60; }
-    #popup .tab-panel { display: none; }
-    #popup .tab-panel.active { display: block; }
-
-    #popup .section { margin-bottom: 8px; padding: 8px; background: #16162a; border-radius: 6px; border: 1px solid #2a2a44; }
-    #popup .section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #8888a0; margin-bottom: 6px; }
-
-    #popup .status-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
-    #popup .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    #popup .dot-ok { background: #40c040; box-shadow: 0 0 4px #40c04080; }
-    #popup .dot-off { background: #606070; }
-    #popup .status-text { margin-left: auto; font-size: 12px; color: #8888a0; }
-
-    #popup .control-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
-    #popup .control-row label { font-size: 12px; color: #8888a0; min-width: 44px; }
-    #popup .control-row select { flex: 1; padding: 3px 5px; background: #1a1a2e; color: #c8c8d4; border: 1px solid #3a3a55; border-radius: 4px; font-size: 11px; }
-
-    #popup .setting-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
-    #popup .setting-row label { font-size: 11px; color: #8888a0; min-width: 100px; flex-shrink: 0; }
-    #popup .setting-row select { flex: 1; padding: 3px 5px; background: #1a1a2e; color: #c8c8d4; border: 1px solid #3a3a55; border-radius: 4px; font-size: 11px; }
-
-    #popup .input-sm { width: 70px; padding: 3px 5px; background: #1a1a2e; color: #c8c8d4; border: 1px solid #3a3a55; border-radius: 4px; font-size: 11px; text-align: right; }
-    #popup .input-xs { width: 36px; padding: 2px 4px; background: #1a1a2e; color: #c8c8d4; border: 1px solid #3a3a55; border-radius: 4px; font-size: 11px; text-align: center; }
-    #popup .input-full { width: 100%; padding: 3px 5px; background: #1a1a2e; color: #c8c8d4; border: 1px solid #3a3a55; border-radius: 4px; font-size: 11px; margin-top: 2px; }
-
-    #popup .btn { padding: 5px 14px; border: 1px solid #3a3a55; border-radius: 4px; background: #22223a; color: #c8c8d4; font-size: 12px; cursor: pointer; transition: all 0.15s; }
-    #popup .btn:hover:not(:disabled) { background: #2a2a50; border-color: #5a5a75; }
-    #popup .btn:disabled { opacity: 0.4; cursor: default; }
-    #popup .btn-warn { border-color: #8a6020; color: #e0a020; }
-    #popup .btn-warn:hover:not(:disabled) { background: #2a2410; border-color: #e0a020; }
-    #popup .btn-ok { border-color: #206a20; color: #40c040; }
-    #popup .btn-ok:hover:not(:disabled) { background: #102a10; border-color: #40c040; }
-    #popup .btn-danger { border-color: #8a2020; color: #e04040; }
-    #popup .btn-danger:hover:not(:disabled) { background: #2a1010; border-color: #e04040; }
-
-    #popup .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; }
-    #popup .stat-label { font-size: 11px; color: #6a6a80; }
-    #popup .stat-value { font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; color: #d0d0e0; }
-
-    #popup .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
-    #popup .check-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px 6px; }
-    #popup .check { display: flex; align-items: center; gap: 5px; padding: 2px 0; cursor: pointer; font-size: 11px; color: #a0a0b4; }
-    #popup .check input[type="checkbox"] { width: 13px; height: 13px; accent-color: #e0c070; cursor: pointer; flex-shrink: 0; }
-    #popup .check span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    #popup .sub-opts { display: none; margin: 2px 0 4px 18px; padding: 4px 6px; border-left: 2px solid #2a2a50; background: #13132a; border-radius: 0 4px 4px 0; }
-    #popup .sub-opts.visible { display: block; }
-
-    #popup .belt-row { display: flex; align-items: center; gap: 4px; }
-    #popup .belt-label { font-size: 10px; color: #6a6a80; min-width: 24px; text-align: center; }
-    #popup .belt-row select { width: 52px; padding: 2px 3px; background: #1a1a2e; color: #c8c8d4; border: 1px solid #3a3a55; border-radius: 4px; font-size: 10px; }
-
-    #popup .inv-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; margin-top: 6px; }
-    #popup .inv-cell { height: 18px; background: #e04040; border-radius: 2px; cursor: pointer; border: 1px solid #1a1a2e; transition: background 0.1s; font-size: 8px; display: flex; align-items: center; justify-content: center; color: transparent; user-select: none; }
-    #popup .inv-cell.free { background: #2a4a2a; }
-    #popup .inv-cell:hover { opacity: 0.7; }
-
-    #popup .inv-legend { display: flex; gap: 12px; margin-top: 4px; font-size: 9px; color: #6a6a80; }
-    #popup .inv-legend span { display: flex; align-items: center; gap: 4px; }
-    #popup .inv-legend-box { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-
-    #popup .shortcut-row { display: flex; align-items: center; justify-content: space-between; padding: 3px 0; font-size: 11px; color: #8888a0; }
-    #popup kbd { padding: 2px 6px; background: #22223a; border: 1px solid #3a3a55; border-radius: 3px; font-family: monospace; font-size: 10px; color: #c8c8d4; }
-
-    #popup input[type="range"] { flex: 1; height: 4px; -webkit-appearance: none; appearance: none; background: #2a2a44; border-radius: 2px; outline: none; }
-    #popup input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #e0c070; cursor: pointer; border: none; }
-    #popup #opacity-value { font-size: 11px; color: #8888a0; min-width: 28px; text-align: right; }
-
-    #popup .class-section { display: none; }
-    #popup .class-section.visible { display: block; }
-
-    #popup .textarea-cfg { width: 100%; min-height: 46px; max-height: 90px; padding: 4px 6px; background: #1a1a2e; color: #c8c8d4; border: 1px solid #3a3a55; border-radius: 4px; font-size: 10px; font-family: monospace; resize: vertical; margin-top: 2px; }
-    #popup .textarea-label { font-size: 10px; color: #6a6a80; margin-top: 5px; display: block; }
-
-    #popup .note { font-size: 9px; color: #555568; margin-top: 2px; font-style: italic; }
-
-    #popup .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-    #popup .two-col .setting-row label { min-width: 60px; font-size: 10px; }
+    .stat-box { display: flex; gap: 16px; margin-bottom: 12px; padding: 8px 12px; background: #12122a; border-radius: 6px; border: 1px solid #2a2a44; font-size: 11px; }
+    .stat-box span { color: #8888a0; }
+    .stat-box strong { color: #e0c070; margin-left: 4px; }
   </style>
 </head>
 <body>
 
-<!-- ── Left Column: Real Popup ────────────────────────────────── -->
 <div class="column col-popup">
   <div class="col-title">Popup Preview (360px)</div>
-  <div id="popup">
-    <!-- Header -->
-    <div class="header">
-      <img src="chrome_extension/kzb_header.webp" alt="KZB" class="logo"
-           onerror="this.style.display='none'; this.insertAdjacentHTML('afterend','<div style=&quot;font-size:20px;font-weight:700;color:#e0c070;letter-spacing:4px;&quot;>K Z B</div>')">
-      <span id="version" class="version">v1.4.0</span>
-    </div>
-
-    <!-- Tab Bar (11 tabs) -->
-    <div class="tab-bar">
-      <button class="tab active" data-tab="tab-control">Control</button>
-      <button class="tab" data-tab="tab-scripts">Scripts</button>
-      <button class="tab" data-tab="tab-leech">Leech</button>
-      <button class="tab" data-tab="tab-combat">Combat</button>
-      <button class="tab" data-tab="tab-health">Health</button>
-      <button class="tab" data-tab="tab-class">Class</button>
-      <button class="tab" data-tab="tab-items">Items</button>
-      <button class="tab" data-tab="tab-social">Social</button>
-      <button class="tab" data-tab="tab-general">General</button>
-      <button class="tab" data-tab="tab-advanced">Adv</button>
-      <button class="tab" data-tab="tab-map">Map</button>
-    </div>
-
-    <!-- TAB 1: CONTROL -->
-    <div id="tab-control" class="tab-panel active">
-      <div class="section">
-        <div class="section-title">Connection Status</div>
-        <div class="status-row">
-          <span class="dot" id="agent-dot"></span>
-          <span id="agent-status" class="status-text">Disconnected</span>
-        </div>
-        <div class="status-row">
-          <span class="dot" id="map-dot"></span>
-          <span id="map-status" class="status-text">Disconnected</span>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Statistics</div>
-        <div class="stat-grid">
-          <div class="stat-label">Uptime</div>
-          <div id="stat-uptime" class="stat-value">—</div>
-          <div class="stat-label">Frames</div>
-          <div id="stat-frames" class="stat-value">0</div>
-          <div class="stat-label">Decisions</div>
-          <div id="stat-decisions" class="stat-value">0</div>
-          <div class="stat-label">Potions</div>
-          <div id="stat-potions" class="stat-value">0</div>
-          <div class="stat-label">Loots</div>
-          <div id="stat-loots" class="stat-value">0</div>
-          <div class="stat-label">Chickens</div>
-          <div id="stat-chickens" class="stat-value">0</div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Profile</div>
-        <div class="control-row">
-          <label>Config</label>
-          <select id="config-select" data-cfg="config_name">
-            <option value="">—</option>
-            <option value="amazon">Amazon</option>
-            <option value="sorceress">Sorceress</option>
-            <option value="necromancer">Necromancer</option>
-            <option value="paladin">Paladin</option>
-            <option value="druid">Druid</option>
-            <option value="assassin">Assassin</option>
-            <option value="barbarian">Barbarian</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Controls</div>
-        <div style="display: flex; gap: 4px;">
-          <button id="btn-pause" class="btn">Pause</button>
-          <button id="btn-resume" class="btn">Resume</button>
-          <button id="btn-kill" class="btn btn-danger">Kill</button>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Map Overlay</div>
-        <div style="display: flex; gap: 4px; margin-bottom: 6px;">
-          <button id="btn-map-activate" class="btn btn-ok">Activate</button>
-          <button id="btn-map-deactivate" class="btn btn-warn">Deactivate</button>
-        </div>
-        <div class="setting-row">
-          <label>Opacity</label>
-          <input type="range" id="opacity-slider" min="10" max="255" value="180" style="flex: 1;">
-          <span id="opacity-value" style="min-width: 30px; text-align: right;">180</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 2-11: Stubs (minimal content for now) -->
-    <div id="tab-scripts" class="tab-panel"><div class="section"><div class="section-title">Scripts</div><div class="check"><input type="checkbox" data-cfg="test1"><span>Test Setting 1</span></div></div></div>
-    <div id="tab-leech" class="tab-panel"><div class="section"><div class="section-title">Leech</div><div class="check"><input type="checkbox" data-cfg="test2"><span>Test Setting 2</span></div></div></div>
-    <div id="tab-combat" class="tab-panel"><div class="section"><div class="section-title">Combat</div><div class="check"><input type="checkbox" data-cfg="test3"><span>Test Setting 3</span></div></div></div>
-    <div id="tab-health" class="tab-panel"><div class="section"><div class="section-title">Health</div><div class="check"><input type="checkbox" data-cfg="test4"><span>Test Setting 4</span></div></div></div>
-    <div id="tab-class" class="tab-panel"><div class="section"><div class="section-title">Class</div><div class="check"><input type="checkbox" data-cfg="test5"><span>Test Setting 5</span></div></div></div>
-    <div id="tab-items" class="tab-panel"><div class="section"><div class="section-title">Items</div><div class="check"><input type="checkbox" data-cfg="test6"><span>Test Setting 6</span></div></div></div>
-    <div id="tab-social" class="tab-panel"><div class="section"><div class="section-title">Social</div><div class="check"><input type="checkbox" data-cfg="test7"><span>Test Setting 7</span></div></div></div>
-    <div id="tab-general" class="tab-panel"><div class="section"><div class="section-title">General</div><div class="check"><input type="checkbox" data-cfg="test8"><span>Test Setting 8</span></div></div></div>
-    <div id="tab-advanced" class="tab-panel"><div class="section"><div class="section-title">Advanced</div><div class="check"><input type="checkbox" data-cfg="test9"><span>Test Setting 9</span></div></div></div>
-    <div id="tab-map" class="tab-panel"><div class="section"><div class="section-title">Map</div><button id="btn-cache-stats" class="btn">Get Cache Stats</button></div></div>
-  </div>
+  <iframe id="popup-frame" src="chrome_extension/popup.html"></iframe>
 </div>
 
-<!-- ── Right Column: Test Controls ─────────────────────────────── -->
 <div class="column col-controls">
-  <div class="col-title">Test Harness — 11 Tabs</div>
+  <div class="col-title">Test Harness — Full GUI (all kolbot settings)</div>
 
-  <div class="scenario-group">
-    <h3>Connection Scenarios</h3>
-    <div class="test-grid">
-      <button class="test-btn" onclick="scenario('both_connected')">Both Connected</button>
-      <button class="test-btn" onclick="scenario('both_disconnected')">Both Disconnected</button>
-      <button class="test-btn" onclick="scenario('agent_only')">Agent Only</button>
-      <button class="test-btn" onclick="scenario('map_only')">Map Only</button>
-    </div>
-  </div>
-
-  <div class="scenario-group">
-    <h3>Agent State</h3>
-    <div class="test-grid">
-      <button class="test-btn" onclick="scenario('running')">Running</button>
-      <button class="test-btn" onclick="scenario('paused')">Paused</button>
-      <button class="test-btn" onclick="scenario('high_stats')">High Stats (4h)</button>
-      <button class="test-btn" onclick="scenario('kill')">Kill Switch</button>
-    </div>
+  <div class="stat-box" id="stats-bar">
+    <span>Tabs: <strong id="st-tabs">—</strong></span>
+    <span>Settings: <strong id="st-cfg">—</strong></span>
+    <span>Scripts: <strong id="st-scripts">—</strong></span>
   </div>
 
   <div class="scenario-group">
@@ -347,10 +81,13 @@
   <div class="scenario-group">
     <h3>Profiles</h3>
     <div class="test-grid">
-      <button class="test-btn" onclick="setProfile('sorceress', 'Sorceress')">Sorceress</button>
-      <button class="test-btn" onclick="setProfile('necromancer', 'Necromancer')">Necromancer</button>
-      <button class="test-btn" onclick="setProfile('paladin', 'Paladin')">Paladin</button>
-      <button class="test-btn" onclick="setProfile('barbarian', 'Barbarian')">Barbarian</button>
+      <button class="test-btn" onclick="setProfile('sorceress')">Sorceress</button>
+      <button class="test-btn" onclick="setProfile('necromancer')">Necromancer</button>
+      <button class="test-btn" onclick="setProfile('paladin')">Paladin</button>
+      <button class="test-btn" onclick="setProfile('barbarian')">Barbarian</button>
+      <button class="test-btn" onclick="setProfile('amazon')">Amazon</button>
+      <button class="test-btn" onclick="setProfile('assassin')">Assassin</button>
+      <button class="test-btn" onclick="setProfile('druid')">Druid</button>
     </div>
   </div>
 
@@ -363,7 +100,6 @@
 </div>
 
 <script>
-// ── Log ────────────────────────────────────────────────────────
 const logEl = document.getElementById('log');
 function log(msg, cls) {
   const d = document.createElement('div');
@@ -374,225 +110,114 @@ function log(msg, cls) {
   logEl.scrollTop = logEl.scrollHeight;
 }
 
-// ── DOM shortcuts ──────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-const agentDot = $('agent-dot'), agentStatus = $('agent-status');
-const mapDot = $('map-dot'), mapStatus = $('map-status');
-const btnPause = $('btn-pause'), btnResume = $('btn-resume');
-const btnActivate = $('btn-map-activate'), btnDeactivate = $('btn-map-deactivate');
-const btnKill = $('btn-kill');
-const opSlider = $('opacity-slider'), opValue = $('opacity-value');
-const statUptime = $('stat-uptime'), statFrames = $('stat-frames');
-const statDecisions = $('stat-decisions'), statPotions = $('stat-potions');
-const statLoots = $('stat-loots'), statChickens = $('stat-chickens');
-const configSelect = $('config-select');
+const frame = document.getElementById('popup-frame');
+let popupDoc = null;
 
-// ── Tab Switching ──────────────────────────────────────────────
-document.querySelectorAll('#popup .tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('#popup .tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('#popup .tab-panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    $(tab.dataset.tab).classList.add('active');
-    log('TAB  → ' + tab.textContent, 'log-info');
-  });
+frame.addEventListener('load', () => {
+  try {
+    popupDoc = frame.contentDocument || frame.contentWindow.document;
+    const tabs = popupDoc.querySelectorAll('.tab');
+    const cfgs = popupDoc.querySelectorAll('[data-cfg]');
+    const scripts = popupDoc.querySelectorAll('[data-cfg^="Scripts."]');
+    document.getElementById('st-tabs').textContent = tabs.length;
+    document.getElementById('st-cfg').textContent = cfgs.length;
+    document.getElementById('st-scripts').textContent = scripts.length;
+    log('Popup loaded: ' + tabs.length + ' tabs, ' + cfgs.length + ' settings, ' + scripts.length + ' scripts', 'log-ok');
+  } catch (e) {
+    log('Cannot access iframe (CORS). Open via local server.', 'log-err');
+  }
 });
 
-// ── Mock State ─────────────────────────────────────────────────
-let state = {
-  agentConnected: false, mapConnected: false, paused: false, mapActive: false, opacity: 180,
-  uptime_ms: 0, frames: 0, decisions: 0, potions: 0, loots: 0, chickens: 0,
-};
-
-function setDot(dot, label, connected, text) {
-  dot.className = 'dot ' + (connected ? 'dot-ok' : 'dot-off');
-  label.textContent = text || (connected ? 'Connected' : 'Disconnected');
-}
-
-function fmtTime(ms) {
-  if (!ms || ms <= 0) return '—';
-  const s = Math.floor(ms / 1000);
-  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
-  if (h > 0) return h + 'h ' + m + 'm';
-  if (m > 0) return m + 'm ' + sec + 's';
-  return sec + 's';
-}
-function fmtNum(n) { return (n || 0).toLocaleString(); }
-
-function render() {
-  if (state.agentConnected) {
-    setDot(agentDot, agentStatus, true, state.paused ? 'Paused' : 'Running');
-    btnPause.disabled = state.paused;
-    btnResume.disabled = !state.paused;
-    statUptime.textContent = fmtTime(state.uptime_ms);
-    statFrames.textContent = fmtNum(state.frames);
-    statDecisions.textContent = fmtNum(state.decisions);
-    statPotions.textContent = fmtNum(state.potions);
-    statLoots.textContent = fmtNum(state.loots);
-    statChickens.textContent = fmtNum(state.chickens);
-  } else {
-    setDot(agentDot, agentStatus, false);
-    btnPause.disabled = true;
-    btnResume.disabled = true;
-    statUptime.textContent = '—';
-    statFrames.textContent = '0';
-    statDecisions.textContent = '0';
-    statPotions.textContent = '0';
-    statLoots.textContent = '0';
-    statChickens.textContent = '0';
-  }
-  if (state.mapConnected) {
-    setDot(mapDot, mapStatus, true);
-    btnActivate.disabled = state.mapActive;
-    btnDeactivate.disabled = !state.mapActive;
-  } else {
-    setDot(mapDot, mapStatus, false);
-    btnActivate.disabled = true;
-    btnDeactivate.disabled = true;
-  }
-  opSlider.value = state.opacity;
-  opValue.textContent = state.opacity;
-}
-
-// ── Tab Switching from harness ─────────────────────────────────
 function switchTab(tabId) {
-  const tab = document.querySelector('#popup .tab[data-tab="' + tabId + '"]');
-  if (tab) {
-    tab.click();
-  }
+  if (!popupDoc) return;
+  const tab = popupDoc.querySelector('.tab[data-tab="' + tabId + '"]');
+  if (tab) { tab.click(); log('TAB → ' + tab.textContent, 'log-info'); }
 }
 
-// ── Scenarios ──────────────────────────────────────────────────
-function scenario(name) {
-  document.querySelectorAll('.test-btn').forEach(b => b.classList.remove('active'));
-  if (event && event.target) event.target.classList.add('active');
-
-  switch (name) {
-    case 'both_connected':
-      Object.assign(state, { agentConnected: true, mapConnected: true, paused: false, mapActive: false,
-        uptime_ms: 342000, frames: 15234, decisions: 8721, potions: 47, loots: 312, chickens: 3 });
-      log('SCENARIO  Both connected, running', 'log-ok'); break;
-    case 'both_disconnected':
-      Object.assign(state, { agentConnected: false, mapConnected: false, paused: false, mapActive: false,
-        uptime_ms: 0, frames: 0, decisions: 0, potions: 0, loots: 0, chickens: 0 });
-      log('SCENARIO  Both disconnected', 'log-err'); break;
-    case 'agent_only':
-      Object.assign(state, { agentConnected: true, mapConnected: false, paused: false,
-        uptime_ms: 120000, frames: 5000, decisions: 2800, potions: 12, loots: 89, chickens: 1 });
-      log('SCENARIO  Agent only', 'log-info'); break;
-    case 'map_only':
-      Object.assign(state, { agentConnected: false, mapConnected: true, paused: false, mapActive: false, uptime_ms: 0 });
-      log('SCENARIO  Map only', 'log-info'); break;
-    case 'running':
-      Object.assign(state, { agentConnected: true, mapConnected: true, paused: false,
-        uptime_ms: 567000, frames: 28000, decisions: 16500, potions: 83, loots: 541, chickens: 7 });
-      log('SCENARIO  Running (farming)', 'log-ok'); break;
-    case 'paused':
-      Object.assign(state, { agentConnected: true, mapConnected: true, paused: true,
-        uptime_ms: 342000, frames: 15234, decisions: 8721, potions: 47, loots: 312, chickens: 3 });
-      log('SCENARIO  Paused', 'log-info'); break;
-    case 'high_stats':
-      Object.assign(state, { agentConnected: true, mapConnected: true, paused: false,
-        uptime_ms: 14400000, frames: 864000, decisions: 512000, potions: 1247, loots: 8934, chickens: 42 });
-      log('SCENARIO  Long session (4h)', 'log-ok'); break;
-    case 'kill':
-      Object.assign(state, { agentConnected: false, mapConnected: false, mapActive: false,
-        uptime_ms: 0, frames: 0, decisions: 0, potions: 0, loots: 0, chickens: 0 });
-      log('KILL  All processes terminated', 'log-err'); break;
-  }
-  render();
-}
-
-function setProfile(val, label) {
-  configSelect.value = val;
+function setProfile(cls) {
+  if (!popupDoc) return;
+  const sel = popupDoc.querySelector('#config-select');
+  if (sel) { sel.value = cls; sel.dispatchEvent(new Event('change')); }
   switchTab('tab-class');
-  log('PROFILE  ' + label, 'log-info');
+  log('PROFILE → ' + cls, 'log-info');
 }
 
-// ── Automated Tests ────────────────────────────────────────────
 function runAllTests() {
+  if (!popupDoc) { log('No popup document available', 'log-err'); return; }
   log('════════════════════════════════════════', 'log-info');
   log('RUNNING ALL TESTS', 'log-info');
   let pass = 0, fail = 0;
 
-  function assert(name, condition) {
-    if (condition) { log('  PASS  ' + name, 'log-ok'); pass++; }
+  function assert(name, cond) {
+    if (cond) { log('  PASS  ' + name, 'log-ok'); pass++; }
     else { log('  FAIL  ' + name, 'log-err'); fail++; }
   }
 
-  // ── Structure tests ──
-  const tabs = document.querySelectorAll('#popup .tab');
-  const panels = document.querySelectorAll('#popup .tab-panel');
+  // Structure
+  const tabs = popupDoc.querySelectorAll('.tab');
+  const panels = popupDoc.querySelectorAll('.tab-panel');
   assert('11 tabs exist', tabs.length === 11);
   assert('11 panels exist', panels.length === 11);
 
-  // ── Tab IDs ──
-  const expectedTabs = ['tab-control','tab-scripts','tab-leech','tab-combat','tab-health',
-                         'tab-class','tab-items','tab-social','tab-general','tab-advanced','tab-map'];
-  expectedTabs.forEach(id => {
-    assert('Panel exists: ' + id, !!$(id));
+  // Tab IDs
+  ['tab-control','tab-scripts','tab-leech','tab-combat','tab-health',
+   'tab-class','tab-items','tab-social','tab-general','tab-advanced','tab-map'].forEach(id => {
+    assert('Panel: ' + id, !!popupDoc.getElementById(id));
   });
 
-  // ── Tab switching ──
-  tabs[1].click(); // Scripts
-  assert('Scripts tab activates', $('tab-scripts').classList.contains('active'));
-  tabs[0].click(); // Back to Control
+  // Tab switching
+  tabs[1].click();
+  assert('Scripts tab activates', popupDoc.getElementById('tab-scripts').classList.contains('active'));
+  tabs[0].click();
 
-  // ── Disconnected state ──
-  scenario('both_disconnected');
-  assert('Pause disabled when disconnected', btnPause.disabled === true);
-  assert('Resume disabled when disconnected', btnResume.disabled === true);
-  assert('Agent dot off', agentDot.classList.contains('dot-off'));
+  // Config elements
+  const cfgEls = popupDoc.querySelectorAll('[data-cfg]');
+  assert('500+ config elements', cfgEls.length >= 500);
+  log('  INFO  ' + cfgEls.length + ' config elements found', 'log-info');
 
-  // ── Connected state ──
-  scenario('both_connected');
-  assert('Agent dot green', agentDot.classList.contains('dot-ok'));
-  assert('Map dot green', mapDot.classList.contains('dot-ok'));
-  assert('Pause enabled when running', btnPause.disabled === false);
-  assert('Uptime shows value', statUptime.textContent !== '—');
-  assert('Frames > 0', statFrames.textContent !== '0');
+  // All 77 scripts from _BaseConfigFile.js
+  const expectedScripts = [
+    'Scripts.Corpsefire','Scripts.Bishibosh','Scripts.Mausoleum','Scripts.Rakanishu',
+    'Scripts.UndergroundPassage','Scripts.Coldcrow','Scripts.Tristram','Scripts.Pit',
+    'Scripts.Treehead','Scripts.Smith','Scripts.BoneAsh','Scripts.Countess',
+    'Scripts.Andariel','Scripts.Cows','Scripts.Radament','Scripts.CreepingFeature',
+    'Scripts.Coldworm','Scripts.AncientTunnels','Scripts.Summoner','Scripts.Tombs',
+    'Scripts.Duriel','Scripts.Stormtree','Scripts.BattlemaidSarina','Scripts.KurastTemples',
+    'Scripts.Icehawk','Scripts.Endugu','Scripts.Travincal','Scripts.Mephisto',
+    'Scripts.OuterSteppes','Scripts.Izual','Scripts.Hephasto','Scripts.Diablo',
+    'Scripts.Pindleskin','Scripts.Nihlathak','Scripts.Eldritch','Scripts.Eyeback',
+    'Scripts.SharpTooth','Scripts.ThreshSocket','Scripts.Abaddon','Scripts.Frozenstein',
+    'Scripts.Bonesaw','Scripts.Snapchip','Scripts.Worldstone','Scripts.Baal',
+    'Scripts.GetFade','Scripts.GetKeys','Scripts.GetEssences','Scripts.Follower',
+    'Scripts.CrushTele','Scripts.Gamble','Scripts.Crafting','Scripts.IPHunter',
+    'Scripts.ShopBot','Scripts.GhostBusters','Scripts.ChestMania','Scripts.ClearAnyArea',
+    'Scripts.GemHunter','Scripts.WPGetter','Scripts.Questing','Scripts.UserAddon',
+    'Scripts.BattleOrders','Scripts.BoBarbHelper','Scripts.AutoBaal','Scripts.BaalHelper',
+    'Scripts.BaalAssistant','Scripts.DiabloHelper','Scripts.AutoChaos','Scripts.SealLeecher',
+    'Scripts.TristramLeech','Scripts.TravincalLeech','Scripts.Wakka','Scripts.MFHelper',
+    'Scripts.OrgTorch','Scripts.OrgTorchHelper','Scripts.Rusher','Scripts.Rushee',
+    'Scripts.ControlBot'
+  ];
+  let missing = [];
+  expectedScripts.forEach(s => {
+    if (!popupDoc.querySelector('[data-cfg="' + s + '"]')) missing.push(s);
+  });
+  assert('All 77 kolbot scripts present', missing.length === 0);
+  if (missing.length > 0) log('  MISSING: ' + missing.join(', '), 'log-err');
 
-  // ── Paused state ──
-  scenario('paused');
-  assert('Status shows Paused', agentStatus.textContent === 'Paused');
-  assert('Pause disabled when paused', btnPause.disabled === true);
-  assert('Resume enabled when paused', btnResume.disabled === false);
+  // Buttons
+  assert('Pause button', !!popupDoc.getElementById('btn-pause'));
+  assert('Resume button', !!popupDoc.getElementById('btn-resume'));
+  assert('Kill button', !!popupDoc.getElementById('btn-kill'));
 
-  // ── High stats ──
-  scenario('high_stats');
-  assert('Uptime shows hours', statUptime.textContent.includes('h'));
-  assert('Frames formatted with commas', statFrames.textContent.includes(','));
-
-  // ── Config elements ──
-  const cfgEls = document.querySelectorAll('#popup [data-cfg]');
-  assert('Has data-cfg elements', cfgEls.length >= 10);
-  log('  INFO  Found ' + cfgEls.length + ' config elements', 'log-info');
-
-  // ── Buttons ──
-  assert('Pause button exists', !!btnPause);
-  assert('Resume button exists', !!btnResume);
-  assert('Kill button exists', !!btnKill);
-  assert('Map Activate exists', !!btnActivate);
-  assert('Map Deactivate exists', !!btnDeactivate);
-
-  // ── Opacity slider ──
-  opSlider.value = 200;
-  opSlider.dispatchEvent(new Event('input'));
-  assert('Opacity updates', opValue.textContent === '200');
-
-  // ── Summary ──
+  // Summary
   log('════════════════════════════════════════', 'log-info');
   log('RESULTS: ' + pass + '/' + (pass + fail) + ' passed, ' + fail + ' failed', fail > 0 ? 'log-err' : 'log-ok');
   if (fail === 0) log('ALL TESTS PASSED!', 'log-ok');
-
-  scenario('both_disconnected');
 }
 
-// ── Init ───────────────────────────────────────────────────────
-render();
 log('KZB GUI Test Harness loaded', 'log-ok');
-log('11 tabs: Control, Scripts, Leech, Combat, Health, Class, Items, Social, General, Adv, Map', 'log-info');
-log('Click scenarios or "Run All Tests"', 'log-info');
+log('Iframing real popup.html with full kolbot settings', 'log-info');
 </script>
 </body>
 </html>
