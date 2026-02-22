@@ -7,7 +7,7 @@ pub mod training;
 pub mod vision;
 
 use config::AgentConfig;
-use decision::DecisionEngine;
+use decision::GameManager;
 use native_messaging::{AgentCommand, NativeMessagingHost, SharedAgentStats};
 use stealth::*;
 use std::path::PathBuf;
@@ -146,7 +146,7 @@ async fn main() {
     let loop_cadence = Arc::clone(&cadence);
 
     let agent_loop = tokio::task::spawn_blocking(move || {
-        let mut engine = DecisionEngine::new(loop_config.clone());
+        let mut game_mgr = GameManager::new(loop_config.clone());
         let mut capture_timing = CaptureTiming::new(capture_timing_config);
         let logger = training::TrainingLogger::new(data_dir().join("training_logs"));
 
@@ -182,7 +182,7 @@ async fn main() {
                         tracing::info!("Config update received");
                         if let Ok(yaml_str) = serde_json::to_string(&data) {
                             if let Ok(new_config) = serde_yaml::from_str::<AgentConfig>(&yaml_str) {
-                                engine.reload_config(new_config);
+                                game_mgr.reload_config(new_config);
                             }
                         }
                     }
@@ -205,7 +205,7 @@ async fn main() {
             };
 
             // ─── Decision ──────────────────────────────────────
-            let decision = engine.decide(&state);
+            let decision = game_mgr.decide(&state);
             loop_stats.decisions_made.fetch_add(1, Ordering::Relaxed);
             loop_stats.frames_processed.fetch_add(1, Ordering::Relaxed);
 
@@ -447,6 +447,7 @@ fn data_dir() -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use decision::DecisionEngine;
     use rand::Rng;
 
     #[tokio::test]

@@ -194,20 +194,44 @@ chrome.commands.onCommand.addListener((command) => {
 // EXTENSION MESSAGE API (from devtools / popup if added later)
 // ═══════════════════════════════════════════════════════════════
 
+// Track last known stats so popup gets instant response
+let lastAgentStats = null;
+
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   switch (request.cmd) {
-    // Agent commands
+    // ── Status overview (instant, no native round-trip) ──
+    case "getStatus":
+      sendResponse({
+        agent: { connected: agentPort !== null, stats: lastAgentStats },
+        map: { connected: mapPort !== null, enabled: mapEnabled, opacity: mapOpacity },
+      });
+      break;
+
+    // ── Agent commands ──
     case "get_stats":
       if (!agentPort) { sendResponse({ error: "agent_not_connected" }); return; }
       agentPort.postMessage({ cmd: "get_stats" });
-      const statsListener = (msg) => {
-        if (msg.cmd === "stats") {
-          agentPort.onMessage.removeListener(statsListener);
-          sendResponse(msg.data);
-        }
-      };
-      agentPort.onMessage.addListener(statsListener);
-      return true;
+      {
+        let responded = false;
+        const statsListener = (msg) => {
+          if (msg.cmd === "stats" && !responded) {
+            responded = true;
+            agentPort.onMessage.removeListener(statsListener);
+            lastAgentStats = msg.data;
+            sendResponse(msg.data);
+          }
+        };
+        agentPort.onMessage.addListener(statsListener);
+        // Timeout: don't leave the channel hanging
+        setTimeout(() => {
+          if (!responded) {
+            responded = true;
+            agentPort.onMessage.removeListener(statsListener);
+            sendResponse(lastAgentStats || { error: "timeout" });
+          }
+        }, 3000);
+      }
+      return true; // keep sendResponse alive for async
 
     case "pause":
       if (agentPort) agentPort.postMessage({ cmd: "pause", reason: request.reason || "manual" });
@@ -219,7 +243,14 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
       sendResponse({ status: "sent" });
       break;
 
-    // Map commands
+    case "update_config":
+      if (agentPort && request.data) {
+        agentPort.postMessage({ cmd: "update_config", data: request.data });
+      }
+      sendResponse({ status: "sent" });
+      break;
+
+    // ── Map commands ──
     case "getMapStatus":
       sendResponse({ enabled: mapEnabled, opacity: mapOpacity, connected: mapPort !== null });
       break;
@@ -227,12 +258,14 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     case "toggleMap":
       mapEnabled = !mapEnabled;
       if (mapPort) mapPort.postMessage({ cmd: "toggle_map", enabled: mapEnabled });
+      chrome.storage.local.set({ mapEnabled });
       sendResponse({ enabled: mapEnabled });
       break;
 
     case "setOpacity":
       mapOpacity = Math.max(10, Math.min(255, request.value));
       if (mapPort) mapPort.postMessage({ cmd: "set_opacity", opacity: mapOpacity });
+      chrome.storage.local.set({ mapOpacity });
       sendResponse({ opacity: mapOpacity });
       break;
 

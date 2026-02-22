@@ -1,0 +1,223 @@
+/* Display Calibration Helper — Popup Styles */
+/* Dark theme matching D2R aesthetic */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 320px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  background: #1a1a2e;
+  color: #c8c8d4;
+  padding: 12px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #2a2a44;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #e0c070;
+}
+
+.version {
+  font-size: 11px;
+  color: #6a6a80;
+}
+
+/* Sections */
+.section {
+  margin-bottom: 12px;
+  padding: 10px;
+  background: #16162a;
+  border-radius: 6px;
+  border: 1px solid #2a2a44;
+}
+
+.section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #8888a0;
+  margin-bottom: 8px;
+}
+
+/* Status rows */
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-ok {
+  background: #40c040;
+  box-shadow: 0 0 4px #40c04080;
+}
+
+.dot-off {
+  background: #606070;
+}
+
+.dot-warn {
+  background: #e0a020;
+  box-shadow: 0 0 4px #e0a02080;
+}
+
+.status-text {
+  margin-left: auto;
+  font-size: 12px;
+  color: #8888a0;
+}
+
+/* Control rows */
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.control-row label {
+  font-size: 12px;
+  color: #8888a0;
+  min-width: 48px;
+}
+
+.control-row select {
+  flex: 1;
+  padding: 4px 6px;
+  background: #1a1a2e;
+  color: #c8c8d4;
+  border: 1px solid #3a3a55;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.control-row select:focus {
+  outline: none;
+  border-color: #e0c070;
+}
+
+/* Buttons */
+.btn {
+  padding: 5px 14px;
+  border: 1px solid #3a3a55;
+  border-radius: 4px;
+  background: #22223a;
+  color: #c8c8d4;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  background: #2a2a50;
+  border-color: #5a5a75;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn-warn {
+  border-color: #8a6020;
+  color: #e0a020;
+}
+
+.btn-warn:hover:not(:disabled) {
+  background: #2a2410;
+  border-color: #e0a020;
+}
+
+.btn-ok {
+  border-color: #206a20;
+  color: #40c040;
+}
+
+.btn-ok:hover:not(:disabled) {
+  background: #102a10;
+  border-color: #40c040;
+}
+
+.btn-sm {
+  padding: 3px 10px;
+  font-size: 11px;
+}
+
+/* Stats grid */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #6a6a80;
+}
+
+.stat-value {
+  font-size: 12px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #d0d0e0;
+}
+
+/* Range slider */
+input[type="range"] {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #2a2a44;
+  border-radius: 2px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e0c070;
+  cursor: pointer;
+  border: none;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e0c070;
+  cursor: pointer;
+  border: none;
+}
+
+#opacity-value {
+  font-size: 11px;
+  color: #8888a0;
+  min-width: 28px;
+  text-align: right;
+}

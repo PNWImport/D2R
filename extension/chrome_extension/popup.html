@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <span class="title">Display Calibration</span>
+    <span id="version" class="version"></span>
+  </div>
+
+  <!-- Connection status -->
+  <div class="section">
+    <div class="status-row">
+      <span class="dot" id="agent-dot"></span>
+      <span>Agent</span>
+      <span id="agent-status" class="status-text">—</span>
+    </div>
+    <div class="status-row">
+      <span class="dot" id="map-dot"></span>
+      <span>Map Host</span>
+      <span id="map-status" class="status-text">—</span>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="section">
+    <div class="control-row">
+      <button id="btn-pause" class="btn btn-warn" disabled>Pause</button>
+      <button id="btn-resume" class="btn btn-ok" disabled>Resume</button>
+    </div>
+    <div class="control-row">
+      <label>Config</label>
+      <select id="config-select">
+        <option value="">— default —</option>
+        <option value="sorceress_blizzard">Sorceress — Blizzard</option>
+        <option value="sorceress_light">Sorceress — Lightning</option>
+        <option value="paladin_hammerdin">Paladin — Hammerdin</option>
+        <option value="amazon_javazon">Amazon — Javazon</option>
+        <option value="necro_summon">Necromancer — Summon</option>
+        <option value="assassin_trapsin">Assassin — Trapsin</option>
+        <option value="barbarian_ww">Barbarian — Whirlwind</option>
+        <option value="druid_wind">Druid — Wind</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="section">
+    <div class="section-title">Session</div>
+    <div class="stat-grid">
+      <span class="stat-label">Uptime</span>
+      <span id="stat-uptime" class="stat-value">—</span>
+      <span class="stat-label">Frames</span>
+      <span id="stat-frames" class="stat-value">0</span>
+      <span class="stat-label">Decisions</span>
+      <span id="stat-decisions" class="stat-value">0</span>
+      <span class="stat-label">Potions</span>
+      <span id="stat-potions" class="stat-value">0</span>
+      <span class="stat-label">Loots</span>
+      <span id="stat-loots" class="stat-value">0</span>
+      <span class="stat-label">Chickens</span>
+      <span id="stat-chickens" class="stat-value">0</span>
+    </div>
+  </div>
+
+  <!-- Map overlay -->
+  <div class="section">
+    <div class="section-title">Map Overlay</div>
+    <div class="control-row">
+      <button id="btn-map-toggle" class="btn btn-sm">Toggle</button>
+      <span id="map-enabled-label" class="status-text">—</span>
+    </div>
+    <div class="control-row">
+      <label>Opacity</label>
+      <input type="range" id="opacity-slider" min="10" max="255" step="5" value="180">
+      <span id="opacity-value">180</span>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

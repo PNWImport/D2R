@@ -86,6 +86,9 @@ pub struct FrameState {
     pub in_town: bool,
     pub current_act: u8,
     pub motion_magnitude: f32,
+    pub at_menu: bool,          // main menu / char select / difficulty select
+    pub loading_screen: bool,   // loading screen between areas
+    pub inventory_full: bool,   // no open inventory slots detected
 
     // Character screen position (center of sprite)
     pub char_screen_x: u16,
@@ -129,6 +132,9 @@ impl Default for FrameState {
             in_town: true,
             current_act: 1,
             motion_magnitude: 0.0,
+            at_menu: false,
+            loading_screen: false,
+            inventory_full: false,
             char_screen_x: 400,
             char_screen_y: 300,
             loot_label_count: 0,
