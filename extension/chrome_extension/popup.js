@@ -1,6 +1,11 @@
 // KZB Control Panel — Enhanced Popup Controller with full 400+ settings support
 // Communicates with background.js via chrome.runtime.sendMessage
 
+// Guard for non-extension environments (test harness preview)
+if (typeof chrome === "undefined") window.chrome = {};
+if (!chrome.runtime) chrome.runtime = { sendMessage: (m, cb) => cb && cb({}), getManifest: () => ({ version: "test" }) };
+if (!chrome.storage) chrome.storage = { local: { get: (k, cb) => cb && cb({}), set: () => {} } };
+
 const $ = (id) => document.getElementById(id);
 
 // ─── Elements ────────────────────────────────────────────────

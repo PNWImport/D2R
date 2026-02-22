@@ -20,7 +20,7 @@
       overflow-y: auto;
     }
     .col-popup {
-      width: 364px;
+      width: 384px;
       flex-shrink: 0;
       padding: 12px;
       background: #111122;
@@ -41,116 +41,14 @@
       border-bottom: 1px solid #222;
     }
 
-    /* ── Popup Replica (from popup.css) ───────────────────────── */
-    #popup {
-      width: 340px;
-      max-height: none;
-      font-size: 13px;
-      background: #1a1a2e;
-      color: #c8c8d4;
-      padding: 10px;
-      border-radius: 8px;
+    /* ── Popup iframe ──────────────────────────────────────────── */
+    #popup-frame {
+      width: 364px;
+      height: calc(100vh - 50px);
       border: 1px solid #2a2a44;
+      border-radius: 8px;
+      background: #1a1a2e;
     }
-    #popup * { box-sizing: border-box; }
-    #popup .header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 8px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid #2a2a44;
-      position: relative;
-    }
-    #popup .logo { max-width: 280px; max-height: 60px; width: auto; height: auto; margin-bottom: 4px; }
-    #popup .version { position: absolute; top: 4px; right: 0; font-size: 10px; color: #6a6a80; }
-
-    /* Tabs */
-    #popup .tab-bar {
-      display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 8px;
-      padding: 3px; background: #12122a; border-radius: 6px; border: 1px solid #2a2a44;
-    }
-    #popup .tab {
-      flex: 1; min-width: 0; padding: 5px 2px; background: transparent;
-      border: 1px solid transparent; border-radius: 4px; color: #6a6a80;
-      font-size: 10px; font-weight: 500; cursor: pointer; transition: all 0.12s;
-      text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    #popup .tab:hover { color: #aaa; background: #1a1a30; }
-    #popup .tab.active { background: #2a2a50; color: #e0c070; border-color: #3a3a60; }
-    #popup .tab-panel { display: none; }
-    #popup .tab-panel.active { display: block; }
-
-    /* Sections */
-    #popup .section { margin-bottom: 8px; padding: 8px; background: #16162a; border-radius: 6px; border: 1px solid #2a2a44; }
-    #popup .section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #8888a0; margin-bottom: 6px; }
-
-    /* Status */
-    #popup .status-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
-    #popup .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    #popup .dot-ok { background: #40c040; box-shadow: 0 0 4px #40c04080; }
-    #popup .dot-off { background: #606070; }
-    #popup .status-text { margin-left: auto; font-size: 12px; color: #8888a0; }
-
-    /* Controls */
-    #popup .control-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
-    #popup .control-row label { font-size: 12px; color: #8888a0; min-width: 44px; }
-    #popup .control-row select, #popup .setting-row select {
-      flex: 1; padding: 3px 5px; background: #1a1a2e; color: #c8c8d4;
-      border: 1px solid #3a3a55; border-radius: 4px; font-size: 11px;
-    }
-    #popup .setting-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
-    #popup .setting-row label { font-size: 11px; color: #8888a0; min-width: 100px; flex-shrink: 0; }
-
-    /* Inputs */
-    #popup .input-sm {
-      width: 70px; padding: 3px 5px; background: #1a1a2e; color: #c8c8d4;
-      border: 1px solid #3a3a55; border-radius: 4px; font-size: 11px; text-align: right;
-    }
-    #popup .input-xs {
-      width: 36px; padding: 2px 4px; background: #1a1a2e; color: #c8c8d4;
-      border: 1px solid #3a3a55; border-radius: 4px; font-size: 11px; text-align: center;
-    }
-
-    /* Buttons */
-    #popup .btn { padding: 5px 14px; border: 1px solid #3a3a55; border-radius: 4px; background: #22223a; color: #c8c8d4; font-size: 12px; cursor: pointer; transition: all 0.15s; }
-    #popup .btn:hover:not(:disabled) { background: #2a2a50; border-color: #5a5a75; }
-    #popup .btn:disabled { opacity: 0.4; cursor: default; }
-    #popup .btn-warn { border-color: #8a6020; color: #e0a020; }
-    #popup .btn-warn:hover:not(:disabled) { background: #2a2410; border-color: #e0a020; }
-    #popup .btn-ok { border-color: #206a20; color: #40c040; }
-    #popup .btn-ok:hover:not(:disabled) { background: #102a10; border-color: #40c040; }
-    #popup .btn-danger { border-color: #8a2020; color: #e04040; }
-    #popup .btn-danger:hover:not(:disabled) { background: #2a1010; border-color: #e04040; }
-
-    /* Stats */
-    #popup .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; }
-    #popup .stat-label { font-size: 11px; color: #6a6a80; }
-    #popup .stat-value { font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; color: #d0d0e0; }
-
-    /* Checkboxes */
-    #popup .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
-    #popup .check { display: flex; align-items: center; gap: 5px; padding: 2px 0; cursor: pointer; font-size: 11px; color: #a0a0b4; }
-    #popup .check input[type="checkbox"] { width: 13px; height: 13px; accent-color: #e0c070; cursor: pointer; flex-shrink: 0; }
-    #popup .check span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    /* Belt */
-    #popup .belt-row { display: flex; align-items: center; gap: 4px; }
-    #popup .belt-label { font-size: 10px; color: #6a6a80; min-width: 24px; text-align: center; }
-    #popup .belt-row select { width: 52px; padding: 2px 3px; background: #1a1a2e; color: #c8c8d4; border: 1px solid #3a3a55; border-radius: 4px; font-size: 10px; }
-
-    /* Shortcuts */
-    #popup .shortcut-row { display: flex; align-items: center; justify-content: space-between; padding: 3px 0; font-size: 11px; color: #8888a0; }
-    #popup kbd { padding: 2px 6px; background: #22223a; border: 1px solid #3a3a55; border-radius: 3px; font-family: monospace; font-size: 10px; color: #c8c8d4; }
-
-    /* Range */
-    #popup input[type="range"] { flex: 1; height: 4px; -webkit-appearance: none; appearance: none; background: #2a2a44; border-radius: 2px; outline: none; }
-    #popup input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #e0c070; cursor: pointer; border: none; }
-    #popup #opacity-value { font-size: 11px; color: #8888a0; min-width: 28px; text-align: right; }
-
-    /* Class sections */
-    #popup .class-section { display: none; }
-    #popup .class-section.visible { display: block; }
 
     /* ── Test Controls ────────────────────────────────────────── */
     .scenario-group { margin-bottom: 16px; }
@@ -163,6 +61,8 @@
     .test-btn:hover { background: #222244; border-color: #4a4a66; color: #dde; }
     .test-btn.active { background: #1a2a1a; border-color: #40c040; color: #40c040; }
 
+    .test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+
     #log {
       margin-top: 12px; background: #0a0a14; border: 1px solid #1a1a2a; border-radius: 4px;
       padding: 10px; font-family: "SF Mono", "Fira Code", monospace; font-size: 11px;
@@ -172,423 +72,91 @@
     .log-info { color: #68a; }
     .log-ok { color: #4a4; }
     .log-cmd { color: #a8a; }
+
+    /* Summary bar */
+    .summary-bar {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      padding: 8px 12px; margin-bottom: 12px;
+      background: #12122a; border-radius: 6px; border: 1px solid #2a2a44;
+      font-size: 11px; color: #8888a0;
+    }
+    .summary-bar .stat { display: flex; gap: 4px; }
+    .summary-bar .val { color: #e0c070; font-weight: 600; }
   </style>
 </head>
 <body>
 
-<!-- ── Left Column: Full Popup Replica ─────────────────────────── -->
+<!-- ── Left Column: Real Popup via iframe ────────────────────────── -->
 <div class="column col-popup">
-  <div class="col-title">Popup Preview (340px)</div>
-  <div id="popup">
-    <!-- Header -->
-    <div class="header">
-      <img id="logo" src="chrome_extension/kzb_header.webp" alt="KZB" class="logo"
-           onerror="this.style.display='none'; this.insertAdjacentHTML('afterend','<div style=&quot;font-size:20px;font-weight:700;color:#e0c070;letter-spacing:4px;&quot;>K Z B</div>')">
-      <span id="version" class="version">v1.4.0</span>
-    </div>
-
-    <!-- Tab Bar -->
-    <div class="tab-bar">
-      <button class="tab active" data-tab="tab-control">Control</button>
-      <button class="tab" data-tab="tab-scripts">Scripts</button>
-      <button class="tab" data-tab="tab-combat">Combat</button>
-      <button class="tab" data-tab="tab-chicken">Chicken</button>
-      <button class="tab" data-tab="tab-char">Class</button>
-      <button class="tab" data-tab="tab-items">Items</button>
-      <button class="tab" data-tab="tab-map">Map</button>
-      <button class="tab" data-tab="tab-settings">Settings</button>
-    </div>
-
-    <!-- TAB: CONTROL -->
-    <div id="tab-control" class="tab-panel active">
-      <div class="section">
-        <div class="status-row">
-          <span class="dot dot-off" id="agent-dot"></span>
-          <span>Agent</span>
-          <span id="agent-status" class="status-text">Disconnected</span>
-        </div>
-        <div class="status-row">
-          <span class="dot dot-off" id="map-dot"></span>
-          <span>Map Host</span>
-          <span id="map-status" class="status-text">Disconnected</span>
-        </div>
-      </div>
-      <div class="section">
-        <div class="control-row">
-          <button id="btn-pause" class="btn btn-warn" disabled>Pause</button>
-          <button id="btn-resume" class="btn btn-ok" disabled>Resume</button>
-        </div>
-        <div class="control-row">
-          <label>Profile</label>
-          <select id="config-select">
-            <option value="">-- default --</option>
-            <option value="sorceress_blizzard">Sorceress -- Blizzard</option>
-            <option value="sorceress_light">Sorceress -- Lightning</option>
-            <option value="sorceress_nova">Sorceress -- Nova</option>
-            <option value="paladin_hammerdin">Paladin -- Hammerdin</option>
-            <option value="paladin_smiter">Paladin -- Smiter</option>
-            <option value="amazon_javazon">Amazon -- Javazon</option>
-            <option value="amazon_bowazon">Amazon -- Bowazon</option>
-            <option value="necro_summon">Necromancer -- Summon</option>
-            <option value="necro_poison">Necromancer -- Poison</option>
-            <option value="necro_bone">Necromancer -- Bone</option>
-            <option value="assassin_trapsin">Assassin -- Trapsin</option>
-            <option value="assassin_whirlsin">Assassin -- Whirlsin</option>
-            <option value="barbarian_ww">Barbarian -- Whirlwind</option>
-            <option value="barbarian_berserk">Barbarian -- Berserk</option>
-            <option value="druid_wind">Druid -- Wind</option>
-            <option value="druid_fire">Druid -- Fire</option>
-            <option value="druid_fury">Druid -- Fury</option>
-          </select>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-title">Session</div>
-        <div class="stat-grid">
-          <span class="stat-label">Uptime</span><span id="stat-uptime" class="stat-value">--</span>
-          <span class="stat-label">Frames</span><span id="stat-frames" class="stat-value">0</span>
-          <span class="stat-label">Decisions</span><span id="stat-decisions" class="stat-value">0</span>
-          <span class="stat-label">Potions</span><span id="stat-potions" class="stat-value">0</span>
-          <span class="stat-label">Loots</span><span id="stat-loots" class="stat-value">0</span>
-          <span class="stat-label">Chickens</span><span id="stat-chickens" class="stat-value">0</span>
-        </div>
-      </div>
-      <div class="section">
-        <div class="control-row">
-          <button id="btn-kill" class="btn btn-danger">Kill Switch</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB: SCRIPTS -->
-    <div id="tab-scripts" class="tab-panel">
-      <div class="section">
-        <div class="section-title">Boss Runs</div>
-        <div class="check-grid">
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Mephisto" checked><span>Mephisto</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Baal"><span>Baal</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Diablo"><span>Diablo</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Andariel"><span>Andariel</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Duriel"><span>Duriel</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Pindleskin" checked><span>Pindleskin</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Nihlathak"><span>Nihlathak</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Countess"><span>Countess</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Summoner"><span>Summoner</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Izual"><span>Izual</span></label>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-title">Area Runs</div>
-        <div class="check-grid">
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Travincal" checked><span>Travincal</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Pit"><span>The Pit</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.AncientTunnels"><span>Ancient Tunnels</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.ChaosRuns"><span>Chaos Sanctuary</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.WorldstoneKeep"><span>Worldstone Keep</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Cows"><span>Cows</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Tristram"><span>Tristram</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Shenk"><span>Shenk/Eldritch</span></label>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-title">Special</div>
-        <div class="check-grid">
-          <label class="check"><input type="checkbox" data-cfg="Scripts.UberTristram"><span>Uber Tristram</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.OrgTorch"><span>Organ/Torch</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.GetKeys"><span>Key Farming</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.GetEssences"><span>Essences</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Rush"><span>Rush</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.Questing"><span>Questing</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.ChestMania"><span>Chest Runs</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Scripts.GemHunter"><span>Gem Hunter</span></label>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-title">Run Settings</div>
-        <div class="setting-row">
-          <label>Difficulty</label>
-          <select data-cfg="Difficulty"><option value="0">Normal</option><option value="1">Nightmare</option><option value="2" selected>Hell</option></select>
-        </div>
-        <div class="setting-row">
-          <label>Clear Type</label>
-          <select data-cfg="ClearType"><option value="0xF">Skip Normal</option><option value="0x7">Champs + Bosses</option><option value="0">All Monsters</option></select>
-        </div>
-        <label class="check"><input type="checkbox" data-cfg="BossPriority" checked><span>Boss Priority</span></label>
-        <label class="check"><input type="checkbox" data-cfg="FastDiablo"><span>Fast Diablo (seal pop)</span></label>
-        <label class="check"><input type="checkbox" data-cfg="MoatMeph"><span>Moat Trick Mephisto</span></label>
-      </div>
-    </div>
-
-    <!-- TAB: COMBAT -->
-    <div id="tab-combat" class="tab-panel">
-      <div class="section">
-        <div class="section-title">Casting</div>
-        <div class="setting-row">
-          <label>Packet Cast</label>
-          <select data-cfg="PacketCasting"><option value="0">Disabled</option><option value="1">Teleport Only</option><option value="2">All Skills</option></select>
-        </div>
-        <label class="check"><input type="checkbox" data-cfg="NoTele"><span>No Teleport (walk only)</span></label>
-        <label class="check"><input type="checkbox" data-cfg="TeleStomp"><span>Tele Stomp (merc kills immunes)</span></label>
-        <label class="check"><input type="checkbox" data-cfg="TeleSwitch"><span>Tele Switch</span></label>
-      </div>
-      <div class="section">
-        <div class="section-title">Dodge</div>
-        <label class="check"><input type="checkbox" data-cfg="Dodge"><span>Enable Dodge</span></label>
-        <div class="setting-row"><label>Dodge Range</label><input type="number" data-cfg="DodgeRange" value="15" min="5" max="40" class="input-sm"></div>
-        <div class="setting-row"><label>Dodge HP%</label><input type="number" data-cfg="DodgeHP" value="100" min="0" max="100" class="input-sm"></div>
-      </div>
-      <div class="section">
-        <div class="section-title">Skip Monsters</div>
-        <div class="check-grid">
-          <label class="check"><input type="checkbox" data-cfg="SkipImmune.physical"><span>Phys Immune</span></label>
-          <label class="check"><input type="checkbox" data-cfg="SkipImmune.fire"><span>Fire Immune</span></label>
-          <label class="check"><input type="checkbox" data-cfg="SkipImmune.cold"><span>Cold Immune</span></label>
-          <label class="check"><input type="checkbox" data-cfg="SkipImmune.lightning"><span>Light Immune</span></label>
-          <label class="check"><input type="checkbox" data-cfg="SkipImmune.poison"><span>Poison Immune</span></label>
-          <label class="check"><input type="checkbox" data-cfg="SkipImmune.magic"><span>Magic Immune</span></label>
-        </div>
-        <div class="check-grid" style="margin-top: 6px;">
-          <label class="check"><input type="checkbox" data-cfg="SkipEnchant.extra_strong"><span>Extra Strong</span></label>
-          <label class="check"><input type="checkbox" data-cfg="SkipEnchant.extra_fast"><span>Extra Fast</span></label>
-          <label class="check"><input type="checkbox" data-cfg="SkipEnchant.cursed"><span>Cursed</span></label>
-          <label class="check"><input type="checkbox" data-cfg="SkipEnchant.stone_skin"><span>Stone Skin</span></label>
-          <label class="check"><input type="checkbox" data-cfg="SkipEnchant.mana_burn"><span>Mana Burn</span></label>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB: CHICKEN -->
-    <div id="tab-chicken" class="tab-panel">
-      <div class="section">
-        <div class="section-title">Chicken (Quit Game)</div>
-        <div class="setting-row"><label>Life Chicken %</label><input type="number" data-cfg="LifeChicken" value="30" min="0" max="90" class="input-sm"></div>
-        <div class="setting-row"><label>Mana Chicken %</label><input type="number" data-cfg="ManaChicken" value="0" min="0" max="90" class="input-sm"></div>
-        <div class="setting-row"><label>Merc Chicken %</label><input type="number" data-cfg="MercChicken" value="0" min="0" max="90" class="input-sm"></div>
-      </div>
-      <div class="section">
-        <div class="section-title">Town Thresholds</div>
-        <div class="setting-row"><label>Town HP %</label><input type="number" data-cfg="TownHP" value="0" min="0" max="90" class="input-sm"></div>
-        <div class="setting-row"><label>Town MP %</label><input type="number" data-cfg="TownMP" value="0" min="0" max="90" class="input-sm"></div>
-        <div class="setting-row"><label>Heal at Healer %</label><input type="number" data-cfg="HealHP" value="50" min="0" max="100" class="input-sm"></div>
-      </div>
-      <div class="section">
-        <div class="section-title">Potion Usage</div>
-        <div class="setting-row"><label>Use HP Pot %</label><input type="number" data-cfg="UseHP" value="75" min="0" max="100" class="input-sm"></div>
-        <div class="setting-row"><label>Use MP Pot %</label><input type="number" data-cfg="UseMP" value="30" min="0" max="100" class="input-sm"></div>
-        <div class="setting-row"><label>Rejuv HP %</label><input type="number" data-cfg="UseRejuvHP" value="40" min="0" max="100" class="input-sm"></div>
-        <div class="setting-row"><label>Rejuv MP %</label><input type="number" data-cfg="UseRejuvMP" value="0" min="0" max="100" class="input-sm"></div>
-        <div class="setting-row"><label>Merc HP %</label><input type="number" data-cfg="UseMercHP" value="75" min="0" max="100" class="input-sm"></div>
-        <div class="setting-row"><label>Merc Rejuv %</label><input type="number" data-cfg="UseMercRejuv" value="0" min="0" max="100" class="input-sm"></div>
-      </div>
-      <div class="section">
-        <div class="section-title">Belt Configuration</div>
-        <div class="belt-row">
-          <span class="belt-label">Col 1</span>
-          <select data-cfg="BeltColumn.0"><option value="hp" selected>HP</option><option value="mp">MP</option><option value="rv">Rejuv</option></select>
-          <span class="belt-label">Col 2</span>
-          <select data-cfg="BeltColumn.1"><option value="hp" selected>HP</option><option value="mp">MP</option><option value="rv">Rejuv</option></select>
-          <span class="belt-label">Col 3</span>
-          <select data-cfg="BeltColumn.2"><option value="hp">HP</option><option value="mp" selected>MP</option><option value="rv">Rejuv</option></select>
-          <span class="belt-label">Col 4</span>
-          <select data-cfg="BeltColumn.3"><option value="hp">HP</option><option value="mp">MP</option><option value="rv" selected>Rejuv</option></select>
-        </div>
-        <div class="belt-row" style="margin-top: 4px;">
-          <span class="belt-label">Min</span><input type="number" data-cfg="MinColumn.0" value="3" min="0" max="4" class="input-xs">
-          <span class="belt-label">Min</span><input type="number" data-cfg="MinColumn.1" value="3" min="0" max="4" class="input-xs">
-          <span class="belt-label">Min</span><input type="number" data-cfg="MinColumn.2" value="3" min="0" max="4" class="input-xs">
-          <span class="belt-label">Min</span><input type="number" data-cfg="MinColumn.3" value="0" min="0" max="4" class="input-xs">
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB: CLASS -->
-    <div id="tab-char" class="tab-panel">
-      <div class="class-section visible" data-class="amazon">
-        <div class="section">
-          <div class="section-title">Amazon</div>
-          <div class="setting-row"><label>LF Delay (sec)</label><input type="number" data-cfg="Amazon.LightningFuryDelay" value="10" min="0" max="30" class="input-sm"></div>
-          <label class="check"><input type="checkbox" data-cfg="Amazon.UseInnerSight" checked><span>Inner Sight</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Amazon.UseSlowMissiles" checked><span>Slow Missiles</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Amazon.UseDecoy" checked><span>Decoy</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Amazon.SummonValkyrie" checked><span>Summon Valkyrie</span></label>
-        </div>
-      </div>
-      <div class="class-section visible" data-class="assassin">
-        <div class="section">
-          <div class="section-title">Assassin</div>
-          <label class="check"><input type="checkbox" data-cfg="Assassin.UseTraps" checked><span>Use Traps</span></label>
-          <div class="setting-row"><label>Shadow</label><select data-cfg="Assassin.SummonShadow"><option value="">None</option><option value="Warrior">Warrior</option><option value="Master" selected>Master</option></select></div>
-          <label class="check"><input type="checkbox" data-cfg="Assassin.UseFade" checked><span>Fade</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Assassin.UseBoS"><span>Burst of Speed</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Assassin.UseVenom"><span>Venom</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Assassin.UseBladeShield"><span>Blade Shield</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Assassin.UseCloakofShadows" checked><span>Cloak of Shadows</span></label>
-        </div>
-      </div>
-      <div class="class-section visible" data-class="barbarian">
-        <div class="section">
-          <div class="section-title">Barbarian</div>
-          <label class="check"><input type="checkbox" data-cfg="Barbarian.FindItem"><span>Find Item (Hork)</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Barbarian.FindItemSwitch"><span>Find Item on Switch</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Barbarian.UseWarcries" checked><span>Warcries (BO/Shout)</span></label>
-        </div>
-      </div>
-      <div class="class-section visible" data-class="druid">
-        <div class="section">
-          <div class="section-title">Druid</div>
-          <label class="check"><input type="checkbox" data-cfg="Druid.SummonRaven"><span>Summon Raven</span></label>
-          <div class="setting-row"><label>Animal</label><select data-cfg="Druid.SummonAnimal"><option value="">None</option><option value="Spirit Wolf">Spirit Wolf</option><option value="Dire Wolf">Dire Wolf</option><option value="Grizzly" selected>Grizzly</option></select></div>
-          <div class="setting-row"><label>Spirit</label><select data-cfg="Druid.SummonSpirit"><option value="">None</option><option value="Oak Sage" selected>Oak Sage</option><option value="Heart of Wolverine">Wolverine</option><option value="Spirit of Barbs">Barbs</option></select></div>
-          <div class="setting-row"><label>Vine</label><select data-cfg="Druid.SummonVine"><option value="">None</option><option value="Poison Creeper" selected>Poison</option><option value="Carrion Vine">Carrion</option><option value="Solar Creeper">Solar</option></select></div>
-        </div>
-      </div>
-      <div class="class-section visible" data-class="necromancer">
-        <div class="section">
-          <div class="section-title">Necromancer</div>
-          <div class="setting-row"><label>Golem</label><select data-cfg="Necro.Golem"><option value="">None</option><option value="Clay">Clay</option><option value="Blood">Blood</option><option value="Iron">Iron</option><option value="Fire">Fire</option></select></div>
-          <div class="setting-row"><label>Skeletons</label><input type="number" data-cfg="Necro.Skeletons" value="0" min="0" max="20" class="input-sm"></div>
-          <div class="setting-row"><label>Mages</label><input type="number" data-cfg="Necro.SkeletonMages" value="0" min="0" max="20" class="input-sm"></div>
-          <div class="setting-row"><label>Revives</label><input type="number" data-cfg="Necro.Revives" value="0" min="0" max="20" class="input-sm"></div>
-          <label class="check"><input type="checkbox" data-cfg="Necro.ExplodeCorpses" checked><span>Corpse Explosion</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Necro.ActiveSummon"><span>Raise Between Attacks</span></label>
-        </div>
-      </div>
-      <div class="class-section visible" data-class="paladin">
-        <div class="section">
-          <div class="section-title">Paladin</div>
-          <label class="check"><input type="checkbox" data-cfg="Paladin.Vigor" checked><span>Vigor When Running</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Paladin.Charge" checked><span>Charge When Running</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Paladin.AvoidDolls"><span>Avoid Dolls</span></label>
-          <div class="setting-row"><label>Redemption Life %</label><input type="number" data-cfg="Paladin.Redemption.0" value="50" min="0" max="100" class="input-sm"></div>
-          <div class="setting-row"><label>Redemption Mana %</label><input type="number" data-cfg="Paladin.Redemption.1" value="50" min="0" max="100" class="input-sm"></div>
-        </div>
-      </div>
-      <div class="class-section visible" data-class="sorceress">
-        <div class="section">
-          <div class="section-title">Sorceress</div>
-          <div class="setting-row"><label>Static Field %</label><input type="number" data-cfg="Sorceress.CastStatic" value="60" min="0" max="100" class="input-sm"></div>
-          <label class="check"><input type="checkbox" data-cfg="Sorceress.UseTelekinesis" checked><span>Telekinesis</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Sorceress.UseEnergyShield"><span>Energy Shield</span></label>
-          <label class="check"><input type="checkbox" data-cfg="Sorceress.UseColdArmor" checked><span>Cold Armor</span></label>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB: ITEMS -->
-    <div id="tab-items" class="tab-panel">
-      <div class="section">
-        <div class="section-title">Picking</div>
-        <div class="setting-row"><label>Pick Range</label><input type="number" data-cfg="PickRange" value="40" min="10" max="80" class="input-sm"></div>
-        <label class="check"><input type="checkbox" data-cfg="FastPick"><span>Fast Pick (between attacks)</span></label>
-        <label class="check"><input type="checkbox" data-cfg="OpenChests"><span>Open Chests</span></label>
-      </div>
-      <div class="section">
-        <div class="section-title">Identification</div>
-        <label class="check"><input type="checkbox" data-cfg="CainID"><span>Identify at Cain</span></label>
-        <label class="check"><input type="checkbox" data-cfg="FieldID"><span>Field Identify</span></label>
-      </div>
-      <div class="section">
-        <div class="section-title">Gambling</div>
-        <label class="check"><input type="checkbox" data-cfg="Gamble"><span>Enable Gambling</span></label>
-        <div class="setting-row"><label>Gold Start</label><input type="number" data-cfg="GambleGoldStart" value="1000000" step="100000" class="input-sm"></div>
-        <div class="setting-row"><label>Gold Stop</label><input type="number" data-cfg="GambleGoldStop" value="500000" step="100000" class="input-sm"></div>
-      </div>
-      <div class="section">
-        <div class="section-title">Town</div>
-        <label class="check"><input type="checkbox" data-cfg="UseMerc" checked><span>Use Mercenary</span></label>
-        <label class="check"><input type="checkbox" data-cfg="MercWatch"><span>Instant Merc Revive</span></label>
-        <label class="check"><input type="checkbox" data-cfg="TownCheck"><span>Town if Out of Potions</span></label>
-        <label class="check"><input type="checkbox" data-cfg="MiniShopBot" checked><span>Scan NPC Shops</span></label>
-        <label class="check"><input type="checkbox" data-cfg="Cubing"><span>Enable Cubing</span></label>
-        <label class="check"><input type="checkbox" data-cfg="MakeRunewords"><span>Make Runewords</span></label>
-      </div>
-    </div>
-
-    <!-- TAB: MAP -->
-    <div id="tab-map" class="tab-panel">
-      <div class="section">
-        <div class="section-title">Map Overlay</div>
-        <div class="control-row">
-          <button id="btn-map-activate" class="btn btn-ok">Activate</button>
-          <button id="btn-map-deactivate" class="btn btn-warn" disabled>Deactivate</button>
-        </div>
-        <div class="control-row">
-          <label>Opacity</label>
-          <input type="range" id="opacity-slider" min="10" max="255" step="5" value="180">
-          <span id="opacity-value">180</span>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-title">Keyboard Shortcuts</div>
-        <div class="shortcut-row"><span>Toggle Map</span><kbd>Ctrl+Shift+M</kbd></div>
-        <div class="shortcut-row"><span>Opacity +</span><kbd>Ctrl+Shift+Up</kbd></div>
-        <div class="shortcut-row"><span>Opacity -</span><kbd>Ctrl+Shift+Down</kbd></div>
-      </div>
-    </div>
-
-    <!-- TAB: SETTINGS -->
-    <div id="tab-settings" class="tab-panel">
-      <div class="section">
-        <div class="section-title">Game Timing</div>
-        <div class="setting-row"><label>Min Game (sec)</label><input type="number" data-cfg="MinGameTime" value="60" min="0" max="600" class="input-sm"></div>
-        <div class="setting-row"><label>Max Game (min)</label><input type="number" data-cfg="MaxGameTime" value="0" min="0" max="120" class="input-sm"></div>
-        <div class="setting-row"><label>Public Mode</label><select data-cfg="PublicMode"><option value="0" selected>Disabled</option><option value="1">Invite+Accept</option><option value="2">Accept Only</option><option value="3">Invite Only</option></select></div>
-      </div>
-      <div class="section">
-        <div class="section-title">Safety</div>
-        <label class="check"><input type="checkbox" data-cfg="AntiHostile"><span>Anti-Hostile</span></label>
-        <div class="setting-row"><label>Hostile Action</label><select data-cfg="HostileAction"><option value="0">Quit Game</option><option value="1">Quit When Seen</option><option value="2">Attack</option></select></div>
-        <label class="check"><input type="checkbox" data-cfg="ViperCheck"><span>Quit on Tomb Vipers</span></label>
-      </div>
-      <div class="section">
-        <div class="section-title">DClone</div>
-        <label class="check"><input type="checkbox" data-cfg="StopOnDClone" checked><span>Idle When Diablo Walks</span></label>
-        <label class="check"><input type="checkbox" data-cfg="KillDclone"><span>Kill Diablo Clone</span></label>
-      </div>
-      <div class="section">
-        <div class="section-title">Logging</div>
-        <label class="check"><input type="checkbox" data-cfg="LogExperience"><span>Log Experience</span></label>
-        <label class="check"><input type="checkbox" data-cfg="LogHighRunes" checked><span>Log High Runes</span></label>
-        <label class="check"><input type="checkbox" data-cfg="LogOrgans" checked><span>Log Organs</span></label>
-      </div>
-      <div class="section">
-        <div class="section-title">Chat</div>
-        <label class="check"><input type="checkbox" data-cfg="Silence"><span>Silence (don't talk)</span></label>
-        <label class="check"><input type="checkbox" data-cfg="ShitList"><span>Blacklist Hostile Players</span></label>
-      </div>
-    </div>
-  </div>
+  <div class="col-title">Popup Preview (360px)</div>
+  <iframe id="popup-frame" src="chrome_extension/popup.html" frameborder="0"></iframe>
 </div>
 
 <!-- ── Right Column: Test Controls ─────────────────────────────── -->
 <div class="column col-controls">
-  <div class="col-title">Test Harness</div>
+  <div class="col-title">Test Harness — 11 Tabs · 322 Settings</div>
+
+  <!-- Summary bar (populated after iframe loads) -->
+  <div class="summary-bar" id="summary-bar">
+    <div class="stat">Tabs: <span class="val" id="sum-tabs">…</span></div>
+    <div class="stat">Panels: <span class="val" id="sum-panels">…</span></div>
+    <div class="stat">Config Elements: <span class="val" id="sum-cfg">…</span></div>
+    <div class="stat">Checkboxes: <span class="val" id="sum-checks">…</span></div>
+    <div class="stat">Numbers: <span class="val" id="sum-nums">…</span></div>
+    <div class="stat">Selects: <span class="val" id="sum-selects">…</span></div>
+    <div class="stat">Textareas: <span class="val" id="sum-textareas">…</span></div>
+  </div>
 
   <div class="scenario-group">
     <h3>Connection Scenarios</h3>
-    <button class="test-btn" onclick="scenario('both_connected')">Both Connected (Running)</button>
-    <button class="test-btn" onclick="scenario('both_disconnected')">Both Disconnected</button>
-    <button class="test-btn" onclick="scenario('agent_only')">Agent Only</button>
-    <button class="test-btn" onclick="scenario('map_only')">Map Host Only</button>
+    <div class="test-grid">
+      <button class="test-btn" onclick="scenario('both_connected')">Both Connected (Running)</button>
+      <button class="test-btn" onclick="scenario('both_disconnected')">Both Disconnected</button>
+      <button class="test-btn" onclick="scenario('agent_only')">Agent Only</button>
+      <button class="test-btn" onclick="scenario('map_only')">Map Host Only</button>
+    </div>
   </div>
 
   <div class="scenario-group">
     <h3>Agent State</h3>
-    <button class="test-btn" onclick="scenario('running')">Running (Farming)</button>
-    <button class="test-btn" onclick="scenario('paused')">Paused</button>
-    <button class="test-btn" onclick="scenario('high_stats')">High Stats (Long Session)</button>
+    <div class="test-grid">
+      <button class="test-btn" onclick="scenario('running')">Running (Farming)</button>
+      <button class="test-btn" onclick="scenario('paused')">Paused</button>
+      <button class="test-btn" onclick="scenario('high_stats')">High Stats (4h Session)</button>
+      <button class="test-btn" onclick="scenario('kill')">Kill Switch</button>
+    </div>
+  </div>
+
+  <div class="scenario-group">
+    <h3>Tab Navigation</h3>
+    <div class="test-grid">
+      <button class="test-btn" onclick="switchTab('tab-control')">Control</button>
+      <button class="test-btn" onclick="switchTab('tab-scripts')">Scripts</button>
+      <button class="test-btn" onclick="switchTab('tab-leech')">Leech</button>
+      <button class="test-btn" onclick="switchTab('tab-combat')">Combat</button>
+      <button class="test-btn" onclick="switchTab('tab-health')">Health</button>
+      <button class="test-btn" onclick="switchTab('tab-class')">Class</button>
+      <button class="test-btn" onclick="switchTab('tab-items')">Items</button>
+      <button class="test-btn" onclick="switchTab('tab-social')">Social</button>
+      <button class="test-btn" onclick="switchTab('tab-general')">General</button>
+      <button class="test-btn" onclick="switchTab('tab-advanced')">Adv</button>
+      <button class="test-btn" onclick="switchTab('tab-map')">Map</button>
+    </div>
   </div>
 
   <div class="scenario-group">
     <h3>Profiles</h3>
-    <button class="test-btn" onclick="scenario('sorc')">Switch: Sorceress Blizzard</button>
-    <button class="test-btn" onclick="scenario('necro')">Switch: Necro Summon</button>
-    <button class="test-btn" onclick="scenario('pally')">Switch: Paladin Hammerdin</button>
+    <div class="test-grid">
+      <button class="test-btn" onclick="scenario('sorc')">Sorceress Blizzard</button>
+      <button class="test-btn" onclick="scenario('necro')">Necro Summon</button>
+      <button class="test-btn" onclick="scenario('pally')">Paladin Hammerdin</button>
+      <button class="test-btn" onclick="scenario('barb')">Barbarian WW</button>
+    </div>
   </div>
 
   <div class="scenario-group">
     <h3>Automated Tests</h3>
-    <button class="test-btn" onclick="runAllTests()">Run All Tests</button>
+    <button class="test-btn" onclick="runAllTests()" style="background:#1a1a40;border-color:#4040a0;color:#88f;">Run All Tests</button>
   </div>
 
   <div id="log"></div>
@@ -601,47 +169,52 @@ function log(msg, cls) {
   const d = document.createElement('div');
   d.className = cls || '';
   const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
-  d.textContent = `[${ts}] ${msg}`;
+  d.textContent = '[' + ts + '] ' + msg;
   logEl.appendChild(d);
   logEl.scrollTop = logEl.scrollHeight;
 }
 
-// ── DOM Shortcuts ──────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-const agentDot = $('agent-dot'), agentStatus = $('agent-status');
-const mapDot = $('map-dot'), mapStatus = $('map-status');
-const btnPause = $('btn-pause'), btnResume = $('btn-resume');
-const btnActivate = $('btn-map-activate'), btnDeactivate = $('btn-map-deactivate');
-const btnKill = $('btn-kill');
-const opSlider = $('opacity-slider'), opValue = $('opacity-value');
-const statUptime = $('stat-uptime'), statFrames = $('stat-frames');
-const statDecisions = $('stat-decisions'), statPotions = $('stat-potions');
-const statLoots = $('stat-loots'), statChickens = $('stat-chickens');
-const configSelect = $('config-select');
+// ── iframe DOM access ──────────────────────────────────────────
+const frame = document.getElementById('popup-frame');
+let doc = null; // iframe's document
 
-// ── Tab Switching ──────────────────────────────────────────────
-document.querySelectorAll('#popup .tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('#popup .tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('#popup .tab-panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    $(tab.dataset.tab).classList.add('active');
-    log('TAB  ' + tab.textContent, 'log-info');
-  });
+function P(id) { return doc ? doc.getElementById(id) : null; }
+function Pall(sel) { return doc ? doc.querySelectorAll(sel) : []; }
+
+// ── Wait for iframe load ───────────────────────────────────────
+frame.addEventListener('load', () => {
+  try {
+    doc = frame.contentDocument || frame.contentWindow.document;
+    log('iframe loaded — accessing popup DOM', 'log-ok');
+    populateSummary();
+  } catch (e) {
+    log('WARN  Cannot access iframe DOM (CORS): ' + e.message, 'log-err');
+    log('TIP   Open test_gui.html via a local web server for full functionality', 'log-info');
+  }
 });
 
-// ── Class section visibility ───────────────────────────────────
-function updateClassSections() {
-  const val = configSelect.value.toLowerCase();
-  document.querySelectorAll('#popup .class-section').forEach(el => {
-    const cls = el.dataset.class;
-    el.classList.toggle('visible', val.startsWith(cls) || val === '');
-  });
+// ── Summary Bar ────────────────────────────────────────────────
+function populateSummary() {
+  if (!doc) return;
+  const tabs = Pall('.tab');
+  const panels = Pall('.tab-panel');
+  const cfgEls = Pall('[data-cfg]');
+  const checks = Pall('input[type="checkbox"][data-cfg]');
+  const nums = Pall('input[type="number"][data-cfg]');
+  const selects = Pall('select[data-cfg]');
+  const textareas = Pall('textarea[data-cfg]');
+
+  document.getElementById('sum-tabs').textContent = tabs.length;
+  document.getElementById('sum-panels').textContent = panels.length;
+  document.getElementById('sum-cfg').textContent = cfgEls.length;
+  document.getElementById('sum-checks').textContent = checks.length;
+  document.getElementById('sum-nums').textContent = nums.length;
+  document.getElementById('sum-selects').textContent = selects.length;
+  document.getElementById('sum-textareas').textContent = textareas.length;
+
+  log('STATS  ' + tabs.length + ' tabs, ' + panels.length + ' panels, ' + cfgEls.length + ' config elements', 'log-info');
+  log('TYPES  ' + checks.length + ' checkboxes, ' + nums.length + ' numbers, ' + selects.length + ' selects, ' + textareas.length + ' textareas', 'log-info');
 }
-configSelect.addEventListener('change', () => {
-  updateClassSections();
-  log('CMD  update_config(' + configSelect.value + ')', 'log-cmd');
-});
 
 // ── Mock State ─────────────────────────────────────────────────
 let state = {
@@ -650,12 +223,13 @@ let state = {
 };
 
 function setDot(dot, label, connected, text) {
+  if (!dot || !label) return;
   dot.className = 'dot ' + (connected ? 'dot-ok' : 'dot-off');
   label.textContent = text || (connected ? 'Connected' : 'Disconnected');
 }
 
 function fmtTime(ms) {
-  if (!ms || ms <= 0) return '--';
+  if (!ms || ms <= 0) return '—';
   const s = Math.floor(ms / 1000);
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
   if (h > 0) return h + 'h ' + m + 'm';
@@ -665,45 +239,62 @@ function fmtTime(ms) {
 function fmtNum(n) { return (n || 0).toLocaleString(); }
 
 function render() {
+  if (!doc) return;
+  const agentDot = P('agent-dot'), agentStatus = P('agent-status');
+  const mapDot = P('map-dot'), mapStatus = P('map-status');
+  const btnPause = P('btn-pause'), btnResume = P('btn-resume');
+  const btnActivate = P('btn-map-activate'), btnDeactivate = P('btn-map-deactivate');
+  const statUptime = P('stat-uptime'), statFrames = P('stat-frames');
+  const statDecisions = P('stat-decisions'), statPotions = P('stat-potions');
+  const statLoots = P('stat-loots'), statChickens = P('stat-chickens');
+  const opSlider = P('opacity-slider'), opValue = P('opacity-value');
+
   if (state.agentConnected) {
     setDot(agentDot, agentStatus, true, state.paused ? 'Paused' : 'Running');
-    btnPause.disabled = state.paused; btnResume.disabled = !state.paused;
-    statUptime.textContent = fmtTime(state.uptime_ms);
-    statFrames.textContent = fmtNum(state.frames);
-    statDecisions.textContent = fmtNum(state.decisions);
-    statPotions.textContent = fmtNum(state.potions);
-    statLoots.textContent = fmtNum(state.loots);
-    statChickens.textContent = fmtNum(state.chickens);
+    if (btnPause) { btnPause.disabled = state.paused; }
+    if (btnResume) { btnResume.disabled = !state.paused; }
+    if (statUptime) statUptime.textContent = fmtTime(state.uptime_ms);
+    if (statFrames) statFrames.textContent = fmtNum(state.frames);
+    if (statDecisions) statDecisions.textContent = fmtNum(state.decisions);
+    if (statPotions) statPotions.textContent = fmtNum(state.potions);
+    if (statLoots) statLoots.textContent = fmtNum(state.loots);
+    if (statChickens) statChickens.textContent = fmtNum(state.chickens);
   } else {
     setDot(agentDot, agentStatus, false);
-    btnPause.disabled = true; btnResume.disabled = true;
-    statUptime.textContent = '--'; statFrames.textContent = '0';
-    statDecisions.textContent = '0'; statPotions.textContent = '0';
-    statLoots.textContent = '0'; statChickens.textContent = '0';
+    if (btnPause) btnPause.disabled = true;
+    if (btnResume) btnResume.disabled = true;
+    if (statUptime) statUptime.textContent = '—';
+    if (statFrames) statFrames.textContent = '0';
+    if (statDecisions) statDecisions.textContent = '0';
+    if (statPotions) statPotions.textContent = '0';
+    if (statLoots) statLoots.textContent = '0';
+    if (statChickens) statChickens.textContent = '0';
   }
   if (state.mapConnected) {
     setDot(mapDot, mapStatus, true);
-    btnActivate.disabled = state.mapActive; btnDeactivate.disabled = !state.mapActive;
+    if (btnActivate) btnActivate.disabled = state.mapActive;
+    if (btnDeactivate) btnDeactivate.disabled = !state.mapActive;
   } else {
     setDot(mapDot, mapStatus, false);
-    btnActivate.disabled = true; btnDeactivate.disabled = true;
+    if (btnActivate) btnActivate.disabled = true;
+    if (btnDeactivate) btnDeactivate.disabled = true;
   }
-  opSlider.value = state.opacity; opValue.textContent = state.opacity;
+  if (opSlider) { opSlider.value = state.opacity; }
+  if (opValue) { opValue.textContent = state.opacity; }
 }
 
-// ── Button Handlers ────────────────────────────────────────────
-btnPause.addEventListener('click', () => { state.paused = true; log('CMD  pause', 'log-cmd'); render(); });
-btnResume.addEventListener('click', () => { state.paused = false; log('CMD  resume', 'log-cmd'); render(); });
-btnActivate.addEventListener('click', () => {
-  state.mapActive = true; log('CMD  activateMap (5s)', 'log-cmd'); render();
-  setTimeout(() => { state.mapActive = false; log('MAP  auto-deactivated', 'log-info'); render(); }, 5000);
-});
-btnDeactivate.addEventListener('click', () => { state.mapActive = false; log('CMD  deactivateMap', 'log-cmd'); render(); });
-btnKill.addEventListener('click', () => {
-  state.agentConnected = false; state.mapConnected = false; state.mapActive = false;
-  log('KILL  All processes terminated', 'log-err'); render();
-});
-opSlider.addEventListener('input', () => { state.opacity = parseInt(opSlider.value); opValue.textContent = state.opacity; });
+// ── Tab Switching (from harness) ───────────────────────────────
+function switchTab(tabId) {
+  if (!doc) { log('WARN  iframe not loaded yet', 'log-err'); return; }
+  // Find the tab button with matching data-tab
+  const tab = doc.querySelector('.tab[data-tab="' + tabId + '"]');
+  if (tab) {
+    tab.click();
+    log('TAB  → ' + tab.textContent, 'log-info');
+  } else {
+    log('WARN  Tab not found: ' + tabId, 'log-err');
+  }
+}
 
 // ── Scenarios ──────────────────────────────────────────────────
 function scenario(name) {
@@ -738,22 +329,37 @@ function scenario(name) {
       Object.assign(state, { agentConnected: true, mapConnected: true, paused: false,
         uptime_ms: 14400000, frames: 864000, decisions: 512000, potions: 1247, loots: 8934, chickens: 42 });
       log('SCENARIO  Long session (4h)', 'log-ok'); break;
+    case 'kill':
+      Object.assign(state, { agentConnected: false, mapConnected: false, mapActive: false,
+        uptime_ms: 0, frames: 0, decisions: 0, potions: 0, loots: 0, chickens: 0 });
+      log('KILL  All processes terminated', 'log-err'); break;
     case 'sorc':
-      configSelect.value = 'sorceress_blizzard'; updateClassSections();
-      log('PROFILE  Sorceress Blizzard', 'log-info'); break;
+      setProfile('sorceress_blizzard', 'Sorceress Blizzard'); break;
     case 'necro':
-      configSelect.value = 'necro_summon'; updateClassSections();
-      log('PROFILE  Necromancer Summon', 'log-info'); break;
+      setProfile('necro_summon', 'Necromancer Summon'); break;
     case 'pally':
-      configSelect.value = 'paladin_hammerdin'; updateClassSections();
-      log('PROFILE  Paladin Hammerdin', 'log-info'); break;
+      setProfile('paladin_hammerdin', 'Paladin Hammerdin'); break;
+    case 'barb':
+      setProfile('barbarian_ww', 'Barbarian WW'); break;
   }
   render();
 }
 
+function setProfile(val, label) {
+  if (!doc) return;
+  const configSelect = P('config-select');
+  if (configSelect) {
+    configSelect.value = val;
+    configSelect.dispatchEvent(new Event('change'));
+  }
+  switchTab('tab-class');
+  log('PROFILE  ' + label, 'log-info');
+}
+
 // ── Automated Tests ────────────────────────────────────────────
 function runAllTests() {
-  log('========================================', 'log-info');
+  if (!doc) { log('ERROR  iframe not loaded', 'log-err'); return; }
+  log('════════════════════════════════════════', 'log-info');
   log('RUNNING ALL TESTS', 'log-info');
   let pass = 0, fail = 0;
 
@@ -762,99 +368,144 @@ function runAllTests() {
     else { log('  FAIL  ' + name, 'log-err'); fail++; }
   }
 
-  // Tab switching
-  const tabs = document.querySelectorAll('#popup .tab');
-  const panels = document.querySelectorAll('#popup .tab-panel');
-  assert('8 tabs exist', tabs.length === 8);
-  assert('8 panels exist', panels.length === 8);
-  tabs[1].click(); // Scripts tab
-  assert('Scripts tab activates', $('tab-scripts').classList.contains('active'));
-  tabs[0].click(); // Back to control
+  // ── Structure tests ──
+  const tabs = Pall('.tab');
+  const panels = Pall('.tab-panel');
+  assert('11 tabs exist', tabs.length === 11);
+  assert('11 panels exist', panels.length === 11);
 
-  // Disconnected
+  // ── Tab IDs ──
+  const expectedTabs = ['tab-control','tab-scripts','tab-leech','tab-combat','tab-health',
+                         'tab-class','tab-items','tab-social','tab-general','tab-advanced','tab-map'];
+  expectedTabs.forEach(id => {
+    assert('Panel exists: ' + id, !!P(id));
+  });
+
+  // ── Tab switching ──
+  tabs[1].click(); // Scripts
+  assert('Scripts tab activates', P('tab-scripts').classList.contains('active'));
+  tabs[0].click(); // Back to Control
+
+  // ── Disconnected state ──
   scenario('both_disconnected');
-  assert('Pause disabled when disconnected', btnPause.disabled === true);
-  assert('Resume disabled when disconnected', btnResume.disabled === true);
-  assert('Agent dot off', agentDot.classList.contains('dot-off'));
-  assert('Map activate disabled', btnActivate.disabled === true);
+  const btnPause = P('btn-pause'), btnResume = P('btn-resume');
+  const agentDot = P('agent-dot');
+  assert('Pause disabled when disconnected', btnPause && btnPause.disabled === true);
+  assert('Resume disabled when disconnected', btnResume && btnResume.disabled === true);
+  assert('Agent dot off', agentDot && agentDot.classList.contains('dot-off'));
 
-  // Connected
+  // ── Connected state ──
   scenario('both_connected');
-  assert('Agent dot green', agentDot.classList.contains('dot-ok'));
-  assert('Map dot green', mapDot.classList.contains('dot-ok'));
-  assert('Pause enabled when running', btnPause.disabled === false);
-  assert('Uptime shows value', statUptime.textContent !== '--');
-  assert('Frames > 0', statFrames.textContent !== '0');
+  assert('Agent dot green', agentDot && agentDot.classList.contains('dot-ok'));
+  const mapDot = P('map-dot');
+  assert('Map dot green', mapDot && mapDot.classList.contains('dot-ok'));
+  assert('Pause enabled when running', btnPause && btnPause.disabled === false);
+  const statUptime = P('stat-uptime');
+  assert('Uptime shows value', statUptime && statUptime.textContent !== '—');
+  const statFrames = P('stat-frames');
+  assert('Frames > 0', statFrames && statFrames.textContent !== '0');
 
-  // Paused
+  // ── Paused state ──
   scenario('paused');
-  assert('Pause disabled when paused', btnPause.disabled === true);
-  assert('Resume enabled when paused', btnResume.disabled === false);
-  assert('Status shows Paused', agentStatus.textContent === 'Paused');
+  const agentStatus = P('agent-status');
+  assert('Status shows Paused', agentStatus && agentStatus.textContent === 'Paused');
+  assert('Pause disabled when paused', btnPause && btnPause.disabled === true);
+  assert('Resume enabled when paused', btnResume && btnResume.disabled === false);
 
-  // High stats
+  // ── High stats ──
   scenario('high_stats');
-  assert('Uptime shows hours', statUptime.textContent.includes('h'));
-  assert('Frames formatted with commas', statFrames.textContent.includes(','));
+  assert('Uptime shows hours', statUptime && statUptime.textContent.includes('h'));
+  assert('Frames formatted with commas', statFrames && statFrames.textContent.includes(','));
 
-  // Button interactions
-  scenario('both_connected');
-  btnPause.click();
-  assert('Pause click works', state.paused === true);
-  btnResume.click();
-  assert('Resume click works', state.paused === false);
-
-  // Kill switch
-  const origConfirm = window.confirm;
-  window.confirm = () => true;
-  btnKill.click();
-  window.confirm = origConfirm;
-  assert('Kill disconnects agent', state.agentConnected === false);
-  assert('Kill disconnects map', state.mapConnected === false);
-
-  // Opacity
-  opSlider.value = 200;
-  opSlider.dispatchEvent(new Event('input'));
-  assert('Opacity updates', opValue.textContent === '200');
-
-  // Profile switching + class sections
-  configSelect.value = 'sorceress_blizzard';
-  configSelect.dispatchEvent(new Event('change'));
-  const sorcVisible = document.querySelector('#popup .class-section[data-class="sorceress"]').classList.contains('visible');
-  const barbVisible = document.querySelector('#popup .class-section[data-class="barbarian"]').classList.contains('visible');
-  assert('Sorc section visible for sorc profile', sorcVisible);
-  assert('Barb section hidden for sorc profile', !barbVisible);
-
-  configSelect.value = 'barbarian_ww';
-  configSelect.dispatchEvent(new Event('change'));
-  const barbNow = document.querySelector('#popup .class-section[data-class="barbarian"]').classList.contains('visible');
-  assert('Barb section visible for barb profile', barbNow);
-
-  // Config elements count
-  const cfgEls = document.querySelectorAll('#popup [data-cfg]');
-  assert('Has 80+ config elements', cfgEls.length >= 80);
+  // ── Config element counts ──
+  const cfgEls = Pall('[data-cfg]');
+  assert('Has 300+ config elements', cfgEls.length >= 300);
   log('  INFO  Found ' + cfgEls.length + ' config elements total', 'log-info');
 
-  // Checkbox grid counts
-  const scriptChecks = document.querySelectorAll('#tab-scripts [data-cfg]');
-  assert('Scripts tab has 20+ settings', scriptChecks.length >= 20);
+  const checks = Pall('input[type="checkbox"][data-cfg]');
+  assert('Has 200+ checkbox settings', checks.length >= 200);
+  log('  INFO  Found ' + checks.length + ' checkboxes', 'log-info');
 
-  const chickenInputs = document.querySelectorAll('#tab-chicken [data-cfg]');
-  assert('Chicken tab has 15+ settings', chickenInputs.length >= 15);
+  const numInputs = Pall('input[type="number"][data-cfg]');
+  assert('Has 50+ number inputs', numInputs.length >= 50);
+  log('  INFO  Found ' + numInputs.length + ' number inputs', 'log-info');
 
-  // Summary
-  log('========================================', 'log-info');
+  const selects = Pall('select[data-cfg]');
+  assert('Has 10+ select dropdowns', selects.length >= 10);
+  log('  INFO  Found ' + selects.length + ' selects', 'log-info');
+
+  // ── Per-tab content ──
+  const scriptChecks = Pall('#tab-scripts [data-cfg]');
+  assert('Scripts tab has 40+ settings', scriptChecks.length >= 40);
+
+  const leechChecks = Pall('#tab-leech [data-cfg]');
+  assert('Leech tab has settings', leechChecks.length >= 5);
+
+  const combatChecks = Pall('#tab-combat [data-cfg]');
+  assert('Combat tab has 20+ settings', combatChecks.length >= 20);
+
+  const healthChecks = Pall('#tab-health [data-cfg]');
+  assert('Health tab has 15+ settings', healthChecks.length >= 15);
+
+  const classChecks = Pall('#tab-class [data-cfg]');
+  assert('Class tab has 30+ settings', classChecks.length >= 30);
+
+  const itemChecks = Pall('#tab-items [data-cfg]');
+  assert('Items tab has 15+ settings', itemChecks.length >= 15);
+
+  const socialChecks = Pall('#tab-social [data-cfg]');
+  assert('Social tab has settings', socialChecks.length >= 5);
+
+  const generalChecks = Pall('#tab-general [data-cfg]');
+  assert('General tab has settings', generalChecks.length >= 5);
+
+  const advChecks = Pall('#tab-advanced [data-cfg]');
+  assert('Advanced tab has settings', advChecks.length >= 5);
+
+  // ── Profile switching + class sections ──
+  const configSelect = P('config-select');
+  if (configSelect) {
+    configSelect.value = 'sorceress_blizzard';
+    configSelect.dispatchEvent(new Event('change'));
+    const sorcVis = doc.querySelector('.class-section[data-class="sorceress"]');
+    assert('Sorc section visible for sorc profile', sorcVis && sorcVis.classList.contains('visible'));
+    const barbVis = doc.querySelector('.class-section[data-class="barbarian"]');
+    assert('Barb section hidden for sorc profile', barbVis && !barbVis.classList.contains('visible'));
+
+    configSelect.value = '';
+    configSelect.dispatchEvent(new Event('change'));
+  }
+
+  // ── Inventory grid ──
+  const invGrid = P('inv-grid');
+  if (invGrid) {
+    const cells = invGrid.querySelectorAll('.inv-cell');
+    assert('Inventory grid has 40 cells', cells.length === 40);
+  } else {
+    assert('Inventory grid exists', false);
+  }
+
+  // ── Opacity slider ──
+  const opSlider = P('opacity-slider');
+  const opValue = P('opacity-value');
+  if (opSlider && opValue) {
+    opSlider.value = 200;
+    opSlider.dispatchEvent(new Event('input'));
+    assert('Opacity updates', opValue.textContent === '200');
+  }
+
+  // ── Summary ──
+  log('════════════════════════════════════════', 'log-info');
   log('RESULTS: ' + pass + '/' + (pass + fail) + ' passed, ' + fail + ' failed', fail > 0 ? 'log-err' : 'log-ok');
-  if (fail === 0) log('ALL TESTS PASSED', 'log-ok');
+  if (fail === 0) log('ALL TESTS PASSED!', 'log-ok');
 
   scenario('both_disconnected');
 }
 
 // ── Init ───────────────────────────────────────────────────────
-render();
 log('KZB GUI Test Harness loaded', 'log-ok');
-log('8 tabs: Control, Scripts, Combat, Chicken, Class, Items, Map, Settings', 'log-info');
-log('Click scenarios or "Run All Tests"', 'log-info');
+log('11 tabs: Control, Scripts, Leech, Combat, Health, Class, Items, Social, General, Adv, Map', 'log-info');
+log('Loading popup.html in iframe...', 'log-info');
 </script>
 </body>
 </html>
