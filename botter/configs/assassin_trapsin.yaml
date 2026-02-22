@@ -1,0 +1,177 @@
+# Trapsin (Lightning Trap Assassin) — Full Config
+# Ported from kolbot libs/config/Assassin.js
+
+character_class: Assassin
+build: trapsin
+
+survival:
+  chicken_hp_pct: 30
+  mana_chicken_pct: 0
+  merc_chicken_pct: 0
+  hp_potion_pct: 75
+  hp_rejuv_pct: 40
+  mana_potion_pct: 30
+  mana_rejuv_pct: 0
+  tp_retreat_pct: 35
+  merc_hp_pct: 75
+  hp_potion_cooldown_ms: 1000
+  mana_potion_cooldown_ms: 1000
+  rejuv_cooldown_ms: 300
+  belt_column: ["hp", "hp", "mp", "rv"]
+  min_belt_column: [3, 3, 3, 0]
+
+combat:
+  primary_skill_key: "f"                 # Lightning Sentry
+  secondary_skill_key: "g"               # Death Sentry
+  mobility_skill_key: "t"                # Burst of Speed / Fade (passive, no tele)
+  preattack_key: null
+  immunity_fallback_key: "h"             # Fire Blast for lightning immunes
+  boss_priority: true
+  kite_threshold: 6
+  cast_interval_ms: 200
+  max_attack_count: 300
+  use_merc_stomp: true
+  no_tele: true
+  attack_slots:
+    preattack: null
+    boss_primary: "f"                    # 5x Lightning Sentry
+    boss_untimed: null
+    mob_primary: "f"                     # Lightning Sentry
+    mob_untimed: "g"                     # Death Sentry (corpse explosions)
+    immune_primary: "h"                  # Fire Blast
+    immune_untimed: null
+  static_field: null
+
+buffs:
+  - { name: "Fade",          hotkey: "b", visual_check: false, duration_secs: 180 }
+  - { name: "Shadow Master", hotkey: "a", visual_check: false, duration_secs: 999 }
+
+class_specific:
+  use_traps: true
+  trap_keys: ["f", "f", "f", "g", "g"]       # 3x Lightning + 2x Death Sentry
+  boss_trap_keys: ["f", "f", "f", "f", "f"]  # All Lightning Sentry on bosses
+  summon_shadow: "Master"
+  use_fade: true
+  use_bos: false
+  use_venom: false
+  use_blade_shield: false
+  use_cloak: true
+
+farming:
+  min_game_time_secs: 60
+  sequence:
+    - { name: Pit, enabled: true }
+    - { name: AncientTunnels, enabled: true }
+    - { name: Mephisto, enabled: false }
+    - { name: Diablo, enabled: false }
+    - { name: Baal, enabled: false }
+    - { name: Cows, enabled: false }
+    - { name: Travincal, enabled: false }
+    - { name: Eldritch, enabled: false }
+
+leveling:
+  auto_skill:
+    enabled: true
+    save: 0
+    build:
+      - { skill: "Fire Blast",         hotkey: "h",  max_points: 1,  satisfy: true  }
+      - { skill: "Claw Mastery",       hotkey: null, max_points: 1,  satisfy: true  }
+      - { skill: "Burst of Speed",     hotkey: null, max_points: 1,  satisfy: true  }
+      - { skill: "Fade",               hotkey: "b",  max_points: 1,  satisfy: true  }
+      - { skill: "Shadow Warrior",     hotkey: null, max_points: 1,  satisfy: true  }
+      - { skill: "Shadow Master",      hotkey: "a",  max_points: 1,  satisfy: true  }
+      - { skill: "Shock Web",          hotkey: null, max_points: 1,  satisfy: true  }
+      - { skill: "Charged Bolt Sentry", hotkey: null, max_points: 1, satisfy: true  }
+      - { skill: "Lightning Sentry",   hotkey: "f",  max_points: 20, satisfy: true  }
+      - { skill: "Death Sentry",       hotkey: "g",  max_points: 20, satisfy: true  }
+      - { skill: "Fire Blast",         hotkey: "h",  max_points: 20, satisfy: true  }
+      - { skill: "Charged Bolt Sentry", hotkey: null, max_points: 20, satisfy: true }
+      - { skill: "Shadow Master",      hotkey: "a",  max_points: 15, satisfy: true  }
+      - { skill: "Fade",               hotkey: "b",  max_points: 10, satisfy: true  }
+  auto_stat:
+    enabled: true
+    save: 0
+    build:
+      - { stat: "strength",  target: 156 }
+      - { stat: "dexterity", target: 109 }
+      - { stat: "vitality",  target: "all" }
+
+cubing:
+  enabled: false
+  recipes:
+    - { recipe_type: "socket", item: "Monarch", ethereal: "noneth" }
+
+runewords:
+  enabled: true
+  make:
+    - { name: "Spirit",  base: "Monarch", ethereal: "noneth" }
+    - { name: "Insight", base: "Thresher", ethereal: "eth" }
+
+gambling:
+  enabled: false
+  gold_start: 1000000
+  gold_stop: 500000
+  items: ["Amulet", "Ring", "Circlet"]
+
+monster_skip:
+  skip_immune: ["lightning"]
+  skip_enchant: []
+  skip_aura: []
+
+clear:
+  clear_type: "skip_normal"
+  clear_path: "skip_normal"
+  clear_range: 30
+
+merc: { use_merc: true, merc_watch: false }
+
+inventory:
+  grid:
+    - [0,0,0,0,0,0,0,0,0,0]
+    - [0,0,0,0,0,0,0,0,0,0]
+    - [0,0,0,0,0,0,0,0,0,0]
+    - [0,0,0,0,0,0,0,0,0,0]
+
+loot:
+  always_pick: ["unique", "set", "rune"]
+  conditional_pick: ["rare_ring", "rare_amulet"]
+  magic_pick_types: ["grand_charm", "small_charm"]
+  gold_threshold: 5000
+  prioritize_runes_uniques: true
+  max_pickup_distance: 400
+  pick_range: 40
+  stash_gold: 100000
+
+town:
+  heal_hp_pct: 50
+  repair_pct: 40
+  go_to_town_triggers: { belt_potions_below: 2, inventory_slots_below: 4, merc_dead: true, durability_low: true }
+  task_order: [revive_merc, heal, repair, identify, stash, buy_potions]
+  stash_rules:
+    always_stash: ["unique", "set", "rune"]
+    id_then_evaluate: ["rare_ring", "rare_amulet"]
+    always_sell: ["magic_non_charm"]
+
+humanization:
+  reaction_mean_ms: 275.0
+  reaction_stddev_ms: 88.0
+  survival_max_delay_ms: 145
+  potion_threshold_variance: 5
+  skill_miss_rate: 0.03
+  aim_variance_px: 14
+  path_deviate_rate: 0.07
+  path_deviate_px: 35
+  idle_pause_rate: 0.02
+  aggression_drift_per_hour: 0.04
+  caution_drift_per_hour: 0.03
+
+session:
+  max_daily_hours: 8.0
+  session_min_minutes: 60
+  session_max_minutes: 180
+  break_min_minutes: 30
+  break_max_minutes: 120
+  allowed_start_hour: 9
+  allowed_end_hour: 23
+  short_break_rate: 0.12
+  long_break_rate: 0.04

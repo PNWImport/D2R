@@ -1,8 +1,8 @@
-# Javazon (Lightning Fury Amazon) — Full Config
-# Ported from kolbot libs/config/Amazon.js
+# Wind Druid (Tornado/Hurricane) — Full Config
+# Ported from kolbot libs/config/Druid.js
 
-character_class: Amazon
-build: javazon
+character_class: Druid
+build: wind
 
 survival:
   chicken_hp_pct: 30
@@ -21,101 +21,100 @@ survival:
   min_belt_column: [3, 3, 3, 0]
 
 combat:
-  primary_skill_key: "f"                 # Lightning Fury (mob clear)
-  secondary_skill_key: "g"               # Charged Strike (single target/boss)
-  mobility_skill_key: null               # No teleport
-  preattack_key: null
-  immunity_fallback_key: "h"             # Jab/Plague Jav for lightning immunes
+  primary_skill_key: "f"                 # Tornado
+  secondary_skill_key: "g"               # Hurricane (cast & forget)
+  mobility_skill_key: "t"                # Teleport if Enigma
+  preattack_key: "g"                     # Hurricane pre-engage
+  immunity_fallback_key: "f"             # Tornado is physical (no immunity issue)
   boss_priority: true
-  kite_threshold: 7
+  kite_threshold: 8
   cast_interval_ms: 200
   max_attack_count: 300
   use_merc_stomp: true
-  no_tele: true
+  no_tele: false
   attack_slots:
-    preattack: null
-    boss_primary: "g"                    # Charged Strike on bosses
+    preattack: "g"                       # Hurricane
+    boss_primary: "f"                    # Tornado
     boss_untimed: null
-    mob_primary: "f"                     # Lightning Fury on mobs
+    mob_primary: "f"                     # Tornado
     mob_untimed: null
-    immune_primary: "h"                  # Jab for lightning immunes
+    immune_primary: "f"                  # Tornado is physical, Hurricane is cold — covers both
     immune_untimed: null
   static_field: null
 
 buffs:
-  - { name: "Valkyrie", hotkey: "a", visual_check: false, duration_secs: 999 }
-  - { name: "Decoy",    hotkey: "s", visual_check: false, duration_secs: 30 }
+  - { name: "Hurricane",     hotkey: "g", visual_check: false, duration_secs: 10 }
+  - { name: "Cyclone Armor", hotkey: "b", visual_check: false, duration_secs: 0 }
+  - { name: "Oak Sage",      hotkey: "a", visual_check: false, duration_secs: 999 }
 
 class_specific:
-  lightning_fury_delay: 10
-  use_inner_sight: true
-  use_slow_missiles: true
-  use_decoy: true
-  summon_valkyrie: true
+  summon_raven: false
+  summon_animal: "Grizzly"
+  summon_spirit: "Oak Sage"
+  summon_vine: "Poison Creeper"
 
 farming:
   min_game_time_secs: 60
   sequence:
-    - { name: Cows, enabled: true }
+    - { name: Travincal, enabled: true }
     - { name: Pit, enabled: true }
-    - { name: Travincal, enabled: false }
     - { name: Mephisto, enabled: false }
     - { name: Diablo, enabled: false }
     - { name: Baal, enabled: false }
     - { name: Eldritch, enabled: false, options: { kill_shenk: true } }
-    - { name: AncientTunnels, enabled: false }
+    - { name: Pindleskin, enabled: false }
+    - { name: Cows, enabled: false }
 
 leveling:
   auto_skill:
     enabled: true
     save: 0
     build:
-      - { skill: "Jab",               hotkey: "h",  max_points: 1,  satisfy: true  }
-      - { skill: "Power Strike",      hotkey: null, max_points: 1,  satisfy: true  }
-      - { skill: "Poison Javelin",    hotkey: null, max_points: 1,  satisfy: false }
-      - { skill: "Lightning Bolt",    hotkey: null, max_points: 1,  satisfy: true  }
-      - { skill: "Charged Strike",    hotkey: "g",  max_points: 1,  satisfy: false }
-      - { skill: "Plague Javelin",    hotkey: null, max_points: 1,  satisfy: true  }
-      - { skill: "Lightning Fury",    hotkey: "f",  max_points: 1,  satisfy: false }
-      - { skill: "Lightning Fury",    hotkey: "f",  max_points: 20, satisfy: true  }
-      - { skill: "Charged Strike",    hotkey: "g",  max_points: 20, satisfy: true  }
-      - { skill: "Lightning Bolt",    hotkey: null, max_points: 20, satisfy: true  }
-      - { skill: "Power Strike",      hotkey: null, max_points: 20, satisfy: true  }
-      - { skill: "Pierce",            hotkey: null, max_points: 9,  satisfy: true  }
-      - { skill: "Valkyrie",          hotkey: "a",  max_points: 1,  satisfy: true  }
+      - { skill: "Arctic Blast",    hotkey: null, max_points: 1,  satisfy: true  }
+      - { skill: "Cyclone Armor",   hotkey: "b",  max_points: 1,  satisfy: true  }
+      - { skill: "Twister",         hotkey: null, max_points: 1,  satisfy: true  }
+      - { skill: "Tornado",         hotkey: "f",  max_points: 1,  satisfy: false }
+      - { skill: "Hurricane",       hotkey: "g",  max_points: 1,  satisfy: true  }
+      - { skill: "Oak Sage",        hotkey: "a",  max_points: 1,  satisfy: true  }
+      - { skill: "Summon Grizzly",  hotkey: "s",  max_points: 1,  satisfy: true  }
+      - { skill: "Tornado",         hotkey: "f",  max_points: 20, satisfy: true  }
+      - { skill: "Hurricane",       hotkey: "g",  max_points: 20, satisfy: true  }
+      - { skill: "Cyclone Armor",   hotkey: "b",  max_points: 20, satisfy: true  }
+      - { skill: "Twister",         hotkey: null, max_points: 20, satisfy: true  }
+      - { skill: "Oak Sage",        hotkey: "a",  max_points: 20, satisfy: true  }
   auto_stat:
     enabled: true
     save: 0
     build:
       - { stat: "strength",  target: 156 }
-      - { stat: "dexterity", target: 109 }
       - { stat: "vitality",  target: "all" }
 
 cubing:
   enabled: false
   recipes:
     - { recipe_type: "socket", item: "Monarch", ethereal: "noneth" }
+    - { recipe_type: "rune", item: "Pul Rune" }
 
 runewords:
   enabled: true
   make:
     - { name: "Spirit",  base: "Monarch", ethereal: "noneth" }
     - { name: "Insight", base: "Thresher", ethereal: "eth" }
+    - { name: "Heart of the Oak", base: "Flail" }
 
 gambling:
   enabled: false
   gold_start: 1000000
   gold_stop: 500000
-  items: ["Amulet", "Ring", "Circlet"]
+  items: ["Amulet", "Ring", "Circlet", "Druid Pelts"]
 
 monster_skip:
-  skip_immune: ["lightning"]
+  skip_immune: []
   skip_enchant: []
   skip_aura: []
-  skip_exception: []
 
 clear:
-  clear_type: "all"
+  clear_type: "skip_normal"
   clear_path: "skip_normal"
   clear_range: 30
 
@@ -149,17 +148,17 @@ town:
     always_sell: ["magic_non_charm"]
 
 humanization:
-  reaction_mean_ms: 270.0
-  reaction_stddev_ms: 85.0
-  survival_max_delay_ms: 140
-  potion_threshold_variance: 5
+  reaction_mean_ms: 280.0
+  reaction_stddev_ms: 90.0
+  survival_max_delay_ms: 150
+  potion_threshold_variance: 6
   skill_miss_rate: 0.03
-  aim_variance_px: 15
+  aim_variance_px: 16
   path_deviate_rate: 0.08
-  path_deviate_px: 38
-  idle_pause_rate: 0.018
+  path_deviate_px: 40
+  idle_pause_rate: 0.02
   aggression_drift_per_hour: 0.04
-  caution_drift_per_hour: 0.025
+  caution_drift_per_hour: 0.03
 
 session:
   max_daily_hours: 8.0
