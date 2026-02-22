@@ -43,6 +43,7 @@ pub struct AgentConfig {
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
 pub struct SurvivalConfig {
     pub hp_potion_pct: u8,
     pub hp_rejuv_pct: u8,
@@ -60,13 +61,9 @@ pub struct SurvivalConfig {
     pub mana_potion_cooldown_ms: u64,
     pub rejuv_cooldown_ms: u64,
     pub min_belt_column: [u8; 4],
-    #[serde(default)]
     pub belt_column: Vec<String>,      // kolbot: Config.BeltColumn = ["hp","hp","mp","rv"]
-    #[serde(default)]
     pub hp_buffer: u8,                 // Config.HPBuffer
-    #[serde(default)]
     pub mp_buffer: u8,                 // Config.MPBuffer
-    #[serde(default)]
     pub rejuv_buffer: u8,              // Config.RejuvBuffer
 }
 
@@ -102,6 +99,7 @@ impl Default for SurvivalConfig {
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
 pub struct CombatConfig {
     pub primary_skill_key: char,
     pub secondary_skill_key: char,
@@ -192,6 +190,7 @@ impl Default for CombatConfig {
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
 pub struct LootConfig {
     pub always_pick: Vec<String>,
     pub conditional_pick: Vec<String>,
@@ -248,6 +247,7 @@ impl Default for LootConfig {
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
 pub struct TownConfig {
     pub go_to_town_triggers: TownTriggers,
     pub task_order: Vec<String>,
@@ -665,6 +665,7 @@ impl Default for InventoryConfig {
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
 pub struct HumanizationConfig {
     pub reaction_mean_ms: f32,
     pub reaction_stddev_ms: f32,
@@ -708,6 +709,7 @@ impl Default for HumanizationConfig {
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
 pub struct SessionConfig {
     pub max_daily_hours: f32,
     pub session_min_minutes: u32,

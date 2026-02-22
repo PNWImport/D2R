@@ -183,6 +183,29 @@ fn char_to_vk(c: char) -> u16 {
         '\r' => 0x0D,      // Enter
         '\t' => 0x09,      // Tab
         ' ' => 0x20,       // Space
+        // Function keys: mapped to chars \x80-\x8B (F1-F12)
+        '\u{80}' => 0x70,  // VK_F1
+        '\u{81}' => 0x71,  // VK_F2
+        '\u{82}' => 0x72,  // VK_F3
+        '\u{83}' => 0x73,  // VK_F4
+        '\u{84}' => 0x74,  // VK_F5
+        '\u{85}' => 0x75,  // VK_F6
+        '\u{86}' => 0x76,  // VK_F7
+        '\u{87}' => 0x77,  // VK_F8
+        '\u{88}' => 0x78,  // VK_F9
+        '\u{89}' => 0x79,  // VK_F10
+        '\u{8A}' => 0x7A,  // VK_F11
+        '\u{8B}' => 0x7B,  // VK_F12
+        '-' => 0xBD,       // VK_OEM_MINUS
+        '=' => 0xBB,       // VK_OEM_PLUS
+        '[' => 0xDB,       // VK_OEM_4
+        ']' => 0xDD,       // VK_OEM_6
+        ',' => 0xBC,       // VK_OEM_COMMA
+        '.' => 0xBE,       // VK_OEM_PERIOD
+        '/' => 0xBF,       // VK_OEM_2
+        ';' => 0xBA,       // VK_OEM_1
+        '\'' => 0xDE,      // VK_OEM_7
+        '`' => 0xC0,       // VK_OEM_3
         _ => c as u16,
     }
 }

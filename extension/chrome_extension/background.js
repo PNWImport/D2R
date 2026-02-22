@@ -266,16 +266,9 @@ chrome.storage.local.get(["mapEnabled", "mapOpacity"], (result) => {
   if (result.mapOpacity !== undefined) mapOpacity = result.mapOpacity;
 });
 
-chrome.runtime.onInstalled.addListener(() => {
-  connectToAgent();
-  connectToMapHost();
-});
-
-chrome.runtime.onStartup.addListener(() => {
-  connectToAgent();
-  connectToMapHost();
-});
-
+// Single top-level connect covers onInstalled, onStartup, and service-worker
+// restarts.  Previous code had duplicate connect calls in event listeners which
+// caused double native-port opens on Chrome start and extension install.
 connectToAgent();
 connectToMapHost();
 

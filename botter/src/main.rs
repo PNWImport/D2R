@@ -43,11 +43,13 @@ async fn main() {
     tracing::info!("Agent starting — PID {}", std::process::id());
 
     // ─── Load Config ───────────────────────────────────────────
-    let config_path = data_dir().join("config.yaml");
+    // Priority: CLI arg > D2R_CONFIG env var > config.yaml in data dir
+    let config_path = resolve_config_path();
     let config = if config_path.exists() {
         match AgentConfig::load(&config_path) {
             Ok(c) => {
-                tracing::info!("Loaded config from {}", config_path.display());
+                tracing::info!("Loaded config: {} (class={}, build={})",
+                    config_path.display(), c.character_class, c.build);
                 c
             }
             Err(e) => {
@@ -56,6 +58,7 @@ async fn main() {
             }
         }
     } else {
+        tracing::warn!("Config not found at {}, writing defaults", config_path.display());
         let default = AgentConfig::default();
         if let Err(e) = default.save(&config_path) {
             tracing::warn!("Could not write default config: {}", e);
@@ -389,6 +392,40 @@ async fn main() {
     // let _ = config.save(&config_path);
 
     tracing::info!("Agent exited cleanly");
+}
+
+/// Resolve which config YAML to load.
+/// Priority: CLI arg (first arg) > D2R_CONFIG env var > data_dir/config.yaml
+fn resolve_config_path() -> PathBuf {
+    // Check CLI args: d2_vision_agent.exe path/to/paladin_hammerdin.yaml
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() > 1 && !args[1].starts_with('-') {
+        let p = PathBuf::from(&args[1]);
+        if p.exists() {
+            return p;
+        }
+        // Try relative to data_dir/configs/
+        let in_configs = data_dir().join("configs").join(&args[1]);
+        if in_configs.exists() {
+            return in_configs;
+        }
+        // Try adding .yaml extension
+        let with_ext = data_dir().join("configs").join(format!("{}.yaml", &args[1]));
+        if with_ext.exists() {
+            return with_ext;
+        }
+    }
+
+    // Check D2R_CONFIG env var
+    if let Ok(env_path) = std::env::var("D2R_CONFIG") {
+        let p = PathBuf::from(&env_path);
+        if p.exists() {
+            return p;
+        }
+    }
+
+    // Default: config.yaml in data directory
+    data_dir().join("config.yaml")
 }
 
 /// Data directory for config, logs, training data

@@ -44,6 +44,18 @@ impl Default for CaptureConfig {
     }
 }
 
+/// Enemy detection results from a single frame
+#[derive(Default)]
+struct EnemyInfo {
+    count: u8,
+    nearest_x: u16,
+    nearest_y: u16,
+    nearest_hp_pct: u8,
+    boss_present: bool,
+    champion_present: bool,
+    immune_detected: bool,
+}
+
 /// Raw pixel buffer from screen capture
 pub struct CapturedFrame {
     pub pixels: Vec<u8>, // BGRA format, row-major
@@ -140,9 +152,16 @@ impl CapturePipeline {
             OrbType::Mana,
         );
 
-        // Detect enemies in the playfield area
-        state.enemy_count = self.count_enemies(frame);
-        state.in_combat = state.enemy_count > 0;
+        // Detect enemies — returns count + nearest enemy position + boss info
+        let enemy_info = self.detect_enemies(frame);
+        state.enemy_count = enemy_info.count;
+        state.in_combat = enemy_info.count > 0;
+        state.nearest_enemy_x = enemy_info.nearest_x;
+        state.nearest_enemy_y = enemy_info.nearest_y;
+        state.nearest_enemy_hp_pct = enemy_info.nearest_hp_pct;
+        state.boss_present = enemy_info.boss_present;
+        state.champion_present = enemy_info.champion_present;
+        state.immune_detected = enemy_info.immune_detected;
 
         // Detect ground loot labels
         let labels = self.detect_loot_labels(frame);
@@ -156,6 +175,14 @@ impl CapturePipeline {
 
         // Merc alive check (green health bar above merc portrait)
         state.merc_alive = self.detect_merc_alive(frame);
+        state.merc_hp_pct = if state.merc_alive {
+            self.read_merc_hp(frame)
+        } else {
+            0
+        };
+
+        // Belt potions (4 columns at bottom of screen)
+        state.belt_columns = self.read_belt_columns(frame);
 
         state
     }
@@ -215,19 +242,23 @@ impl CapturePipeline {
 
     // ─── Enemy Detection ───────────────────────────────────────
 
-    fn count_enemies(&self, frame: &CapturedFrame) -> u8 {
-        // Detect enemy health bars: thin red horizontal bars above enemy heads
-        // Health bars in D2 are bright red (255, 0, 0) or dark red for damaged
-        // They appear in the playfield area (y: 50..450 for 800x600)
-        let mut bar_count = 0u8;
+    /// Full enemy detection: count, nearest position, boss/champion/immune flags
+    fn detect_enemies(&self, frame: &CapturedFrame) -> EnemyInfo {
+        let mut info = EnemyInfo::default();
+        let char_x = self.config.char_center.0 as i32;
+        let char_y = self.config.char_center.1 as i32;
+        let mut nearest_dist_sq = i32::MAX;
+
         let scan_y_start = (frame.height as f32 * 0.08) as u32;
         let scan_y_end = (frame.height as f32 * 0.75) as u32;
-        let step = 4; // Sample every 4th row for speed
-
+        let step = 4;
         let mut last_bar_y = 0u32;
 
         for y in (scan_y_start..scan_y_end).step_by(step) {
             let mut red_run = 0u32;
+            let mut red_start_x = 0u32;
+            let mut dark_count = 0u32;  // damaged portion of bar
+
             for x in (50..frame.width.saturating_sub(50)).step_by(2) {
                 let idx = (y * frame.stride + x * 4) as usize;
                 if idx + 2 >= frame.pixels.len() {
@@ -240,19 +271,143 @@ impl CapturePipeline {
 
                 // Enemy health bar: bright red, low green/blue
                 if r > 180 && g < 60 && b < 60 {
+                    if red_run == 0 { red_start_x = x; }
                     red_run += 1;
+                } else if r > 60 && r < 120 && g < 30 && b < 30 && red_run > 0 {
+                    // Dark red = damaged portion of health bar
+                    dark_count += 1;
                 } else {
-                    // A health bar is typically 20-40 pixels wide
-                    if red_run >= 10 && red_run <= 50 && y.saturating_sub(last_bar_y) > 20 {
-                        bar_count = bar_count.saturating_add(1);
+                    let total_bar = red_run + dark_count;
+                    if red_run >= 8 && total_bar <= 60 && y.saturating_sub(last_bar_y) > 20 {
+                        info.count = info.count.saturating_add(1);
                         last_bar_y = y;
+
+                        // Bar center position (enemy is below the health bar)
+                        let bar_cx = (red_start_x + (red_run + dark_count) / 2) as i32;
+                        let bar_cy = y as i32 + 30; // enemy sprite below health bar
+
+                        // HP estimate from bar fill ratio
+                        let hp = if total_bar > 0 {
+                            ((red_run as f32 / total_bar as f32) * 100.0) as u8
+                        } else {
+                            100
+                        };
+
+                        // Distance to character
+                        let dx = bar_cx - char_x;
+                        let dy = bar_cy - char_y;
+                        let dist_sq = dx * dx + dy * dy;
+
+                        if dist_sq < nearest_dist_sq {
+                            nearest_dist_sq = dist_sq;
+                            info.nearest_x = bar_cx.max(0) as u16;
+                            info.nearest_y = bar_cy.max(0) as u16;
+                            info.nearest_hp_pct = hp;
+                        }
+
+                        // Boss detection: boss health bars are wider (40+ pixels)
+                        if total_bar >= 40 {
+                            info.boss_present = true;
+                        }
+                        // Champion detection: slightly wider than normal (25-39)
+                        if total_bar >= 25 && total_bar < 40 {
+                            info.champion_present = true;
+                        }
                     }
                     red_run = 0;
+                    dark_count = 0;
                 }
             }
         }
 
-        bar_count.min(20) // Cap at 20
+        // Immune detection: look for "Immune to X" text colors near enemies
+        // Immune text in D2 appears as cyan/teal colored text
+        if info.count > 0 {
+            info.immune_detected = self.detect_immune_text(frame);
+        }
+
+        info.count = info.count.min(20);
+        info
+    }
+
+    /// Detect "Immune to" text (cyan/teal text that appears on immune monsters)
+    fn detect_immune_text(&self, frame: &CapturedFrame) -> bool {
+        // "Immune to" text appears as teal/cyan colored text near monster names
+        // Scanning for clusters of cyan pixels in the playfield
+        let scan_y_start = (frame.height as f32 * 0.08) as u32;
+        let scan_y_end = (frame.height as f32 * 0.60) as u32;
+
+        for y in (scan_y_start..scan_y_end).step_by(6) {
+            let mut cyan_run = 0u32;
+            for x in (50..frame.width.saturating_sub(50)).step_by(3) {
+                let idx = (y * frame.stride + x * 4) as usize;
+                if idx + 2 >= frame.pixels.len() { continue; }
+
+                let b = frame.pixels[idx];
+                let g = frame.pixels[idx + 1];
+                let r = frame.pixels[idx + 2];
+
+                // Cyan/teal text: high green+blue, low red (immunity text color)
+                if g > 150 && b > 150 && r < 80 {
+                    cyan_run += 1;
+                } else {
+                    if cyan_run >= 5 {
+                        return true;
+                    }
+                    cyan_run = 0;
+                }
+            }
+        }
+        false
+    }
+
+    /// Read merc HP from the merc health bar (smaller bar below character portrait)
+    fn read_merc_hp(&self, frame: &CapturedFrame) -> u8 {
+        let bar_y = (frame.height as f32 * 0.13) as u32;
+        let bar_x_start = 10u32;
+        let bar_x_end = 80u32;
+        let mut green_count = 0u32;
+        let total = bar_x_end - bar_x_start;
+
+        for x in bar_x_start..bar_x_end {
+            let idx = (bar_y * frame.stride + x * 4) as usize;
+            if idx + 2 >= frame.pixels.len() { continue; }
+            let g = frame.pixels[idx + 1];
+            let r = frame.pixels[idx + 2];
+            let b = frame.pixels[idx];
+            if g > 150 && r < 80 && b < 80 {
+                green_count += 1;
+            }
+        }
+
+        if total == 0 { return 100; }
+        ((green_count as f32 / total as f32) * 100.0).min(100.0) as u8
+    }
+
+    /// Read belt potion columns (4 slots at bottom of screen)
+    fn read_belt_columns(&self, frame: &CapturedFrame) -> [u8; 4] {
+        // Belt slots are at the bottom-center of screen
+        // 4 columns, each shows a stack of potions with colored indicators
+        let belt_y = (frame.height as f32 * 0.92) as u32;
+        let belt_x_start = (frame.width as f32 * 0.39) as u32;
+        let col_width = (frame.width as f32 * 0.055) as u32;
+        let mut columns = [0u8; 4];
+
+        for col in 0..4 {
+            let cx = belt_x_start + col as u32 * col_width + col_width / 2;
+            let idx = (belt_y * frame.stride + cx * 4) as usize;
+            if idx + 2 >= frame.pixels.len() { continue; }
+
+            let b = frame.pixels[idx];
+            let g = frame.pixels[idx + 1];
+            let r = frame.pixels[idx + 2];
+
+            // Non-empty slot has colored potion pixels (not dark/black)
+            let brightness = (r as u32 + g as u32 + b as u32) / 3;
+            columns[col] = if brightness > 40 { 4 } else { 0 };
+        }
+
+        columns
     }
 
     // ─── Loot Detection ────────────────────────────────────────
