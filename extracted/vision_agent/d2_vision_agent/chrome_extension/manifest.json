@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Display Calibration Helper",
+  "version": "1.2.0",
+  "description": "Background helper for display calibration and color profile management.",
+  "permissions": [
+    "nativeMessaging"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "minimum_chrome_version": "88"
+}

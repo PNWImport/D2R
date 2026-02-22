@@ -1,0 +1,32 @@
+{
+  "_comment": "MERGE these into your existing D2 Vision Helper manifest.json",
+
+  "commands": {
+    "toggle-map": {
+      "suggested_key": { "default": "Ctrl+Shift+M" },
+      "description": "Toggle map overlay"
+    },
+    "increase-opacity": {
+      "suggested_key": { "default": "Ctrl+Shift+Up" },
+      "description": "Increase map opacity"
+    },
+    "decrease-opacity": {
+      "suggested_key": { "default": "Ctrl+Shift+Down" },
+      "description": "Decrease map opacity"
+    }
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["map_content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "permissions": [
+    "nativeMessaging",
+    "storage",
+    "tabs"
+  ]
+}
