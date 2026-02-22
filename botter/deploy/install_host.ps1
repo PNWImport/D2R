@@ -14,7 +14,7 @@ if (-not (Test-Path $InstallPath)) {
 }
 
 # Copy binary
-$binarySource = ".\target\release\d2_vision_agent.exe"
+$binarySource = ".\target\release\kzb_vision_agent.exe"
 if (-not (Test-Path $binarySource)) {
     Write-Host "[-] Binary not found. Run: cargo build --release" -ForegroundColor Red
     exit 1

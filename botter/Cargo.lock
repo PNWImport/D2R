@@ -224,26 +224,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
 
 [[package]]
-name = "d2_vision_agent"
-version = "1.0.0"
-dependencies = [
- "anyhow",
- "chrono",
- "criterion",
- "rand",
- "rand_distr",
- "serde",
- "serde_json",
- "serde_yaml",
- "thiserror",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "windows",
- "winres",
-]
-
-[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -373,6 +353,26 @@ checksum = "93f0862381daaec758576dcc22eb7bbf4d7efd67328553f3b45a412a51a3fb21"
 dependencies = [
  "once_cell",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "kzb_vision_agent"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "criterion",
+ "rand",
+ "rand_distr",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "windows",
+ "winres",
 ]
 
 [[package]]

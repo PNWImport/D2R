@@ -1,11 +1,11 @@
 // tests/stress.rs — Heavy stress tests for production validation
 // Run with: cargo test --test stress -- --nocapture
 
-use d2_vision_agent::config::AgentConfig;
-use d2_vision_agent::decision::{Action, DecisionEngine};
-use d2_vision_agent::native_messaging::{NativeMessagingHost, SharedAgentStats};
-use d2_vision_agent::stealth::*;
-use d2_vision_agent::vision::*;
+use kzb_vision_agent::config::AgentConfig;
+use kzb_vision_agent::decision::{Action, DecisionEngine};
+use kzb_vision_agent::native_messaging::{NativeMessagingHost, SharedAgentStats};
+use kzb_vision_agent::stealth::*;
+use kzb_vision_agent::vision::*;
 
 use rand::prelude::*;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -503,7 +503,7 @@ fn stress_cadence_sustained_decoys() {
 
 #[test]
 fn stress_capture_vision_extraction() {
-    use d2_vision_agent::vision::capture::{CaptureConfig, CapturePipeline};
+    use kzb_vision_agent::vision::capture::{CaptureConfig, CapturePipeline};
 
     let buffer = Arc::new(ShardedFrameBuffer::new());
     let config = CaptureConfig::default();
@@ -550,8 +550,8 @@ fn stress_full_pipeline_5s() {
     let cap_buf = Arc::clone(&buffer);
     let cap_shut = Arc::clone(&shutdown);
     let capture = std::thread::spawn(move || {
-        let config = d2_vision_agent::vision::capture::CaptureConfig::default();
-        let mut pipeline = d2_vision_agent::vision::capture::CapturePipeline::new(
+        let config = kzb_vision_agent::vision::capture::CaptureConfig::default();
+        let mut pipeline = kzb_vision_agent::vision::capture::CapturePipeline::new(
             config, cap_buf,
         );
         let running = pipeline.running_flag();

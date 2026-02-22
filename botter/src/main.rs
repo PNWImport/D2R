@@ -29,7 +29,7 @@ async fn main() {
     let _ = std::fs::create_dir_all(&log_dir);
 
     let file_appender = tracing_subscriber::fmt()
-        .with_env_filter("d2_vision_agent=debug")
+        .with_env_filter("kzb_vision_agent=debug")
         .with_writer(move || {
             let path = log_dir.join("agent.log");
             std::fs::OpenOptions::new()
@@ -409,7 +409,7 @@ async fn main() {
 /// Resolve which config YAML to load.
 /// Priority: CLI arg (first arg) > D2R_CONFIG env var > data_dir/config.yaml
 fn resolve_config_path() -> PathBuf {
-    // Check CLI args: d2_vision_agent.exe path/to/paladin_hammerdin.yaml
+    // Check CLI args: kzb_vision_agent.exe path/to/paladin_hammerdin.yaml
     let args: Vec<String> = std::env::args().collect();
     if args.len() > 1 && !args[1].starts_with('-') {
         let p = PathBuf::from(&args[1]);
@@ -448,7 +448,7 @@ fn data_dir() -> PathBuf {
     }
     #[cfg(not(windows))]
     {
-        PathBuf::from("/tmp/d2_vision_agent")
+        PathBuf::from("/tmp/kzb_vision_agent")
     }
 }
 

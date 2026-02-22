@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use d2_vision_agent::vision::{FrameState, ShardedFrameBuffer};
+use kzb_vision_agent::vision::{FrameState, ShardedFrameBuffer};
 use std::sync::Arc;
 
 fn bench_push(c: &mut Criterion) {

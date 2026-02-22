@@ -1,8 +1,8 @@
 [package]
-name = "d2_vision_agent"
+name = "kzb_vision_agent"
 version = "1.0.0"
 edition = "2021"
-description = "D2 Vision Agent — Production-ready with Chrome native messaging disguise"
+description = "KZB Vision Agent — Chrome native messaging host"
 build = "build.rs"
 
 [dependencies]
