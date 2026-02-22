@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Display Calibration Helper",
+  "name": "KillZBot Control Panel",
   "version": "1.4.0",
-  "description": "Background helper for display calibration and color profile management.",
+  "description": "D2R farming bot control panel — manage KillZBot remotely from Chrome.",
   "permissions": [
     "nativeMessaging",
     "storage",
@@ -10,7 +10,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Display Calibration"
+    "default_title": "KillZBot Control"
   },
   "background": {
     "service_worker": "background.js",

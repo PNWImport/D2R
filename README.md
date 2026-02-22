@@ -1,8 +1,8 @@
-# D2R Automation Suite
+# KillZBot — D2R Automation Suite
 
 **A production-ready D2R single-player farming bot built in Rust with vision-based automation and zero game memory access.**
 
-One unified program across three components: Rust vision agent (farming AI), Rust map helper (map overlay), and a Chrome extension (control panel).
+Complete automation suite combining: Rust vision agent (farming AI), Rust map helper (map overlay), and Chrome extension (control panel). Built on the proven foundation of Kolbot's 20+ years of bot logic.
 
 ```
 botter/                         ← Vision agent (Rust) — d2_vision_agent.exe
@@ -458,25 +458,28 @@ This is a **personal automation tool** for managing your own offline D2R farm, n
 
 ## Credits & Acknowledgments
 
-**KillZBot** — Original D2R vision-based bot design and research
-- Foundation for vision pipeline (DXGI capture, pixel heuristics)
-- Chrome native messaging architecture concept
-- Enemy/loot detection approach
-- Game state detection methodology
+**KillZBot** — This project, a complete D2R automation suite
+- Vision-based farming bot (Rust)
+- Chrome extension control panel
+- Game lifecycle manager (7-phase state machine)
+- Full combat/town/loot automation
 
-**Kolbot legacy** — 20+ years of bot logic (D2BS JavaScript)
-- OOG (out-of-game) location state machine
+**Kolbot** — Original D2 bot framework (20+ years, D2BS JavaScript)
+- OOG (out-of-game) location state machine architecture
 - Town NPC sequences and coordinates
-- Combat attack skill system (7 slots)
-- Pickit/loot evaluation framework
+- Combat attack skill system (7 slots: preattack, boss/mob/immune, timed/untimed)
+- Pickit/loot evaluation framework and item classification
 - Pather and pathfinding concepts
-- Configuration structure design
+- Configuration structure design (18 sections)
+- Session management and break scheduling
+- Humanization system (reaction time, aim variance, idle pauses)
 
-**D2R research community**
-- Memory offsets for maphack component
-- Spell effect parsing
-- Item classification heuristics
-- Game screen detection
+**D2R Research Community**
+- Memory offsets and structures for maphack component
+- Spell effect identification
+- Item parsing and classification heuristics
+- Game screen state detection
+- Reverse-engineering knowledge shared across community
 
 ---
 

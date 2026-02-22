@@ -1,12 +1,12 @@
-# Changelog — D2R Automation Suite
+# Changelog — KillZBot
 
-All notable changes to this project are documented here.
+Complete version history of KillZBot, a production D2R farming automation suite built in Rust.
 
 ---
 
 ## [1.0.0] — 2026-02-22
 
-### Initial Release: Complete D2R Bot Suite (Rust + Chrome)
+### KillZBot v1.0: Complete D2R Farming Automation Suite (Rust + Chrome)
 
 #### Rust Vision Agent (`botter/`)
 - **Frame capture** (DXGI Desktop Duplication)
