@@ -1,8 +1,30 @@
-# Rust build artifacts
+# Build artifacts
 botter/target/
 maphack/target/
-target/
+*.exe
+*.dll
 
-# OS files
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
 .DS_Store
 Thumbs.db
+*.tmp
+
+# Archives (dev files, not for release)
+*.tar.gz
+*.zip
+extracted/
+
+# Runtime data
+*.yaml
+!botter/configs/*.yaml
+!maphack/configs/*.yaml
