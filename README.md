@@ -456,17 +456,32 @@ This is a **personal automation tool** for managing your own offline D2R farm, n
 
 ---
 
-## Credits
+## Credits & Acknowledgments
 
-- **Kolbot legacy**: 20+ years of bot logic (OOG, Town, Pickit, Pather, Attack system)
-- **D2R research**: community reverse-engineering of memory offsets, spell effects, item parsing
-- **Rust vision**: built from scratch using DXGI, Windows API, pixel heuristics
-- **Chrome native messaging**: legitimate subprocess architecture avoiding injection/hooks
+**KillZBot** — Original D2R vision-based bot design and research
+- Foundation for vision pipeline (DXGI capture, pixel heuristics)
+- Chrome native messaging architecture concept
+- Enemy/loot detection approach
+- Game state detection methodology
+
+**Kolbot legacy** — 20+ years of bot logic (D2BS JavaScript)
+- OOG (out-of-game) location state machine
+- Town NPC sequences and coordinates
+- Combat attack skill system (7 slots)
+- Pickit/loot evaluation framework
+- Pather and pathfinding concepts
+- Configuration structure design
+
+**D2R research community**
+- Memory offsets for maphack component
+- Spell effect parsing
+- Item classification heuristics
+- Game screen detection
 
 ---
 
 ## License
 
-MIT License — see LICENSE file.
+MIT License — see LICENSE file for details.
 
 **But:** Respect Blizzard's D2R Terms of Service. This tool is for personal offline use only.
