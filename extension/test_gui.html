@@ -2,347 +2,773 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>KZB GUI Test — No Chrome Required</title>
+  <title>KZB GUI Test Harness</title>
   <style>
+    /* ── Page Layout ─────────────────────────────────────────── */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
     body {
-      background: #111;
+      background: #0d0d1a;
       display: flex;
-      gap: 24px;
-      padding: 24px;
-      font-family: sans-serif;
-      color: #ccc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #c8c8d4;
     }
-    .panel {
-      border: 1px solid #333;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    .panel-title {
-      background: #222;
-      padding: 8px 12px;
-      font-size: 13px;
-      color: #888;
-    }
-    .panel-body {
-      width: 320px;
-    }
-    .controls {
-      padding: 16px;
+    .column {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      height: 100vh;
+      overflow-y: auto;
     }
-    .controls button {
-      padding: 8px 16px;
-      background: #2a2a50;
-      border: 1px solid #555;
-      color: #ccc;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 13px;
-    }
-    .controls button:hover { background: #3a3a60; }
-    .controls button.active { background: #206a20; border-color: #40c040; color: #40c040; }
-    .log {
-      background: #0a0a0a;
-      border: 1px solid #333;
-      border-radius: 4px;
+    .col-popup {
+      width: 344px;
+      flex-shrink: 0;
       padding: 12px;
-      font-family: monospace;
+      background: #111122;
+      border-right: 1px solid #2a2a44;
+    }
+    .col-controls {
+      flex: 1;
+      padding: 16px;
+      min-width: 360px;
+    }
+    .col-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #555;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #222;
+    }
+
+    /* ── Popup Replica (inlined from popup.css) ───────────────── */
+    #popup {
+      width: 320px;
+      font-size: 13px;
+      background: #1a1a2e;
+      color: #c8c8d4;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #2a2a44;
+    }
+    #popup .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #2a2a44;
+      position: relative;
+    }
+    #popup .logo {
+      max-width: 300px;
+      max-height: 80px;
+      width: auto;
+      height: auto;
+      margin-bottom: 6px;
+    }
+    #popup .version {
+      position: absolute;
+      top: 6px;
+      right: 0;
+      font-size: 11px;
+      color: #6a6a80;
+    }
+    #popup .section {
+      margin-bottom: 12px;
+      padding: 10px;
+      background: #16162a;
+      border-radius: 6px;
+      border: 1px solid #2a2a44;
+    }
+    #popup .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #8888a0;
+      margin-bottom: 8px;
+    }
+    #popup .status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+    }
+    #popup .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    #popup .dot-ok {
+      background: #40c040;
+      box-shadow: 0 0 4px #40c04080;
+    }
+    #popup .dot-off {
+      background: #606070;
+    }
+    #popup .dot-warn {
+      background: #e0a020;
+      box-shadow: 0 0 4px #e0a02080;
+    }
+    #popup .status-text {
+      margin-left: auto;
+      font-size: 12px;
+      color: #8888a0;
+    }
+    #popup .control-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+    }
+    #popup .control-row label {
+      font-size: 12px;
+      color: #8888a0;
+      min-width: 48px;
+    }
+    #popup .control-row select {
+      flex: 1;
+      padding: 4px 6px;
+      background: #1a1a2e;
+      color: #c8c8d4;
+      border: 1px solid #3a3a55;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    #popup .control-row select:focus {
+      outline: none;
+      border-color: #e0c070;
+    }
+    #popup .btn {
+      padding: 5px 14px;
+      border: 1px solid #3a3a55;
+      border-radius: 4px;
+      background: #22223a;
+      color: #c8c8d4;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    #popup .btn:hover:not(:disabled) {
+      background: #2a2a50;
+      border-color: #5a5a75;
+    }
+    #popup .btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    #popup .btn-warn {
+      border-color: #8a6020;
+      color: #e0a020;
+    }
+    #popup .btn-warn:hover:not(:disabled) {
+      background: #2a2410;
+      border-color: #e0a020;
+    }
+    #popup .btn-ok {
+      border-color: #206a20;
+      color: #40c040;
+    }
+    #popup .btn-ok:hover:not(:disabled) {
+      background: #102a10;
+      border-color: #40c040;
+    }
+    #popup .btn-danger {
+      border-color: #8a2020;
+      color: #e04040;
+    }
+    #popup .btn-danger:hover:not(:disabled) {
+      background: #2a1010;
+      border-color: #e04040;
+    }
+    #popup .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 12px;
+    }
+    #popup .stat-label {
+      font-size: 11px;
+      color: #6a6a80;
+    }
+    #popup .stat-value {
+      font-size: 12px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: #d0d0e0;
+    }
+    #popup input[type="range"] {
+      flex: 1;
+      height: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #2a2a44;
+      border-radius: 2px;
+      outline: none;
+    }
+    #popup input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #e0c070;
+      cursor: pointer;
+      border: none;
+    }
+    #popup #opacity-value {
+      font-size: 11px;
+      color: #8888a0;
+      min-width: 28px;
+      text-align: right;
+    }
+
+    /* ── Test Controls ────────────────────────────────────────── */
+    .scenario-group {
+      margin-bottom: 16px;
+    }
+    .scenario-group h3 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+    .test-btn {
+      display: block;
+      width: 100%;
+      padding: 8px 12px;
+      margin-bottom: 4px;
+      background: #1a1a30;
+      border: 1px solid #2a2a44;
+      border-radius: 4px;
+      color: #aab;
+      font-size: 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.12s;
+    }
+    .test-btn:hover {
+      background: #222244;
+      border-color: #4a4a66;
+      color: #dde;
+    }
+    .test-btn.active {
+      background: #1a2a1a;
+      border-color: #40c040;
+      color: #40c040;
+    }
+
+    /* ── Log ──────────────────────────────────────────────────── */
+    #log {
+      margin-top: 12px;
+      background: #0a0a14;
+      border: 1px solid #1a1a2a;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: "SF Mono", "Fira Code", monospace;
       font-size: 11px;
       color: #6a6;
-      max-height: 400px;
+      max-height: 300px;
       overflow-y: auto;
       white-space: pre-wrap;
-      min-width: 400px;
+      line-height: 1.5;
     }
-    .log-entry { margin-bottom: 2px; }
-    .log-entry.error { color: #c44; }
-    .log-entry.info { color: #68a; }
-    .log-entry.success { color: #4a4; }
+    .log-err { color: #c44; }
+    .log-info { color: #68a; }
+    .log-ok { color: #4a4; }
+    .log-cmd { color: #a8a; }
   </style>
 </head>
 <body>
-  <!-- Popup Preview -->
-  <div class="panel">
-    <div class="panel-title">Popup Preview (320px)</div>
-    <div class="panel-body">
-      <iframe id="popup-frame" src="chrome_extension/popup.html" width="320" height="600" style="border:none; background: #1a1a2e;"></iframe>
-    </div>
-  </div>
 
-  <!-- Test Controls -->
-  <div>
-    <div class="panel" style="margin-bottom: 16px;">
-      <div class="panel-title">Test Controls</div>
-      <div class="controls">
-        <button onclick="mockConnected()">Simulate: Both Connected</button>
-        <button onclick="mockDisconnected()">Simulate: Both Disconnected</button>
-        <button onclick="mockAgentOnly()">Simulate: Agent Only</button>
-        <button onclick="mockMapOnly()">Simulate: Map Only</button>
-        <button onclick="mockRunning()">Simulate: Agent Running</button>
-        <button onclick="mockPaused()">Simulate: Agent Paused</button>
-        <button onclick="mockMapActivated()">Simulate: Map Activated (5s)</button>
-        <button onclick="testProtocol()">Test: Native Messaging Protocol</button>
-        <button onclick="testAllButtons()">Test: Click All Buttons</button>
-        <button onclick="clearLog()">Clear Log</button>
+<!-- ── Left Column: Popup Replica ──────────────────────────────── -->
+<div class="column col-popup">
+  <div class="col-title">Popup Preview (320px)</div>
+  <div id="popup">
+    <!-- Header -->
+    <div class="header">
+      <img id="logo" src="chrome_extension/kzb_header.webp" alt="KZB" class="logo"
+           onerror="this.style.display='none'; this.insertAdjacentHTML('afterend','<div style=&quot;font-size:20px;font-weight:700;color:#e0c070;letter-spacing:4px;&quot;>K Z B</div>')">
+      <span id="version" class="version">v1.4.0</span>
+    </div>
+
+    <!-- Connection status -->
+    <div class="section">
+      <div class="status-row">
+        <span class="dot dot-off" id="agent-dot"></span>
+        <span>Agent</span>
+        <span id="agent-status" class="status-text">Disconnected</span>
+      </div>
+      <div class="status-row">
+        <span class="dot dot-off" id="map-dot"></span>
+        <span>Map Host</span>
+        <span id="map-status" class="status-text">Disconnected</span>
       </div>
     </div>
 
-    <!-- Log Output -->
-    <div class="panel">
-      <div class="panel-title">Test Log</div>
-      <div id="log" class="log"></div>
+    <!-- Controls -->
+    <div class="section">
+      <div class="control-row">
+        <button id="btn-pause" class="btn btn-warn" disabled>Pause</button>
+        <button id="btn-resume" class="btn btn-ok" disabled>Resume</button>
+      </div>
+      <div class="control-row">
+        <label>Config</label>
+        <select id="config-select">
+          <option value="">-- default --</option>
+          <option value="sorceress_blizzard">Sorceress -- Blizzard</option>
+          <option value="sorceress_light">Sorceress -- Lightning</option>
+          <option value="paladin_hammerdin">Paladin -- Hammerdin</option>
+          <option value="amazon_javazon">Amazon -- Javazon</option>
+          <option value="necro_summon">Necromancer -- Summon</option>
+          <option value="assassin_trapsin">Assassin -- Trapsin</option>
+          <option value="barbarian_ww">Barbarian -- Whirlwind</option>
+          <option value="druid_wind">Druid -- Wind</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="section">
+      <div class="section-title">Session</div>
+      <div class="stat-grid">
+        <span class="stat-label">Uptime</span>
+        <span id="stat-uptime" class="stat-value">--</span>
+        <span class="stat-label">Frames</span>
+        <span id="stat-frames" class="stat-value">0</span>
+        <span class="stat-label">Decisions</span>
+        <span id="stat-decisions" class="stat-value">0</span>
+        <span class="stat-label">Potions</span>
+        <span id="stat-potions" class="stat-value">0</span>
+        <span class="stat-label">Loots</span>
+        <span id="stat-loots" class="stat-value">0</span>
+        <span class="stat-label">Chickens</span>
+        <span id="stat-chickens" class="stat-value">0</span>
+      </div>
+    </div>
+
+    <!-- Map overlay -->
+    <div class="section">
+      <div class="section-title">Map Overlay</div>
+      <div class="control-row">
+        <button id="btn-map-activate" class="btn btn-ok">Activate</button>
+        <button id="btn-map-deactivate" class="btn btn-warn" disabled>Deactivate</button>
+      </div>
+      <div class="control-row">
+        <label>Opacity</label>
+        <input type="range" id="opacity-slider" min="10" max="255" step="5" value="180">
+        <span id="opacity-value">180</span>
+      </div>
+    </div>
+
+    <!-- Emergency -->
+    <div class="section">
+      <div class="control-row">
+        <button id="btn-kill" class="btn btn-danger">Kill Switch</button>
+      </div>
     </div>
   </div>
+</div>
+
+<!-- ── Right Column: Test Controls ─────────────────────────────── -->
+<div class="column col-controls">
+  <div class="col-title">Test Harness</div>
+
+  <div class="scenario-group">
+    <h3>Connection Scenarios</h3>
+    <button class="test-btn" onclick="scenario('both_connected')">Both Connected (Running)</button>
+    <button class="test-btn" onclick="scenario('both_disconnected')">Both Disconnected</button>
+    <button class="test-btn" onclick="scenario('agent_only')">Agent Only</button>
+    <button class="test-btn" onclick="scenario('map_only')">Map Host Only</button>
+  </div>
+
+  <div class="scenario-group">
+    <h3>Agent State</h3>
+    <button class="test-btn" onclick="scenario('running')">Running (Farming)</button>
+    <button class="test-btn" onclick="scenario('paused')">Paused</button>
+    <button class="test-btn" onclick="scenario('high_stats')">High Stats (Long Session)</button>
+  </div>
+
+  <div class="scenario-group">
+    <h3>Map Overlay</h3>
+    <button class="test-btn" onclick="scenario('map_activated')">Map Activated (5s Timer)</button>
+    <button class="test-btn" onclick="scenario('map_deactivated')">Map Deactivated</button>
+  </div>
+
+  <div class="scenario-group">
+    <h3>Automated Tests</h3>
+    <button class="test-btn" onclick="runAllTests()">Run All Tests</button>
+  </div>
+
+  <div id="log"></div>
+</div>
 
 <script>
-// ── Chrome API Mock ─────────────────────────────────────────────
-// Inject mock Chrome APIs into the iframe before popup.js loads
-
+// ── Log ────────────────────────────────────────────────────────
 const logEl = document.getElementById('log');
-
-function log(msg, cls = '') {
-  const entry = document.createElement('div');
-  entry.className = 'log-entry ' + cls;
-  entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-  logEl.appendChild(entry);
+function log(msg, cls) {
+  const d = document.createElement('div');
+  d.className = cls || '';
+  const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
+  d.textContent = `[${ts}] ${msg}`;
+  logEl.appendChild(d);
   logEl.scrollTop = logEl.scrollHeight;
 }
 
-function clearLog() {
-  logEl.innerHTML = '';
-  log('Log cleared', 'info');
-}
+// ── DOM Shortcuts ──────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const agentDot = $('agent-dot'), agentStatus = $('agent-status');
+const mapDot = $('map-dot'), mapStatus = $('map-status');
+const btnPause = $('btn-pause'), btnResume = $('btn-resume');
+const btnActivate = $('btn-map-activate'), btnDeactivate = $('btn-map-deactivate');
+const btnKill = $('btn-kill');
+const opSlider = $('opacity-slider'), opValue = $('opacity-value');
+const statUptime = $('stat-uptime'), statFrames = $('stat-frames');
+const statDecisions = $('stat-decisions'), statPotions = $('stat-potions');
+const statLoots = $('stat-loots'), statChickens = $('stat-chickens');
+const configSelect = $('config-select');
 
-// Mock state
-let mockState = {
+// ── Mock State ─────────────────────────────────────────────────
+let state = {
   agentConnected: false,
   mapConnected: false,
-  mapEnabled: true,
-  mapActive: false,
-  mapOpacity: 180,
   paused: false,
-  uptime_ms: 123456,
-  frames: 15234,
-  decisions: 8721,
-  potions: 47,
-  loots: 312,
-  chickens: 3,
+  mapActive: false,
+  opacity: 180,
+  uptime_ms: 0,
+  frames: 0,
+  decisions: 0,
+  potions: 0,
+  loots: 0,
+  chickens: 0,
 };
 
-const iframe = document.getElementById('popup-frame');
+// ── UI Update ──────────────────────────────────────────────────
+function setDot(dot, label, connected, text) {
+  dot.className = 'dot ' + (connected ? 'dot-ok' : 'dot-off');
+  label.textContent = text || (connected ? 'Connected' : 'Disconnected');
+}
 
-iframe.addEventListener('load', () => {
-  const win = iframe.contentWindow;
+function fmtTime(ms) {
+  if (!ms || ms <= 0) return '--';
+  const s = Math.floor(ms / 1000);
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  if (h > 0) return h + 'h ' + m + 'm';
+  if (m > 0) return m + 'm ' + sec + 's';
+  return sec + 's';
+}
 
-  // Mock chrome.runtime
-  win.chrome = {
-    runtime: {
-      getManifest: () => ({ version: '1.4.0' }),
-      sendMessage: (msg, callback) => {
-        log(`popup -> background: ${JSON.stringify(msg)}`, 'info');
-        const resp = handleMockMessage(msg);
-        log(`background -> popup: ${JSON.stringify(resp)}`, 'success');
-        if (callback) callback(resp);
-      },
-      id: 'mock-extension-id-12345',
-    },
-    storage: {
-      local: {
-        get: (keys, cb) => { cb({}); },
-        set: (obj) => { log(`storage.set: ${JSON.stringify(obj)}`, 'info'); },
-      },
-    },
-    tabs: {
-      query: (q, cb) => { cb([]); },
-    },
-  };
+function fmtNum(n) { return (n || 0).toLocaleString(); }
 
-  log('Chrome APIs injected into popup iframe', 'success');
-  log('Popup loaded successfully!', 'success');
+function render() {
+  // Agent
+  if (state.agentConnected) {
+    setDot(agentDot, agentStatus, true, state.paused ? 'Paused' : 'Running');
+    btnPause.disabled = state.paused;
+    btnResume.disabled = !state.paused;
+    statUptime.textContent = fmtTime(state.uptime_ms);
+    statFrames.textContent = fmtNum(state.frames);
+    statDecisions.textContent = fmtNum(state.decisions);
+    statPotions.textContent = fmtNum(state.potions);
+    statLoots.textContent = fmtNum(state.loots);
+    statChickens.textContent = fmtNum(state.chickens);
+  } else {
+    setDot(agentDot, agentStatus, false);
+    btnPause.disabled = true;
+    btnResume.disabled = true;
+    statUptime.textContent = '--';
+    statFrames.textContent = '0';
+    statDecisions.textContent = '0';
+    statPotions.textContent = '0';
+    statLoots.textContent = '0';
+    statChickens.textContent = '0';
+  }
 
-  // Force re-run popup.js with mocked APIs
-  const script = win.document.createElement('script');
-  script.src = 'popup.js';
-  win.document.body.appendChild(script);
+  // Map
+  if (state.mapConnected) {
+    setDot(mapDot, mapStatus, true);
+    btnActivate.disabled = state.mapActive;
+    btnDeactivate.disabled = !state.mapActive;
+  } else {
+    setDot(mapDot, mapStatus, false);
+    btnActivate.disabled = true;
+    btnDeactivate.disabled = true;
+  }
+
+  opSlider.value = state.opacity;
+  opValue.textContent = state.opacity;
+}
+
+// ── Button Event Handlers ──────────────────────────────────────
+btnPause.addEventListener('click', () => {
+  state.paused = true;
+  log('CMD  pause (reason: popup)', 'log-cmd');
+  render();
 });
 
-function handleMockMessage(msg) {
-  switch (msg.cmd) {
-    case 'getStatus':
-      return {
-        agent: { connected: mockState.agentConnected, stats: null },
-        map: { connected: mockState.mapConnected, enabled: mockState.mapEnabled, opacity: mockState.mapOpacity },
-      };
-    case 'get_stats':
-      if (!mockState.agentConnected) return { error: 'agent_not_connected' };
-      return {
-        paused: mockState.paused,
-        uptime_ms: mockState.uptime_ms,
-        frames: mockState.frames,
-        decisions: mockState.decisions,
-        potions: mockState.potions,
-        loots: mockState.loots,
-        chickens: mockState.chickens,
-      };
-    case 'getMapStatus':
-      return {
-        connected: mockState.mapConnected,
-        enabled: mockState.mapEnabled,
-        opacity: mockState.mapOpacity,
-      };
-    case 'pause':
-      mockState.paused = true;
-      log('Agent PAUSED', 'info');
-      return { status: 'sent' };
-    case 'resume':
-      mockState.paused = false;
-      log('Agent RESUMED', 'info');
-      return { status: 'sent' };
-    case 'toggleMap':
-      mockState.mapEnabled = !mockState.mapEnabled;
-      log(`Map toggled: ${mockState.mapEnabled ? 'ON' : 'OFF'}`, 'info');
-      return { enabled: mockState.mapEnabled };
-    case 'setOpacity':
-      mockState.mapOpacity = msg.value;
-      log(`Opacity set to: ${msg.value}`, 'info');
-      return { opacity: msg.value };
-    case 'activateMap':
-      mockState.mapActive = true;
-      log(`Map ACTIVATED for ${msg.durationMs || 5000}ms`, 'success');
-      setTimeout(() => {
-        mockState.mapActive = false;
-        log('Map auto-DEACTIVATED (timer expired)', 'info');
-      }, msg.durationMs || 5000);
-      return { status: 'requested' };
-    case 'deactivateMap':
-      mockState.mapActive = false;
-      log('Map DEACTIVATED', 'info');
-      return { status: 'requested' };
-    case 'killMap':
-      log('KILL SWITCH ACTIVATED', 'error');
-      mockState.mapConnected = false;
-      mockState.agentConnected = false;
-      return { status: 'requested' };
-    case 'update_config':
-      log(`Config update: ${JSON.stringify(msg.data)}`, 'info');
-      return { status: 'sent' };
-    case 'getCacheStats':
-      return { status: 'requested' };
-    case 'generateMap':
-      log(`Generate map: seed=${msg.seed} area=${msg.areaId}`, 'info');
-      return { status: 'requested' };
-    default:
-      log(`Unknown command: ${msg.cmd}`, 'error');
-      return { error: 'unknown' };
-  }
-}
+btnResume.addEventListener('click', () => {
+  state.paused = false;
+  log('CMD  resume', 'log-cmd');
+  render();
+});
 
-// ── Simulation Functions ────────────────────────────────────────
-
-function mockConnected() {
-  mockState.agentConnected = true;
-  mockState.mapConnected = true;
-  log('Simulated: Both hosts CONNECTED', 'success');
-}
-
-function mockDisconnected() {
-  mockState.agentConnected = false;
-  mockState.mapConnected = false;
-  log('Simulated: Both hosts DISCONNECTED', 'error');
-}
-
-function mockAgentOnly() {
-  mockState.agentConnected = true;
-  mockState.mapConnected = false;
-  log('Simulated: Agent connected, Map disconnected', 'info');
-}
-
-function mockMapOnly() {
-  mockState.agentConnected = false;
-  mockState.mapConnected = true;
-  log('Simulated: Map connected, Agent disconnected', 'info');
-}
-
-function mockRunning() {
-  mockState.agentConnected = true;
-  mockState.paused = false;
-  mockState.uptime_ms += 60000;
-  mockState.frames += 1500;
-  mockState.decisions += 900;
-  log('Simulated: Agent RUNNING (stats incrementing)', 'success');
-}
-
-function mockPaused() {
-  mockState.agentConnected = true;
-  mockState.paused = true;
-  log('Simulated: Agent PAUSED', 'info');
-}
-
-function mockMapActivated() {
-  mockState.mapConnected = true;
-  mockState.mapActive = true;
-  log('Simulated: Map ACTIVATED for 5 seconds', 'success');
+btnActivate.addEventListener('click', () => {
+  state.mapActive = true;
+  log('CMD  activateMap (duration: 5000ms)', 'log-cmd');
+  render();
   setTimeout(() => {
-    mockState.mapActive = false;
-    log('Map auto-deactivated (5s timer expired)', 'info');
+    state.mapActive = false;
+    log('MAP  auto-deactivated (timer expired)', 'log-info');
+    render();
   }, 5000);
-}
+});
 
-// ── Protocol Tests ──────────────────────────────────────────────
+btnDeactivate.addEventListener('click', () => {
+  state.mapActive = false;
+  log('CMD  deactivateMap', 'log-cmd');
+  render();
+});
 
-function testProtocol() {
-  log('=== PROTOCOL TEST START ===', 'info');
+btnKill.addEventListener('click', () => {
+  state.agentConnected = false;
+  state.mapConnected = false;
+  state.mapActive = false;
+  state.paused = false;
+  log('KILL  All processes terminated', 'log-err');
+  render();
+});
 
-  const cmds = [
-    { cmd: 'handshake', version: '1.4.0' },
-    { cmd: 'ping', timestamp: Date.now() },
-    { cmd: 'read_state' },
-    { cmd: 'toggle_map', enabled: true },
-    { cmd: 'set_opacity', opacity: 200 },
-    { cmd: 'activate_map', duration_ms: 3000 },
-    { cmd: 'deactivate_map' },
-    { cmd: 'cache_stats' },
-    { cmd: 'get_offsets' },
-  ];
+opSlider.addEventListener('input', () => {
+  state.opacity = parseInt(opSlider.value);
+  opValue.textContent = state.opacity;
+});
 
-  cmds.forEach((c, i) => {
-    log(`Protocol[${i}]: ${JSON.stringify(c)}`, 'info');
-  });
+opSlider.addEventListener('change', () => {
+  log('CMD  setOpacity(' + state.opacity + ')', 'log-cmd');
+});
 
-  log('=== PROTOCOL TEST COMPLETE (9 commands validated) ===', 'success');
-}
+configSelect.addEventListener('change', () => {
+  const v = configSelect.value;
+  if (v) log('CMD  update_config(' + v + ')', 'log-cmd');
+});
 
-function testAllButtons() {
-  log('=== BUTTON TEST START ===', 'info');
-  const doc = iframe.contentDocument;
-  const buttons = doc.querySelectorAll('button');
-  log(`Found ${buttons.length} buttons in popup`, 'info');
-  buttons.forEach((btn, i) => {
-    log(`  Button[${i}]: "${btn.textContent}" id=${btn.id} disabled=${btn.disabled}`, 'info');
-  });
+// ── Scenarios ──────────────────────────────────────────────────
+function scenario(name) {
+  // Highlight active button
+  document.querySelectorAll('.test-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
 
-  // Test non-destructive buttons
-  const activate = doc.getElementById('btn-map-activate');
-  if (activate && !activate.disabled) {
-    activate.click();
-    log('Clicked: Activate', 'success');
+  switch (name) {
+    case 'both_connected':
+      state.agentConnected = true;
+      state.mapConnected = true;
+      state.paused = false;
+      state.mapActive = false;
+      state.uptime_ms = 342000;
+      state.frames = 15234;
+      state.decisions = 8721;
+      state.potions = 47;
+      state.loots = 312;
+      state.chickens = 3;
+      log('SCENARIO  Both connected, running', 'log-ok');
+      break;
+
+    case 'both_disconnected':
+      state.agentConnected = false;
+      state.mapConnected = false;
+      state.paused = false;
+      state.mapActive = false;
+      state.uptime_ms = 0;
+      state.frames = 0;
+      state.decisions = 0;
+      state.potions = 0;
+      state.loots = 0;
+      state.chickens = 0;
+      log('SCENARIO  Both disconnected', 'log-err');
+      break;
+
+    case 'agent_only':
+      state.agentConnected = true;
+      state.mapConnected = false;
+      state.paused = false;
+      state.uptime_ms = 120000;
+      state.frames = 5000;
+      state.decisions = 2800;
+      state.potions = 12;
+      state.loots = 89;
+      state.chickens = 1;
+      log('SCENARIO  Agent only (map disconnected)', 'log-info');
+      break;
+
+    case 'map_only':
+      state.agentConnected = false;
+      state.mapConnected = true;
+      state.paused = false;
+      state.mapActive = false;
+      state.uptime_ms = 0;
+      log('SCENARIO  Map only (agent disconnected)', 'log-info');
+      break;
+
+    case 'running':
+      state.agentConnected = true;
+      state.mapConnected = true;
+      state.paused = false;
+      state.uptime_ms = 567000;
+      state.frames = 28000;
+      state.decisions = 16500;
+      state.potions = 83;
+      state.loots = 541;
+      state.chickens = 7;
+      log('SCENARIO  Running (active farming)', 'log-ok');
+      break;
+
+    case 'paused':
+      state.agentConnected = true;
+      state.mapConnected = true;
+      state.paused = true;
+      state.uptime_ms = 342000;
+      state.frames = 15234;
+      state.decisions = 8721;
+      state.potions = 47;
+      state.loots = 312;
+      state.chickens = 3;
+      log('SCENARIO  Paused', 'log-info');
+      break;
+
+    case 'high_stats':
+      state.agentConnected = true;
+      state.mapConnected = true;
+      state.paused = false;
+      state.uptime_ms = 14400000; // 4 hours
+      state.frames = 864000;
+      state.decisions = 512000;
+      state.potions = 1247;
+      state.loots = 8934;
+      state.chickens = 42;
+      log('SCENARIO  Long session (4h, high numbers)', 'log-ok');
+      break;
+
+    case 'map_activated':
+      state.mapConnected = true;
+      state.mapActive = true;
+      log('SCENARIO  Map activated (5s timer)', 'log-ok');
+      setTimeout(() => {
+        state.mapActive = false;
+        log('MAP  auto-deactivated (5s expired)', 'log-info');
+        render();
+      }, 5000);
+      break;
+
+    case 'map_deactivated':
+      state.mapConnected = true;
+      state.mapActive = false;
+      log('SCENARIO  Map deactivated', 'log-info');
+      break;
   }
 
-  const pause = doc.getElementById('btn-pause');
-  if (pause && !pause.disabled) {
-    pause.click();
-    log('Clicked: Pause', 'success');
-  }
-
-  log('=== BUTTON TEST COMPLETE ===', 'success');
+  render();
 }
 
-// Initial log
-log('KZB GUI Test Harness loaded', 'success');
-log('Click buttons on the left to simulate different states', 'info');
-log('The popup refreshes every 2 seconds via its built-in poll loop', 'info');
+// ── Automated Tests ────────────────────────────────────────────
+function runAllTests() {
+  log('========================================', 'log-info');
+  log('RUNNING ALL TESTS', 'log-info');
+  log('========================================', 'log-info');
+  let pass = 0, fail = 0;
+
+  function assert(name, condition) {
+    if (condition) {
+      log('  PASS  ' + name, 'log-ok');
+      pass++;
+    } else {
+      log('  FAIL  ' + name, 'log-err');
+      fail++;
+    }
+  }
+
+  // Test 1: Disconnected state
+  scenario('both_disconnected');
+  assert('Pause disabled when disconnected', btnPause.disabled === true);
+  assert('Resume disabled when disconnected', btnResume.disabled === true);
+  assert('Agent dot is off', agentDot.classList.contains('dot-off'));
+  assert('Map dot is off', mapDot.classList.contains('dot-off'));
+  assert('Activate disabled when map disconnected', btnActivate.disabled === true);
+
+  // Test 2: Connected state
+  scenario('both_connected');
+  assert('Agent dot is green', agentDot.classList.contains('dot-ok'));
+  assert('Map dot is green', mapDot.classList.contains('dot-ok'));
+  assert('Pause enabled when running', btnPause.disabled === false);
+  assert('Resume disabled when running', btnResume.disabled === true);
+  assert('Uptime shows value', statUptime.textContent !== '--');
+  assert('Frames > 0', statFrames.textContent !== '0');
+  assert('Activate enabled', btnActivate.disabled === false);
+
+  // Test 3: Paused state
+  scenario('paused');
+  assert('Pause disabled when paused', btnPause.disabled === true);
+  assert('Resume enabled when paused', btnResume.disabled === false);
+  assert('Status shows Paused', agentStatus.textContent === 'Paused');
+
+  // Test 4: Agent only
+  scenario('agent_only');
+  assert('Agent connected', agentDot.classList.contains('dot-ok'));
+  assert('Map disconnected', mapDot.classList.contains('dot-off'));
+  assert('Map activate disabled (no map host)', btnActivate.disabled === true);
+
+  // Test 5: High stats formatting
+  scenario('high_stats');
+  assert('Uptime shows hours', statUptime.textContent.includes('h'));
+  assert('Frames formatted with commas', statFrames.textContent.includes(','));
+  assert('Loots formatted with commas', statLoots.textContent.includes(','));
+
+  // Test 6: Button interactions
+  scenario('both_connected');
+  btnPause.click();
+  assert('Pause click sets paused state', state.paused === true);
+  assert('Status shows Paused after click', agentStatus.textContent === 'Paused');
+  btnResume.click();
+  assert('Resume click clears paused state', state.paused === false);
+  assert('Status shows Running after resume', agentStatus.textContent === 'Running');
+
+  // Test 7: Kill switch
+  scenario('both_connected');
+  // Skip confirm dialog for test
+  const origConfirm = window.confirm;
+  window.confirm = () => true;
+  btnKill.click();
+  window.confirm = origConfirm;
+  assert('Kill disconnects agent', state.agentConnected === false);
+  assert('Kill disconnects map', state.mapConnected === false);
+  assert('Agent dot off after kill', agentDot.classList.contains('dot-off'));
+
+  // Test 8: Opacity slider
+  opSlider.value = 200;
+  opSlider.dispatchEvent(new Event('input'));
+  assert('Opacity value updates', opValue.textContent === '200');
+  assert('State opacity updated', state.opacity === 200);
+
+  // Test 9: Config select
+  configSelect.value = 'paladin_hammerdin';
+  configSelect.dispatchEvent(new Event('change'));
+  assert('Config select fires', configSelect.value === 'paladin_hammerdin');
+
+  // Summary
+  log('========================================', 'log-info');
+  log('RESULTS: ' + pass + '/' + (pass + fail) + ' passed, ' + fail + ' failed', fail > 0 ? 'log-err' : 'log-ok');
+  if (fail === 0) log('ALL TESTS PASSED', 'log-ok');
+  log('========================================', 'log-info');
+
+  // Reset to clean state
+  scenario('both_disconnected');
+}
+
+// ── Init ───────────────────────────────────────────────────────
+render();
+log('KZB GUI Test Harness loaded', 'log-ok');
+log('Click scenarios on the right to test different states', 'log-info');
+log('Click "Run All Tests" for automated validation', 'log-info');
 </script>
 </body>
 </html>

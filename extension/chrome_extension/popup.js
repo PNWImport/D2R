@@ -85,7 +85,8 @@ async function refresh() {
   const mapInfo = await send("getMapStatus");
   if (mapInfo && mapInfo.connected !== undefined) {
     setDot(mapDot, mapStatus, mapInfo.connected);
-    mapLabel.textContent = mapInfo.enabled ? "ON" : "OFF";
+    btnMapActivate.disabled = !mapInfo.enabled;
+    btnMapDeactivate.disabled = mapInfo.enabled;
     opacitySlider.value = mapInfo.opacity || 180;
     opacityValue.textContent = mapInfo.opacity || 180;
   } else {
