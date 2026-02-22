@@ -146,6 +146,11 @@ fn format_action(action: &crate::decision::Action) -> (String, serde_json::Value
             "idle_pause".into(),
             serde_json::json!({ "duration_ms": duration.as_millis() as u64 }),
         ),
+        Action::Dodge { screen_x, screen_y } => (
+            "dodge".into(),
+            serde_json::json!({ "x": screen_x, "y": screen_y }),
+        ),
+        Action::SwitchWeapon => ("switch_weapon".into(), serde_json::json!({})),
         Action::Wait => ("wait".into(), serde_json::json!({})),
     }
 }

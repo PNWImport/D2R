@@ -18,7 +18,18 @@ pub enum Action {
     RecastBuff { key: char },
     TakeBreak { duration: Duration },
     IdlePause { duration: Duration },
+    Dodge { screen_x: i32, screen_y: i32 },
+    SwitchWeapon,
     Wait,
+}
+
+/// Monster context passed from vision layer
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TargetType {
+    Boss,
+    Champion,
+    Normal,
+    Immune,
 }
 
 /// Decision with attached humanized delay
@@ -40,6 +51,8 @@ pub struct DecisionEngine {
     pub(crate) last_rejuv: Instant,
     pub(crate) last_attack: Instant,
     pub(crate) last_break_check: Instant,
+    pub(crate) last_static_field: Instant,
+    pub(crate) last_preattack: Instant,
     session_start: Instant,
 
     // Humanization state
@@ -51,6 +64,10 @@ pub struct DecisionEngine {
     // Intentional mistake tracking
     kills_since_last_mistake: u32,
     next_mistake_at: u32,
+
+    // Combat state tracking
+    static_field_casts: u8,
+    on_weapon_switch: bool,
 }
 
 impl DecisionEngine {
@@ -73,6 +90,8 @@ impl DecisionEngine {
             last_rejuv: now,
             last_attack: now,
             last_break_check: now,
+            last_static_field: now,
+            last_preattack: now,
             session_start: now,
             current_aggression: 0.7,
             current_caution: 0.5,
@@ -80,6 +99,8 @@ impl DecisionEngine {
             reaction_dist,
             kills_since_last_mistake: 0,
             next_mistake_at: next_mistake,
+            static_field_casts: 0,
+            on_weapon_switch: false,
         }
     }
 
@@ -93,7 +114,7 @@ impl DecisionEngine {
             return d;
         }
 
-        // Priority 1: CHICKEN
+        // Priority 1: CHICKEN (HP)
         if state.hp_pct <= self.config.survival.chicken_hp_pct && state.in_combat {
             return Decision {
                 action: Action::ChickenQuit,
@@ -101,6 +122,16 @@ impl DecisionEngine {
                 priority: 0,
                 reason: "chicken: HP critical",
             };
+        }
+
+        // Priority 1b: CHICKEN (Mana — kolbot Config.ManaChicken)
+        if let Some(d) = self.check_mana_chicken(state) {
+            return d;
+        }
+
+        // Priority 1c: CHICKEN (Merc — kolbot Config.MercChicken)
+        if let Some(d) = self.check_merc_chicken(state) {
+            return d;
         }
 
         // Priority 2: REJUV
@@ -123,6 +154,11 @@ impl DecisionEngine {
             };
         }
 
+        // Priority 4b: DODGE (kolbot Config.Dodge)
+        if let Some(d) = self.check_dodge(state) {
+            return d;
+        }
+
         // Priority 5: MANA POTION
         if let Some(d) = self.check_mana_potion(state) {
             return d;
@@ -138,7 +174,22 @@ impl DecisionEngine {
             return d;
         }
 
-        // Priority 8: ATTACK
+        // Priority 7b: STATIC FIELD (Sorceress — before main attack)
+        if let Some(d) = self.check_static_field(state) {
+            return d;
+        }
+
+        // Priority 7c: PREATTACK (kolbot AttackSkill[0] — Hurricane, Battle Cry, etc.)
+        if let Some(d) = self.check_preattack(state) {
+            return d;
+        }
+
+        // Priority 7d: MF WEAPON SWITCH (kolbot Config.MFSwitchPercent — swap before kill)
+        if let Some(d) = self.check_mf_switch(state) {
+            return d;
+        }
+
+        // Priority 8: ATTACK (uses full attack_slots system)
         if let Some(d) = self.check_attack(state) {
             return d;
         }
@@ -235,10 +286,259 @@ impl DecisionEngine {
         None
     }
 
+    // --- Mana / Merc Chicken (kolbot Config.ManaChicken, Config.MercChicken) ---
+
+    fn check_mana_chicken(&self, state: &FrameState) -> Option<Decision> {
+        let threshold = self.config.survival.mana_chicken_pct;
+        if threshold == 0 || state.in_town {
+            return None;
+        }
+        if state.mana_pct <= threshold && state.in_combat {
+            return Some(Decision {
+                action: Action::ChickenQuit,
+                delay: Duration::ZERO,
+                priority: 0,
+                reason: "chicken: mana critical",
+            });
+        }
+        None
+    }
+
+    fn check_merc_chicken(&self, state: &FrameState) -> Option<Decision> {
+        let threshold = self.config.survival.merc_chicken_pct;
+        if threshold == 0 || state.in_town || !self.config.merc.use_merc {
+            return None;
+        }
+        // Merc chicken: leave game if merc HP falls below threshold
+        if state.merc_alive && state.merc_hp_pct <= threshold && state.in_combat {
+            return Some(Decision {
+                action: Action::ChickenQuit,
+                delay: Duration::ZERO,
+                priority: 0,
+                reason: "chicken: merc HP critical",
+            });
+        }
+        None
+    }
+
+    // --- Dodge (kolbot Config.Dodge) ---
+
+    fn check_dodge(&mut self, state: &FrameState) -> Option<Decision> {
+        if !self.config.combat.dodge || state.in_town || !state.in_combat {
+            return None;
+        }
+
+        // Only dodge when HP is below dodge threshold
+        if state.hp_pct > self.config.combat.dodge_hp {
+            return None;
+        }
+
+        // Dodge when enemies are very close (within kite threshold)
+        if state.enemy_count < self.config.combat.kite_threshold {
+            return None;
+        }
+
+        // Move away from the nearest enemy
+        let dx = state.char_screen_x as i32 - state.nearest_enemy_x as i32;
+        let dy = state.char_screen_y as i32 - state.nearest_enemy_y as i32;
+
+        // Normalize and move in the opposite direction
+        let dist = ((dx * dx + dy * dy) as f32).sqrt().max(1.0);
+        let dodge_dist = self.config.combat.dodge_range as f32 * 10.0;
+        let dodge_x = state.char_screen_x as i32 + (dx as f32 / dist * dodge_dist) as i32;
+        let dodge_y = state.char_screen_y as i32 + (dy as f32 / dist * dodge_dist) as i32;
+
+        let (dx, dy) = self.humanize_position(dodge_x, dodge_y);
+
+        Some(Decision {
+            action: Action::Dodge {
+                screen_x: dx,
+                screen_y: dy,
+            },
+            delay: self.survival_delay(),
+            priority: 4,
+            reason: "dodge: HP low, enemies close",
+        })
+    }
+
+    // --- Static Field (Sorceress — kolbot Config.CastStatic) ---
+
+    fn check_static_field(&mut self, state: &FrameState) -> Option<Decision> {
+        let sf = match self.config.combat.static_field.as_ref() {
+            Some(sf) => sf,
+            None => return None,
+        };
+
+        if state.in_town || !state.in_combat || !state.boss_present {
+            self.static_field_casts = 0;
+            return None;
+        }
+
+        // Only cast if boss HP is above the threshold
+        if state.nearest_enemy_hp_pct <= sf.until_hp_pct {
+            return None;
+        }
+
+        // Max casts per engagement
+        if self.static_field_casts >= sf.max_casts {
+            return None;
+        }
+
+        let now = Instant::now();
+        if now.duration_since(self.last_static_field) < Duration::from_millis(300) {
+            return None;
+        }
+
+        // Copy hotkey before mutable borrow
+        let hotkey = sf.hotkey;
+
+        self.last_static_field = now;
+        self.static_field_casts += 1;
+
+        let (tx, ty) = self.humanize_position(
+            state.nearest_enemy_x as i32,
+            state.nearest_enemy_y as i32,
+        );
+
+        Some(Decision {
+            action: Action::CastSkill {
+                key: hotkey,
+                screen_x: tx,
+                screen_y: ty,
+            },
+            delay: self.attack_delay(),
+            priority: 7,
+            reason: "static field: boss HP above threshold",
+        })
+    }
+
+    // --- Preattack (kolbot AttackSkill[0] — Hurricane, Battle Cry, etc.) ---
+
+    fn check_preattack(&mut self, state: &FrameState) -> Option<Decision> {
+        let preattack_key = self.config.combat.attack_slots.preattack
+            .or(self.config.combat.preattack_key)?;
+
+        if state.in_town || state.enemy_count == 0 {
+            return None;
+        }
+
+        let now = Instant::now();
+        // Only preattack every 10 seconds (kolbot re-casts warcries/auras periodically)
+        if now.duration_since(self.last_preattack) < Duration::from_secs(10) {
+            return None;
+        }
+
+        self.last_preattack = now;
+
+        let (tx, ty) = self.humanize_position(
+            state.nearest_enemy_x as i32,
+            state.nearest_enemy_y as i32,
+        );
+
+        Some(Decision {
+            action: Action::CastSkill {
+                key: preattack_key,
+                screen_x: tx,
+                screen_y: ty,
+            },
+            delay: self.attack_delay(),
+            priority: 7,
+            reason: "preattack: warcry/debuff",
+        })
+    }
+
+    // --- MF Weapon Switch (kolbot Config.MFSwitchPercent) ---
+
+    fn check_mf_switch(&mut self, state: &FrameState) -> Option<Decision> {
+        let mf_pct = self.config.combat.mf_switch_pct;
+        if mf_pct == 0 {
+            return None;
+        }
+
+        if state.in_town || state.enemy_count == 0 {
+            // Switch back to main weapon if we're on MF switch
+            if self.on_weapon_switch {
+                self.on_weapon_switch = false;
+                return Some(Decision {
+                    action: Action::SwitchWeapon,
+                    delay: self.normal_delay(),
+                    priority: 8,
+                    reason: "mf switch: back to main weapon",
+                });
+            }
+            return None;
+        }
+
+        // Switch to MF weapon when boss/champion is low HP
+        if (state.boss_present || state.champion_present)
+            && state.nearest_enemy_hp_pct <= mf_pct
+            && state.nearest_enemy_hp_pct > 0
+            && !self.on_weapon_switch
+        {
+            self.on_weapon_switch = true;
+            return Some(Decision {
+                action: Action::SwitchWeapon,
+                delay: self.attack_delay(),
+                priority: 8,
+                reason: "mf switch: boss low HP, swap for MF",
+            });
+        }
+
+        None
+    }
+
     // --- Combat ---
+
+    /// Derive target type from vision state for attack slot selection
+    fn derive_target_type(&self, state: &FrameState) -> TargetType {
+        if state.immune_detected {
+            TargetType::Immune
+        } else if state.boss_present {
+            TargetType::Boss
+        } else if state.champion_present {
+            TargetType::Champion
+        } else {
+            TargetType::Normal
+        }
+    }
+
+    /// Select the right skill key based on target type using attack_slots.
+    /// Falls back to primary/secondary keys if slots aren't configured.
+    /// kolbot mapping:
+    ///   AttackSkill[0] = preattack (handled separately)
+    ///   AttackSkill[1] = boss timed (boss_primary)
+    ///   AttackSkill[2] = boss untimed (boss_untimed)
+    ///   AttackSkill[3] = mob timed (mob_primary)
+    ///   AttackSkill[4] = mob untimed (mob_untimed)
+    ///   AttackSkill[5] = immune timed (immune_primary)
+    ///   AttackSkill[6] = immune untimed (immune_untimed)
+    fn select_attack_key(&mut self, target: TargetType, timed: bool) -> char {
+        let slots = &self.config.combat.attack_slots;
+
+        let slot_key = match (target, timed) {
+            (TargetType::Boss, true) | (TargetType::Champion, true) => slots.boss_primary,
+            (TargetType::Boss, false) | (TargetType::Champion, false) => slots.boss_untimed,
+            (TargetType::Immune, true) => slots.immune_primary,
+            (TargetType::Immune, false) => slots.immune_untimed,
+            (TargetType::Normal, true) => slots.mob_primary,
+            (TargetType::Normal, false) => slots.mob_untimed,
+        };
+
+        // Fall back to configured primary/secondary if attack slot is empty
+        slot_key.unwrap_or_else(|| {
+            match target {
+                TargetType::Immune => self.config.combat.immunity_fallback_key
+                    .unwrap_or(self.config.combat.primary_skill_key),
+                TargetType::Boss | TargetType::Champion => self.config.combat.primary_skill_key,
+                TargetType::Normal => self.config.combat.primary_skill_key,
+            }
+        })
+    }
 
     fn check_attack(&mut self, state: &FrameState) -> Option<Decision> {
         if state.enemy_count == 0 || state.in_town {
+            // Reset static field counter when no enemies
+            self.static_field_casts = 0;
             return None;
         }
 
@@ -269,17 +569,58 @@ impl DecisionEngine {
             });
         }
 
-        // Skill selection with miss chance
-        let skill_key = if self.rng.gen::<f32>() < self.config.humanization.skill_miss_rate {
-            self.config.combat.secondary_skill_key
+        // Low mana fallback (kolbot Config.LowManaSkill)
+        if let Some(low_mana_key) = self.config.combat.low_mana_skill_key {
+            if state.mana_pct < 15 {
+                let (tx, ty) = self.humanize_position(
+                    state.nearest_enemy_x as i32,
+                    state.nearest_enemy_y as i32,
+                );
+                return Some(Decision {
+                    action: Action::CastSkill {
+                        key: low_mana_key,
+                        screen_x: tx,
+                        screen_y: ty,
+                    },
+                    delay: self.attack_delay(),
+                    priority: 8,
+                    reason: "attack: low mana fallback",
+                });
+            }
+        }
+
+        // Derive target type from vision state
+        let target = self.derive_target_type(state);
+
+        // Select skill using attack_slots system
+        // Alternate between timed (primary) and untimed skills for bosses
+        let use_timed = if matches!(target, TargetType::Boss | TargetType::Champion) {
+            // Alternate: 70% timed, 30% untimed (matches kolbot tick-based alternation)
+            self.rng.gen::<f32>() < 0.7
         } else {
-            self.config.combat.primary_skill_key
+            // Mobs: mostly timed, occasionally untimed (Death Sentry for corpses, etc.)
+            self.rng.gen::<f32>() < 0.8
         };
 
+        let mut skill_key = self.select_attack_key(target, use_timed);
+
+        // Humanization: occasional wrong skill press
+        if self.rng.gen::<f32>() < self.config.humanization.skill_miss_rate {
+            skill_key = self.config.combat.secondary_skill_key;
+        }
+
+        // Target nearest enemy position instead of fixed offset
         let (tx, ty) = self.humanize_position(
-            state.char_screen_x as i32,
-            state.char_screen_y as i32 - 80,
+            state.nearest_enemy_x as i32,
+            state.nearest_enemy_y as i32,
         );
+
+        let reason = match target {
+            TargetType::Boss => "attack: boss target",
+            TargetType::Champion => "attack: champion target",
+            TargetType::Immune => "attack: immune target (fallback)",
+            TargetType::Normal => "attack: mob clear",
+        };
 
         Some(Decision {
             action: Action::CastSkill {
@@ -289,7 +630,7 @@ impl DecisionEngine {
             },
             delay: self.attack_delay(),
             priority: 8,
-            reason: "attack: enemies present",
+            reason,
         })
     }
 
@@ -572,6 +913,10 @@ mod tests {
         s.enemy_count = enemies;
         s.in_combat = enemies > 0;
         s.in_town = false;
+        // Set nearest enemy to a sensible position
+        s.nearest_enemy_x = 400;
+        s.nearest_enemy_y = 220;
+        s.nearest_enemy_hp_pct = 100;
         s
     }
 
@@ -742,5 +1087,201 @@ mod tests {
             }
             _ => panic!("expected PickupLoot"),
         }
+    }
+
+    #[test]
+    fn test_attack_slots_boss_target() {
+        let mut config = AgentConfig::default();
+        config.combat.attack_slots.boss_primary = Some('f');
+        config.combat.attack_slots.boss_untimed = Some('g');
+        config.combat.attack_slots.mob_primary = Some('h');
+        let mut engine = DecisionEngine::new(config);
+        // Disable humanization miss rate for deterministic test
+        engine.config.humanization.skill_miss_rate = 0.0;
+
+        let mut state = combat_state(90, 80, 3);
+        state.boss_present = true;
+        state.nearest_enemy_hp_pct = 100;
+
+        let mut found_boss_skill = false;
+        for _ in 0..50 {
+            engine.last_attack = Instant::now() - Duration::from_secs(5);
+            engine.last_preattack = Instant::now(); // prevent preattack from firing
+            let d = engine.decide(&state);
+            if let Action::CastSkill { key, .. } = d.action {
+                // Should use boss_primary ('f') or boss_untimed ('g'), never mob_primary ('h')
+                assert!(key == 'f' || key == 'g',
+                    "boss target should use boss slots, got: {}", key);
+                found_boss_skill = true;
+                break;
+            }
+        }
+        assert!(found_boss_skill, "should use boss attack slot");
+    }
+
+    #[test]
+    fn test_attack_slots_immune_fallback() {
+        let mut config = AgentConfig::default();
+        config.combat.attack_slots.immune_primary = Some('h');
+        config.combat.attack_slots.mob_primary = Some('f');
+        config.combat.immunity_fallback_key = Some('h');
+        let mut engine = DecisionEngine::new(config);
+        engine.config.humanization.skill_miss_rate = 0.0;
+
+        let mut state = combat_state(90, 80, 2);
+        state.immune_detected = true;
+
+        let mut found_immune_skill = false;
+        for _ in 0..50 {
+            engine.last_attack = Instant::now() - Duration::from_secs(5);
+            engine.last_preattack = Instant::now();
+            let d = engine.decide(&state);
+            if let Action::CastSkill { key, .. } = d.action {
+                assert_eq!(key, 'h', "immune target should use immune slot");
+                found_immune_skill = true;
+                break;
+            }
+        }
+        assert!(found_immune_skill, "should use immune attack slot");
+    }
+
+    #[test]
+    fn test_mana_chicken() {
+        let mut config = AgentConfig::default();
+        config.survival.mana_chicken_pct = 10;
+        let mut engine = DecisionEngine::new(config);
+
+        let state = combat_state(80, 5, 3);
+
+        let d = engine.decide(&state);
+        assert!(
+            matches!(d.action, Action::ChickenQuit),
+            "should chicken when mana is below mana_chicken_pct, got: {:?}",
+            d.action
+        );
+    }
+
+    #[test]
+    fn test_mana_chicken_disabled() {
+        let mut config = AgentConfig::default();
+        config.survival.mana_chicken_pct = 0; // disabled
+        let mut engine = DecisionEngine::new(config);
+
+        let state = combat_state(80, 5, 3);
+
+        let d = engine.decide(&state);
+        assert!(
+            !matches!(d.action, Action::ChickenQuit),
+            "should NOT chicken when mana_chicken_pct is 0"
+        );
+    }
+
+    #[test]
+    fn test_static_field_on_boss() {
+        let mut config = AgentConfig::default();
+        config.combat.static_field = Some(StaticFieldConfig {
+            hotkey: 'e',
+            until_hp_pct: 40,
+            max_casts: 5,
+        });
+        let mut engine = DecisionEngine::new(config);
+        engine.config.humanization.skill_miss_rate = 0.0;
+        engine.last_static_field = Instant::now() - Duration::from_secs(5);
+
+        let mut state = combat_state(90, 80, 1);
+        state.boss_present = true;
+        state.nearest_enemy_hp_pct = 80; // above 40% threshold
+
+        let mut found_static = false;
+        for _ in 0..50 {
+            engine.last_attack = Instant::now() - Duration::from_secs(5);
+            engine.last_static_field = Instant::now() - Duration::from_secs(5);
+            engine.last_preattack = Instant::now();
+            let d = engine.decide(&state);
+            if let Action::CastSkill { key, .. } = d.action {
+                if key == 'e' {
+                    found_static = true;
+                    break;
+                }
+            }
+        }
+        assert!(found_static, "should cast static field on boss above threshold");
+    }
+
+    #[test]
+    fn test_mf_switch_on_low_boss() {
+        let mut config = AgentConfig::default();
+        config.combat.mf_switch_pct = 15;
+        let mut engine = DecisionEngine::new(config);
+
+        let mut state = combat_state(90, 80, 1);
+        state.boss_present = true;
+        state.nearest_enemy_hp_pct = 10; // below 15% threshold
+
+        let mut found_switch = false;
+        for _ in 0..50 {
+            engine.last_attack = Instant::now() - Duration::from_secs(5);
+            engine.last_preattack = Instant::now();
+            engine.on_weapon_switch = false;
+            let d = engine.decide(&state);
+            if matches!(d.action, Action::SwitchWeapon) {
+                found_switch = true;
+                break;
+            }
+        }
+        assert!(found_switch, "should switch to MF weapon when boss HP below threshold");
+    }
+
+    #[test]
+    fn test_dodge_at_low_hp() {
+        let mut config = AgentConfig::default();
+        config.combat.dodge = true;
+        config.combat.dodge_hp = 60;
+        config.combat.dodge_range = 15;
+        config.combat.kite_threshold = 4;
+        let mut engine = DecisionEngine::new(config);
+
+        let mut state = combat_state(45, 80, 6); // HP below 60, enemies above kite threshold
+        state.nearest_enemy_x = 380;
+        state.nearest_enemy_y = 280;
+
+        let mut found_dodge = false;
+        for _ in 0..50 {
+            let d = engine.decide(&state);
+            if matches!(d.action, Action::Dodge { .. }) {
+                found_dodge = true;
+                break;
+            }
+        }
+        assert!(found_dodge, "should dodge when HP low and enemies close");
+    }
+
+    #[test]
+    fn test_target_type_derivation() {
+        let engine = make_engine();
+
+        let mut state = FrameState::default();
+        state.in_town = false;
+        state.in_combat = true;
+
+        // Normal mob
+        state.boss_present = false;
+        state.champion_present = false;
+        state.immune_detected = false;
+        assert_eq!(engine.derive_target_type(&state), TargetType::Normal);
+
+        // Boss
+        state.boss_present = true;
+        assert_eq!(engine.derive_target_type(&state), TargetType::Boss);
+
+        // Immune takes priority over boss
+        state.immune_detected = true;
+        assert_eq!(engine.derive_target_type(&state), TargetType::Immune);
+
+        // Champion
+        state.boss_present = false;
+        state.immune_detected = false;
+        state.champion_present = true;
+        assert_eq!(engine.derive_target_type(&state), TargetType::Champion);
     }
 }

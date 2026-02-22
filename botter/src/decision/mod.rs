@@ -1,3 +1,3 @@
 pub mod engine;
 
-pub use engine::{Action, Decision, DecisionEngine};
+pub use engine::{Action, Decision, DecisionEngine, TargetType};

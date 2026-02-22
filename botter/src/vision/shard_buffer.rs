@@ -74,6 +74,13 @@ pub struct FrameState {
     pub enemy_count: u8,
     pub in_combat: bool,
     pub boss_present: bool,
+    pub champion_present: bool,
+    pub immune_detected: bool,        // vision saw immunity text on nearest target
+
+    // Nearest enemy screen position (for targeted attacks)
+    pub nearest_enemy_x: u16,
+    pub nearest_enemy_y: u16,
+    pub nearest_enemy_hp_pct: u8,     // 0-100 from health bar vision
 
     // Location
     pub in_town: bool,
@@ -114,6 +121,11 @@ impl Default for FrameState {
             enemy_count: 0,
             in_combat: false,
             boss_present: false,
+            champion_present: false,
+            immune_detected: false,
+            nearest_enemy_x: 400,
+            nearest_enemy_y: 220,
+            nearest_enemy_hp_pct: 0,
             in_town: true,
             current_act: 1,
             motion_magnitude: 0.0,

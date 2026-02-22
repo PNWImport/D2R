@@ -284,6 +284,19 @@ async fn main() {
                 decision::Action::IdlePause { duration } => {
                     std::thread::sleep(*duration);
                 }
+                decision::Action::Dodge { screen_x, screen_y } => {
+                    // Dodge = fast move away from danger
+                    input_pool.dispatch(InputCommand::ClickAt {
+                        x: *screen_x,
+                        y: *screen_y,
+                        button: MouseButton::Left,
+                        hold_ms: 20,
+                    });
+                }
+                decision::Action::SwitchWeapon => {
+                    // W key = weapon swap in D2R
+                    input_pool.dispatch(InputCommand::KeyPress { key: 'w', hold_ms: 35 });
+                }
                 decision::Action::Wait => {}
             }
 
