@@ -1,4 +1,4 @@
-// KZB Control Panel — Full Popup Controller
+// KZB Control Panel — Enhanced Popup Controller with full 400+ settings support
 // Communicates with background.js via chrome.runtime.sendMessage
 
 const $ = (id) => document.getElementById(id);
@@ -23,6 +23,7 @@ const btnKill      = $("btn-kill");
 const opacitySlider = $("opacity-slider");
 const opacityValue = $("opacity-value");
 const versionEl    = $("version");
+const invGrid      = $("inv-grid");
 
 // ─── Init ────────────────────────────────────────────────────
 versionEl.textContent = "v" + chrome.runtime.getManifest().version;
@@ -87,20 +88,65 @@ function updateClassSections() {
 configSelect.addEventListener("change", updateClassSections);
 updateClassSections();
 
+// ─── Inventory Grid ─────────────────────────────────────────
+function initInventoryGrid() {
+  if (!invGrid) return;
+  invGrid.innerHTML = "";
+
+  // Create 4x10 grid (40 cells)
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 10; col++) {
+      const idx = row * 10 + col;
+      const cell = document.createElement("div");
+      cell.className = "inv-cell free"; // Default: free (1)
+      cell.dataset.row = row;
+      cell.dataset.col = col;
+      cell.dataset.cfgIndex = idx;
+      cell.title = `Cell ${row},${col}`;
+
+      cell.addEventListener("click", () => {
+        cell.classList.toggle("free");
+        debouncedSave();
+      });
+
+      invGrid.appendChild(cell);
+    }
+  }
+}
+
 // ─── Config Persistence ──────────────────────────────────────
 // Save all data-cfg values to chrome.storage.local
 function saveAllSettings() {
   const settings = {};
+
+  // Handle regular inputs
   document.querySelectorAll("[data-cfg]").forEach((el) => {
     const key = el.dataset.cfg;
     if (el.type === "checkbox") {
       settings[key] = el.checked;
     } else if (el.type === "number" || el.type === "range") {
-      settings[key] = parseFloat(el.value);
+      settings[key] = parseFloat(el.value) || 0;
+    } else if (el.tagName === "TEXTAREA") {
+      settings[key] = el.value; // Store as-is; agent will parse
     } else {
       settings[key] = el.value;
     }
   });
+
+  // Handle inventory grid
+  if (invGrid) {
+    const invArray = [];
+    for (let row = 0; row < 4; row++) {
+      invArray[row] = [];
+      for (let col = 0; col < 10; col++) {
+        const cell = invGrid.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        // 0 = locked (red), 1 = free (green)
+        invArray[row][col] = cell && cell.classList.contains("free") ? 1 : 0;
+      }
+    }
+    settings["Inventory"] = invArray;
+  }
+
   chrome.storage.local.set({ kzbConfig: settings });
 }
 
@@ -112,6 +158,8 @@ function loadAllSettings() {
     }
     if (result.kzbConfig) {
       const cfg = result.kzbConfig;
+
+      // Load regular inputs
       document.querySelectorAll("[data-cfg]").forEach((el) => {
         const key = el.dataset.cfg;
         if (key in cfg) {
@@ -122,6 +170,16 @@ function loadAllSettings() {
           }
         }
       });
+
+      // Load inventory grid
+      if (invGrid && Array.isArray(cfg.Inventory)) {
+        invGrid.querySelectorAll(".inv-cell").forEach((cell) => {
+          const row = parseInt(cell.dataset.row);
+          const col = parseInt(cell.dataset.col);
+          const val = cfg.Inventory[row] && cfg.Inventory[row][col];
+          cell.classList.toggle("free", val === 1);
+        });
+      }
     }
   });
 }
@@ -139,6 +197,24 @@ document.querySelectorAll("[data-cfg]").forEach((el) => {
     el.addEventListener("input", debouncedSave);
   }
 });
+
+// ─── Sub-options Toggle ──────────────────────────────────────
+// When a script checkbox is checked, show its sub-options
+function initSubOptsToggle() {
+  document.querySelectorAll("[data-subs]").forEach((parentCheckbox) => {
+    const targetId = parentCheckbox.dataset.subs;
+    const targetDiv = document.getElementById(targetId);
+    if (!targetDiv) return;
+
+    // Set initial visibility
+    targetDiv.classList.toggle("visible", parentCheckbox.checked);
+
+    // Toggle on change
+    parentCheckbox.addEventListener("change", () => {
+      targetDiv.classList.toggle("visible", parentCheckbox.checked);
+    });
+  });
+}
 
 // ─── Poll Loop ───────────────────────────────────────────────
 async function refresh() {
@@ -235,16 +311,33 @@ if (btnCacheStats) {
 // When settings change, push entire config object to agent
 function pushConfigToAgent() {
   const settings = {};
+
   document.querySelectorAll("[data-cfg]").forEach((el) => {
     const key = el.dataset.cfg;
     if (el.type === "checkbox") {
       settings[key] = el.checked;
     } else if (el.type === "number" || el.type === "range") {
-      settings[key] = parseFloat(el.value);
+      settings[key] = parseFloat(el.value) || 0;
+    } else if (el.tagName === "TEXTAREA") {
+      settings[key] = el.value;
     } else {
       settings[key] = el.value;
     }
   });
+
+  // Include inventory
+  if (invGrid) {
+    const invArray = [];
+    for (let row = 0; row < 4; row++) {
+      invArray[row] = [];
+      for (let col = 0; col < 10; col++) {
+        const cell = invGrid.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        invArray[row][col] = cell && cell.classList.contains("free") ? 1 : 0;
+      }
+    }
+    settings["Inventory"] = invArray;
+  }
+
   send("update_config", { data: settings });
 }
 
@@ -258,9 +351,13 @@ document.querySelectorAll("[data-cfg]").forEach((el) => {
 });
 
 // ─── Start ───────────────────────────────────────────────────
-loadAllSettings();
-refresh();
-pollTimer = setInterval(refresh, 2000);
+document.addEventListener("DOMContentLoaded", () => {
+  initInventoryGrid();
+  initSubOptsToggle();
+  loadAllSettings();
+  refresh();
+  pollTimer = setInterval(refresh, 2000);
+});
 
 // Cleanup when popup closes
 window.addEventListener("unload", () => {
