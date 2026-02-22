@@ -7,8 +7,8 @@
 }
 
 body {
-  width: 340px;
-  max-height: 580px;
+  width: 360px;
+  max-height: 600px;
   overflow-y: auto;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
@@ -116,6 +116,16 @@ body::-webkit-scrollbar-thumb { background: #3a3a55; border-radius: 3px; }
   margin-bottom: 6px;
 }
 
+.setting-group {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #5a6080;
+  margin: 6px 0 3px;
+  padding-top: 4px;
+  border-top: 1px solid #22223a;
+}
+
 /* ─── Status rows ────────────────────────────────────────────── */
 .status-row {
   display: flex;
@@ -191,8 +201,16 @@ body::-webkit-scrollbar-thumb { background: #3a3a55; border-radius: 3px; }
 .setting-row label {
   font-size: 11px;
   color: #8888a0;
-  min-width: 100px;
+  min-width: 110px;
   flex-shrink: 0;
+}
+
+.setting-row label.wide {
+  min-width: 140px;
+}
+
+.setting-row label.narrow {
+  min-width: 80px;
 }
 
 .setting-row select {
@@ -240,6 +258,50 @@ body::-webkit-scrollbar-thumb { background: #3a3a55; border-radius: 3px; }
 .input-xs:focus {
   outline: none;
   border-color: #e0c070;
+}
+
+.input-full {
+  width: 100%;
+  padding: 3px 5px;
+  background: #1a1a2e;
+  color: #c8c8d4;
+  border: 1px solid #3a3a55;
+  border-radius: 4px;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.input-full:focus {
+  outline: none;
+  border-color: #e0c070;
+}
+
+/* ─── Textarea for array settings ───────────────────────────── */
+.textarea-cfg {
+  width: 100%;
+  min-height: 46px;
+  max-height: 90px;
+  padding: 4px 6px;
+  background: #1a1a2e;
+  color: #c8c8d4;
+  border: 1px solid #3a3a55;
+  border-radius: 4px;
+  font-size: 10px;
+  font-family: monospace;
+  resize: vertical;
+  margin-top: 2px;
+}
+
+.textarea-cfg:focus {
+  outline: none;
+  border-color: #e0c070;
+}
+
+.textarea-label {
+  font-size: 10px;
+  color: #6a6a80;
+  margin-top: 5px;
+  display: block;
 }
 
 /* ─── Buttons ────────────────────────────────────────────────── */
@@ -320,6 +382,12 @@ body::-webkit-scrollbar-thumb { background: #3a3a55; border-radius: 3px; }
   gap: 2px 8px;
 }
 
+.check-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2px 6px;
+}
+
 .check {
   display: flex;
   align-items: center;
@@ -344,6 +412,39 @@ body::-webkit-scrollbar-thumb { background: #3a3a55; border-radius: 3px; }
   text-overflow: ellipsis;
 }
 
+/* ─── Sub-options (shown when parent script is checked) ─────── */
+.sub-opts {
+  display: none;
+  margin: 2px 0 4px 18px;
+  padding: 4px 6px;
+  border-left: 2px solid #2a2a50;
+  background: #13132a;
+  border-radius: 0 4px 4px 0;
+}
+
+.sub-opts.visible {
+  display: block;
+}
+
+.sub-opts .setting-row label {
+  min-width: 90px;
+  font-size: 10px;
+}
+
+.sub-opts .check {
+  font-size: 10px;
+}
+
+.sub-opts .textarea-cfg {
+  min-height: 36px;
+  font-size: 9px;
+}
+
+/* Script entry wrapper */
+.script-entry {
+  margin-bottom: 2px;
+}
+
 /* ─── Belt config ────────────────────────────────────────────── */
 .belt-row {
   display: flex;
@@ -366,6 +467,58 @@ body::-webkit-scrollbar-thumb { background: #3a3a55; border-radius: 3px; }
   border: 1px solid #3a3a55;
   border-radius: 4px;
   font-size: 10px;
+}
+
+/* ─── Inventory grid ─────────────────────────────────────────── */
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 2px;
+  margin-top: 6px;
+}
+
+.inv-cell {
+  height: 18px;
+  background: #e04040;
+  border-radius: 2px;
+  cursor: pointer;
+  border: 1px solid #1a1a2e;
+  transition: background 0.1s;
+  font-size: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  user-select: none;
+}
+
+.inv-cell.free {
+  background: #2a4a2a;
+}
+
+.inv-cell:hover {
+  opacity: 0.7;
+}
+
+.inv-legend {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+  font-size: 9px;
+  color: #6a6a80;
+}
+
+.inv-legend span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inv-legend-box {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
 }
 
 /* ─── Shortcut row ───────────────────────────────────────────── */
@@ -439,4 +592,24 @@ input[type="range"]::-moz-range-thumb {
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   opacity: 0.5;
+}
+
+/* ─── Two-column setting-rows ────────────────────────────────── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.two-col .setting-row label {
+  min-width: 60px;
+  font-size: 10px;
+}
+
+/* ─── Tip/note text ──────────────────────────────────────────── */
+.note {
+  font-size: 9px;
+  color: #555568;
+  margin-top: 2px;
+  font-style: italic;
 }
