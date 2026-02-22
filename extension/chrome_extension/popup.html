@@ -64,7 +64,7 @@
       <div class="section-title">Profile</div>
       <div class="control-row">
         <label>Config</label>
-        <select id="config-select" data-cfg="config_name">
+        <select id="config-select">
           <option value="">—</option>
           <option value="amazon">Amazon</option>
           <option value="sorceress">Sorceress</option>
@@ -172,8 +172,8 @@
         </div>
       </div>
       <div class="script-entry">
-        <label class="check"><input type="checkbox" data-cfg="Scripts.AncientTunnels" data-subs="opts-anciënttunnels"><span>Ancient Tunnels</span></label>
-        <div id="opts-anciënttunnels" class="sub-opts">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.AncientTunnels" data-subs="opts-ancienttunnels"><span>Ancient Tunnels</span></label>
+        <div id="opts-ancienttunnels" class="sub-opts">
           <label class="check"><input type="checkbox" data-cfg="AncientTunnels.OpenChest"><span>Open Chest</span></label>
           <label class="check"><input type="checkbox" data-cfg="AncientTunnels.KillDarkElder"><span>Kill Dark Elder</span></label>
         </div>
@@ -1290,10 +1290,6 @@
           <option value="2">Accept Only</option>
           <option value="3">Invite Only</option>
         </select>
-      </div>
-      <div class="setting-row">
-        <label>Leader</label>
-        <input type="text" data-cfg="Leader" class="input-full" placeholder="Leader character name">
       </div>
       <label class="check"><input type="checkbox" data-cfg="PartyAfterScript"><span>Party After Script</span></label>
       <label class="check"><input type="checkbox" data-cfg="ShitList"><span>Blacklist Hostile</span></label>

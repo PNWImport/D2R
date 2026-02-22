@@ -236,20 +236,20 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
       agentPort.postMessage({ cmd: "get_stats" });
       {
         let responded = false;
+        const port = agentPort; // Capture reference; port may disconnect before timeout
         const statsListener = (msg) => {
           if (msg.cmd === "stats" && !responded) {
             responded = true;
-            agentPort.onMessage.removeListener(statsListener);
+            try { port.onMessage.removeListener(statsListener); } catch (_) {}
             lastAgentStats = msg.data;
             sendResponse(msg.data);
           }
         };
-        agentPort.onMessage.addListener(statsListener);
-        // Timeout: don't leave the channel hanging
+        port.onMessage.addListener(statsListener);
         setTimeout(() => {
           if (!responded) {
             responded = true;
-            agentPort.onMessage.removeListener(statsListener);
+            try { port.onMessage.removeListener(statsListener); } catch (_) {}
             sendResponse(lastAgentStats || { error: "timeout" });
           }
         }, 3000);
@@ -357,18 +357,19 @@ chrome.storage.local.get(["mapEnabled", "mapOpacity"], (result) => {
 connectToAgent();
 connectToMapHost();
 
-self.addEventListener("unload", () => {
+// Service workers don't receive "unload". Chrome automatically disconnects
+// native messaging ports when the service worker is terminated, so explicit
+// cleanup is not strictly needed. We send a best-effort shutdown on suspend.
+chrome.runtime.onSuspend && chrome.runtime.onSuspend.addListener(() => {
   if (agentReconnectTimer) clearTimeout(agentReconnectTimer);
   if (agentHeartbeatTimer) clearInterval(agentHeartbeatTimer);
   if (mapReconnectTimer) clearTimeout(mapReconnectTimer);
   if (mapActivationTimer) clearTimeout(mapActivationTimer);
   stopMapPolling();
   if (agentPort) {
-    agentPort.postMessage({ cmd: "shutdown" });
-    agentPort.disconnect();
+    try { agentPort.postMessage({ cmd: "shutdown" }); agentPort.disconnect(); } catch (_) {}
   }
   if (mapPort) {
-    mapPort.postMessage({ cmd: "shutdown" });
-    mapPort.disconnect();
+    try { mapPort.postMessage({ cmd: "shutdown" }); mapPort.disconnect(); } catch (_) {}
   }
 });

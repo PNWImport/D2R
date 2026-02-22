@@ -91,7 +91,6 @@ function updateClassSections() {
 }
 
 configSelect.addEventListener("change", updateClassSections);
-updateClassSections();
 
 // ─── Inventory Grid ─────────────────────────────────────────
 function initInventoryGrid() {
@@ -155,11 +154,10 @@ function saveAllSettings() {
   chrome.storage.local.set({ kzbConfig: settings });
 }
 
-function loadAllSettings() {
+function loadAllSettings(callback) {
   chrome.storage.local.get(["kzbConfig", "selectedConfig"], (result) => {
     if (result.selectedConfig) {
       configSelect.value = result.selectedConfig;
-      updateClassSections();
     }
     if (result.kzbConfig) {
       const cfg = result.kzbConfig;
@@ -186,6 +184,7 @@ function loadAllSettings() {
         });
       }
     }
+    if (callback) callback();
   });
 }
 
@@ -358,8 +357,11 @@ document.querySelectorAll("[data-cfg]").forEach((el) => {
 // ─── Start ───────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   initInventoryGrid();
-  initSubOptsToggle();
-  loadAllSettings();
+  loadAllSettings(() => {
+    // These must run AFTER settings are loaded from storage
+    initSubOptsToggle();        // Reads .checked state set by loadAllSettings
+    updateClassSections();      // Uses configSelect.value set by loadAllSettings
+  });
   refresh();
   pollTimer = setInterval(refresh, 2000);
 });
