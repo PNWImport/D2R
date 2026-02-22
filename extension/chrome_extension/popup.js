@@ -1,4 +1,4 @@
-// Display Calibration Helper — Popup Controller
+// KillZBot Control Panel — Popup Controller
 // Communicates with background.js via chrome.runtime.sendMessage
 
 const $ = (id) => document.getElementById(id);
@@ -17,8 +17,9 @@ const statDecisions = $("stat-decisions");
 const statPotions  = $("stat-potions");
 const statLoots    = $("stat-loots");
 const statChickens = $("stat-chickens");
-const btnMapToggle = $("btn-map-toggle");
-const mapLabel     = $("map-enabled-label");
+const btnMapActivate = $("btn-map-activate");
+const btnMapDeactivate = $("btn-map-deactivate");
+const btnKill      = $("btn-kill");
 const opacitySlider = $("opacity-slider");
 const opacityValue = $("opacity-value");
 const versionEl    = $("version");
@@ -114,10 +115,21 @@ configSelect.addEventListener("change", async () => {
   }
 });
 
-btnMapToggle.addEventListener("click", async () => {
-  const resp = await send("toggleMap");
-  if (resp) {
-    mapLabel.textContent = resp.enabled ? "ON" : "OFF";
+btnMapActivate.addEventListener("click", async () => {
+  await send("activateMap", { durationMs: 5000 });
+  btnMapActivate.disabled = true;
+  btnMapDeactivate.disabled = false;
+});
+
+btnMapDeactivate.addEventListener("click", async () => {
+  await send("deactivateMap");
+  btnMapActivate.disabled = false;
+  btnMapDeactivate.disabled = true;
+});
+
+btnKill.addEventListener("click", async () => {
+  if (confirm("Kill all KillZBot processes? This cannot be undone!")) {
+    await send("killMap");
   }
 });
 

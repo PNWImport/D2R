@@ -7,7 +7,7 @@
 <body>
   <!-- Header -->
   <div class="header">
-    <span class="title">Display Calibration</span>
+    <img id="logo" src="killzbot_header.png" alt="KillZBot" class="logo">
     <span id="version" class="version"></span>
   </div>
 
@@ -70,13 +70,20 @@
   <div class="section">
     <div class="section-title">Map Overlay</div>
     <div class="control-row">
-      <button id="btn-map-toggle" class="btn btn-sm">Toggle</button>
-      <span id="map-enabled-label" class="status-text">—</span>
+      <button id="btn-map-activate" class="btn btn-ok">Activate</button>
+      <button id="btn-map-deactivate" class="btn btn-warn" disabled>Deactivate</button>
     </div>
     <div class="control-row">
       <label>Opacity</label>
       <input type="range" id="opacity-slider" min="10" max="255" step="5" value="180">
       <span id="opacity-value">180</span>
+    </div>
+  </div>
+
+  <!-- Emergency -->
+  <div class="section">
+    <div class="control-row">
+      <button id="btn-kill" class="btn btn-danger">Kill Switch</button>
     </div>
   </div>
 

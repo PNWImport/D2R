@@ -1,5 +1,5 @@
-/* Display Calibration Helper — Popup Styles */
-/* Dark theme matching D2R aesthetic */
+/* KillZBot Control Panel — Popup Styles */
+/* Dark theme for professional bot control interface */
 
 * {
   margin: 0;
@@ -19,11 +19,20 @@ body {
 /* Header */
 .header {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid #2a2a44;
+  position: relative;
+}
+
+.logo {
+  max-width: 300px;
+  max-height: 80px;
+  width: auto;
+  height: auto;
+  margin-bottom: 6px;
 }
 
 .title {
@@ -33,6 +42,9 @@ body {
 }
 
 .version {
+  position: absolute;
+  top: 6px;
+  right: 0;
   font-size: 11px;
   color: #6a6a80;
 }
@@ -158,6 +170,16 @@ body {
 .btn-ok:hover:not(:disabled) {
   background: #102a10;
   border-color: #40c040;
+}
+
+.btn-danger {
+  border-color: #8a2020;
+  color: #e04040;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #2a1010;
+  border-color: #e04040;
 }
 
 .btn-sm {

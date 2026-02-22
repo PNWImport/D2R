@@ -1,7 +1,7 @@
 // =============================================================================
 // Map Overlay Content Script
 // =============================================================================
-// Renders D2R map overlay as a transparent HTML5 Canvas.
+// Renders game map overlay as a transparent HTML5 Canvas.
 // Decodes run-length encoded collision data and draws walls vs walkable.
 // =============================================================================
 
@@ -46,7 +46,7 @@
     function initOverlay() {
         if (canvas) return;
         canvas = document.createElement('canvas');
-        canvas.id = 'd2r-map-overlay';
+        canvas.id = 'map-overlay';
         canvas.width = 300;
         canvas.height = 300;
         canvas.style.cssText = [

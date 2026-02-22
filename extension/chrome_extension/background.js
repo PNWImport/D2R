@@ -1,7 +1,7 @@
-// Display Calibration Helper — Unified Background Script
+// KillZBot Control Panel — Unified Background Script
 // Connects to TWO native messaging hosts:
-//   1. com.chromium.display.calibration → chrome_helper.exe  (vision/input agent)
-//   2. com.d2vision.map                 → chrome_map_helper.exe (map overlay)
+//   1. com.chromium.* → chrome_helper.exe  (vision/input agent)
+//   2. com.chromium.* → chrome_map_helper.exe (map overlay)
 
 // ═══════════════════════════════════════════════════════════════
 // VISION AGENT HOST
