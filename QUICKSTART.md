@@ -1,4 +1,4 @@
-# KillZBot — Quick Start
+# KZB — Quick Start
 
 Get farming in 5 minutes.
 
@@ -7,7 +7,7 @@ Get farming in 5 minutes.
 ## 1. Build (2 min)
 
 ```powershell
-cd C:\path\to\KillZBot
+cd C:\path\to\KZB
 .\install.ps1
 # Builds Rust binaries, installs native hosts, copies configs
 # When prompted, load the extension in Chrome first (see step 2)
@@ -21,7 +21,7 @@ cd C:\path\to\KillZBot
 1. Go to chrome://extensions
 2. Enable "Developer mode" (top-right)
 3. Click "Load unpacked"
-4. Select: C:\path\to\KillZBot\extension\chrome_extension\
+4. Select: C:\path\to\KZB\extension\chrome_extension\
 5. Copy the Extension ID (blue text under extension name)
 6. Return to PowerShell installer, paste the ID when prompted
 ```
@@ -247,7 +247,7 @@ Copy any of these to `C:\ProgramData\DisplayCalibration\config.yaml` and edit to
 
 ## Session Management
 
-KillZBot respects human play patterns:
+KZB respects human play patterns:
 
 ```yaml
 session:

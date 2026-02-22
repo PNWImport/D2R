@@ -1,4 +1,4 @@
-# KillZBot Documentation Index
+# KZB Documentation Index
 
 Complete guide to all documentation and source files.
 
@@ -255,7 +255,7 @@ git push origin claude/prepare-kolbot-production-zGrdr
 
 ## 🔐 Security Model
 
-KillZBot avoids detection by:
+KZB avoids detection by:
 
 1. **No Memory Access** — Pure vision pipeline (DXGI screenshot → pixel heuristics)
 2. **Chrome Child Process** — Native messaging makes it a legitimate Chrome subprocess
@@ -333,7 +333,7 @@ KillZBot avoids detection by:
 
 ## 🤝 Credits
 
-**KillZBot** — This project (vision-based farming, game lifecycle, Chrome UI)
+**KZB** — This project (vision-based farming, game lifecycle, Chrome UI)
 
 **Kolbot** — 20+ years of D2BS logic foundation
 - OOG location state machine
@@ -364,4 +364,4 @@ MIT License — See LICENSE file for details.
 
 ---
 
-**Everything is documented. You have all the information to deploy, configure, and extend KillZBot.** 🤖
+**Everything is documented. You have all the information to deploy, configure, and extend KZB.** 🤖

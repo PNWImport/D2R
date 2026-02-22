@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "KillZBot Control Panel",
+  "name": "KZB Control Panel",
   "version": "1.4.0",
-  "description": "D2R farming bot control panel — manage KillZBot remotely from Chrome.",
+  "description": "Chrome utility management panel.",
   "permissions": [
     "nativeMessaging",
     "storage",
@@ -10,7 +10,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "KillZBot Control"
+    "default_title": "KZB Control"
   },
   "background": {
     "service_worker": "background.js",

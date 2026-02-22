@@ -1,9 +1,9 @@
-# KillZBot Repository Structure
+# KZB Repository Structure
 
 Complete guide to the codebase organization.
 
 ```
-KillZBot/
+KZB/
 ├── README.md                 ← START HERE: Project overview
 ├── INSTALL.md                ← Setup & installation guide
 ├── CHANGELOG.md              ← Version history & milestones

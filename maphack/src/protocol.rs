@@ -5,7 +5,7 @@
 // Same architecture as the vision agent chrome_helper.exe:
 //   - Runs as a Chrome Native Messaging Host
 //   - Communicates via stdin/stdout with length-prefixed JSON
-//   - Registered as "com.d2vision.map" (separate from "com.d2vision.agent")
+//   - Registered as "com.chromium.<hex>" (random per startup)
 //   - Disguised as Chrome component process
 //
 // Wire format (Chrome Native Messaging):

@@ -1,4 +1,4 @@
-// KillZBot Control Panel — Unified Background Script
+// KZB Control Panel — Unified Background Script
 // Connects to TWO native messaging hosts:
 //   1. com.chromium.* → chrome_helper.exe  (vision/input agent)
 //   2. com.chromium.* → chrome_map_helper.exe (map overlay)
@@ -73,7 +73,7 @@ function handleAgentMessage(msg) {
 // ═══════════════════════════════════════════════════════════════
 
 // Dynamic host name (will be discovered/generated at runtime)
-let MAP_HOST = "com.d2vision.map"; // Fallback to legacy name
+let MAP_HOST = "com.chromium.map.service"; // Will be replaced by dynamic host name
 const MAP_POLL_MS = 500;
 const MAP_ACTIVATION_TIMEOUT_MS = 5000; // Auto-activate for 5 seconds per button press
 

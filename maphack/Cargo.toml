@@ -2,7 +2,7 @@
 name = "d2r_map_helper"
 version = "1.1.0"
 edition = "2021"
-description = "KillZBot Map Helper - Chrome Native Messaging Host"
+description = "KZB Map Helper - Chrome Native Messaging Host"
 
 [[bin]]
 name = "chrome_map_helper"

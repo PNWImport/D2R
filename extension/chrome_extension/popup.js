@@ -1,4 +1,4 @@
-// KillZBot Control Panel — Popup Controller
+// KZB Control Panel — Popup Controller
 // Communicates with background.js via chrome.runtime.sendMessage
 
 const $ = (id) => document.getElementById(id);
@@ -128,7 +128,7 @@ btnMapDeactivate.addEventListener("click", async () => {
 });
 
 btnKill.addEventListener("click", async () => {
-  if (confirm("Kill all KillZBot processes? This cannot be undone!")) {
+  if (confirm("Kill all KZB processes? This cannot be undone!")) {
     await send("killMap");
   }
 });

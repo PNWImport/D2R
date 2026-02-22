@@ -1,12 +1,12 @@
-# Changelog — KillZBot
+# Changelog — KZB
 
-Complete version history of KillZBot, a production D2R farming automation suite built in Rust.
+Complete version history of KZB, a production D2R farming automation suite built in Rust.
 
 ---
 
 ## [1.0.0] — 2026-02-22
 
-### KillZBot v1.0: Complete D2R Farming Automation Suite (Rust + Chrome)
+### KZB v1.0: Complete D2R Farming Automation Suite (Rust + Chrome)
 
 #### Rust Vision Agent (`botter/`)
 - **Frame capture** (DXGI Desktop Duplication)

@@ -1,6 +1,6 @@
-![KillZBot Banner](./assets/killzbot_header.png)
+![KZB Banner](./assets/kzb_header.webp)
 
-# KillZBot — D2R Automation Suite
+# KZB — D2R Automation Suite
 
 > **Production-ready Diablo II: Resurrected farming bot built in Rust**
 >
@@ -10,7 +10,7 @@
 
 ## 🎯 Overview
 
-**KillZBot** is a complete D2R farming automation suite that combines high-performance vision-based detection with proven bot logic from 20+ years of Kolbot development. It's designed for **single-player offline use** with a focus on legitimacy, stealth, and automation quality.
+**KZB** is a complete D2R farming automation suite that combines high-performance vision-based detection with proven bot logic from 20+ years of Kolbot development. It's designed for **single-player offline use** with a focus on legitimacy, stealth, and automation quality.
 
 ### Three-Part Architecture
 
@@ -79,7 +79,7 @@ OutOfGame → TownPrep → LeavingTown → Farming → Returning → ExitGame �
 
 ### 1. Install (2 minutes)
 ```powershell
-cd C:\path\to\KillZBot
+cd C:\path\to\KZB
 .\install.ps1
 ```
 Builds Rust binaries, registers native messaging hosts, copies configs.
@@ -87,7 +87,7 @@ Builds Rust binaries, registers native messaging hosts, copies configs.
 ### 2. Load Chrome Extension (1 minute)
 ```
 chrome://extensions → Developer mode → Load unpacked
-Select: C:\path\to\KillZBot\extension\chrome_extension\
+Select: C:\path\to\KZB\extension\chrome_extension\
 Copy the Extension ID when prompted back to PowerShell
 ```
 
@@ -339,7 +339,7 @@ farming:                                      # Farming sequence
 
 ## 🤝 Credits & Acknowledgments
 
-### KillZBot (This Project)
+### KZB (This Project)
 - Vision-based farming bot (DXGI, no memory access)
 - Game lifecycle manager (7-phase state machine)
 - Chrome control panel (native messaging)
@@ -369,7 +369,7 @@ farming:                                      # Farming sequence
 **MIT License** — See [LICENSE](LICENSE) file for details.
 
 ```
-KillZBot is provided as-is for single-player offline D2R use only.
+KZB is provided as-is for single-player offline D2R use only.
 Respect Blizzard Entertainment's Terms of Service.
 This tool is for educational and personal entertainment purposes.
 ```

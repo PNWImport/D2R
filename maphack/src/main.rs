@@ -1,5 +1,5 @@
 // =============================================================================
-// D2R Map Helper - Chrome Native Messaging Host
+// Map Helper - Chrome Native Messaging Host
 // =============================================================================
 // Binary name: chrome_map_helper.exe (disguised as Chrome component)
 // Registry: com.chromium.<random-12-16-hex> (regenerated per startup)
@@ -10,7 +10,7 @@
 //     └── connectNative("com.chromium.<hex>") → chrome_map_helper.exe (THIS)
 //
 // This host handles:
-//   1. Reading D2R game state (seed, area, position, difficulty)
+//   1. Reading game state (seed, area, position, difficulty)
 //   2. Generating/caching map collision data
 //   3. Providing map data to the extension for overlay rendering
 //   4. Heartbeat/stats reporting
@@ -148,7 +148,7 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
                 "type": "map_helper",
                 "pid": std::process::id(),
                 "ext_version": version,
-                "d2r_attached": state.reader.is_attached(),
+                "attached": state.reader.is_attached(),
                 "offsets_version": "MapAssist-compat-2026",
             }));
         }
@@ -183,7 +183,7 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
                 && state.reader.attach().is_err()
             {
                 let _ = send_response("state", json!({
-                    "d2r_attached": false, "error": "Game process not found"
+                    "attached": false, "error": "Game process not found"
                 }));
                 return Ok(());
             }
@@ -213,7 +213,7 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
                     } else { None };
 
                     let _ = send_response("state", json!({
-                        "d2r_attached": true, "game_state": game_state,
+                        "attached": true, "game_state": game_state,
                         "map": map_data, "opacity": state.opacity,
                     }));
 
@@ -224,7 +224,7 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
                 }
                 Err(e) => {
                     let _ = send_response("state", json!({
-                        "d2r_attached": true, "in_game": false, "error": e,
+                        "attached": true, "in_game": false, "error": e,
                     }));
                 }
             }
@@ -266,7 +266,7 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
             let _ = send_response("cache_stats", json!({
                 "cached_maps": cached, "max_cache": max,
                 "poll_count": state.poll_count, "enabled": state.enabled,
-                "d2r_attached": state.reader.is_attached(),
+                "attached": state.reader.is_attached(),
             }));
         }
 

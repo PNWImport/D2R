@@ -1,13 +1,13 @@
 //! Dynamic Host Name Registry
 //!
 //! Generates and manages random 12-16 character hex host names per startup.
-//! Names are stored in the KillZBot config directory and used for native messaging.
+//! Names are stored in the KZB config directory and used for native messaging.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
-const CONFIG_DIR: &str = "KillZBot";
+const CONFIG_DIR: &str = "KZB";
 const HOST_NAME_MIN: usize = 12;
 const HOST_NAME_MAX: usize = 16;
 
