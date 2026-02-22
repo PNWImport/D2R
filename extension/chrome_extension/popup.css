@@ -1,5 +1,4 @@
-/* KZB Control Panel — Popup Styles */
-/* Dark theme for professional control interface */
+/* KZB Control Panel — Full UI Styles */
 
 * {
   margin: 0;
@@ -8,70 +7,121 @@
 }
 
 body {
-  width: 320px;
+  width: 340px;
+  max-height: 580px;
+  overflow-y: auto;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   background: #1a1a2e;
   color: #c8c8d4;
-  padding: 12px;
+  padding: 10px;
 }
+
+/* Scrollbar */
+body::-webkit-scrollbar { width: 5px; }
+body::-webkit-scrollbar-track { background: transparent; }
+body::-webkit-scrollbar-thumb { background: #3a3a55; border-radius: 3px; }
 
 /* Header */
 .header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid #2a2a44;
   position: relative;
 }
 
 .logo {
-  max-width: 300px;
-  max-height: 80px;
+  max-width: 280px;
+  max-height: 60px;
   width: auto;
   height: auto;
-  margin-bottom: 6px;
-}
-
-.title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #e0c070;
+  margin-bottom: 4px;
 }
 
 .version {
   position: absolute;
-  top: 6px;
+  top: 4px;
   right: 0;
-  font-size: 11px;
+  font-size: 10px;
   color: #6a6a80;
 }
 
-/* Sections */
+/* ─── Tab Bar ────────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-bottom: 8px;
+  padding: 3px;
+  background: #12122a;
+  border-radius: 6px;
+  border: 1px solid #2a2a44;
+}
+
+.tab {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 2px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #6a6a80;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab:hover {
+  color: #aaa;
+  background: #1a1a30;
+}
+
+.tab.active {
+  background: #2a2a50;
+  color: #e0c070;
+  border-color: #3a3a60;
+}
+
+/* ─── Tab Panels ─────────────────────────────────────────────── */
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+/* ─── Sections ───────────────────────────────────────────────── */
 .section {
-  margin-bottom: 12px;
-  padding: 10px;
+  margin-bottom: 8px;
+  padding: 8px;
   background: #16162a;
   border-radius: 6px;
   border: 1px solid #2a2a44;
 }
 
 .section-title {
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: #8888a0;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
-/* Status rows */
+/* ─── Status rows ────────────────────────────────────────────── */
 .status-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 0;
+  padding: 3px 0;
 }
 
 .dot {
@@ -101,18 +151,18 @@ body {
   color: #8888a0;
 }
 
-/* Control rows */
+/* ─── Control rows ───────────────────────────────────────────── */
 .control-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 0;
+  padding: 3px 0;
 }
 
 .control-row label {
   font-size: 12px;
   color: #8888a0;
-  min-width: 48px;
+  min-width: 44px;
 }
 
 .control-row select {
@@ -130,7 +180,69 @@ body {
   border-color: #e0c070;
 }
 
-/* Buttons */
+/* ─── Setting rows ───────────────────────────────────────────── */
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.setting-row label {
+  font-size: 11px;
+  color: #8888a0;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.setting-row select {
+  flex: 1;
+  padding: 3px 5px;
+  background: #1a1a2e;
+  color: #c8c8d4;
+  border: 1px solid #3a3a55;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.setting-row select:focus {
+  outline: none;
+  border-color: #e0c070;
+}
+
+.input-sm {
+  width: 70px;
+  padding: 3px 5px;
+  background: #1a1a2e;
+  color: #c8c8d4;
+  border: 1px solid #3a3a55;
+  border-radius: 4px;
+  font-size: 11px;
+  text-align: right;
+}
+
+.input-sm:focus {
+  outline: none;
+  border-color: #e0c070;
+}
+
+.input-xs {
+  width: 36px;
+  padding: 2px 4px;
+  background: #1a1a2e;
+  color: #c8c8d4;
+  border: 1px solid #3a3a55;
+  border-radius: 4px;
+  font-size: 11px;
+  text-align: center;
+}
+
+.input-xs:focus {
+  outline: none;
+  border-color: #e0c070;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────── */
 .btn {
   padding: 5px 14px;
   border: 1px solid #3a3a55;
@@ -182,16 +294,11 @@ body {
   border-color: #e04040;
 }
 
-.btn-sm {
-  padding: 3px 10px;
-  font-size: 11px;
-}
-
-/* Stats grid */
+/* ─── Stats grid ─────────────────────────────────────────────── */
 .stat-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4px 12px;
+  gap: 3px 12px;
 }
 
 .stat-label {
@@ -206,7 +313,82 @@ body {
   color: #d0d0e0;
 }
 
-/* Range slider */
+/* ─── Checkbox grid ──────────────────────────────────────────── */
+.check-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 8px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 0;
+  cursor: pointer;
+  font-size: 11px;
+  color: #a0a0b4;
+}
+
+.check input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+  accent-color: #e0c070;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.check span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Belt config ────────────────────────────────────────────── */
+.belt-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.belt-label {
+  font-size: 10px;
+  color: #6a6a80;
+  min-width: 24px;
+  text-align: center;
+}
+
+.belt-row select {
+  width: 52px;
+  padding: 2px 3px;
+  background: #1a1a2e;
+  color: #c8c8d4;
+  border: 1px solid #3a3a55;
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+/* ─── Shortcut row ───────────────────────────────────────────── */
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 11px;
+  color: #8888a0;
+}
+
+kbd {
+  padding: 2px 6px;
+  background: #22223a;
+  border: 1px solid #3a3a55;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 10px;
+  color: #c8c8d4;
+}
+
+/* ─── Range slider ───────────────────────────────────────────── */
 input[type="range"] {
   flex: 1;
   height: 4px;
@@ -242,4 +424,19 @@ input[type="range"]::-moz-range-thumb {
   color: #8888a0;
   min-width: 28px;
   text-align: right;
+}
+
+/* ─── Class sections (show/hide based on selected profile) ──── */
+.class-section {
+  display: none;
+}
+
+.class-section.visible {
+  display: block;
+}
+
+/* ─── Number input spin buttons ──────────────────────────────── */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 0.5;
 }

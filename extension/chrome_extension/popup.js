@@ -1,4 +1,4 @@
-// KZB Control Panel — Popup Controller
+// KZB Control Panel — Full Popup Controller
 // Communicates with background.js via chrome.runtime.sendMessage
 
 const $ = (id) => document.getElementById(id);
@@ -54,11 +54,91 @@ function formatNum(n) {
   return n.toLocaleString();
 }
 
+// ─── Tab Switching ───────────────────────────────────────────
+document.querySelectorAll(".tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+    tab.classList.add("active");
+    $(tab.dataset.tab).classList.add("active");
+  });
+});
+
 // ─── Connection Status ───────────────────────────────────────
 function setDot(dot, statusEl, connected, label) {
   dot.className = "dot " + (connected ? "dot-ok" : "dot-off");
   statusEl.textContent = label || (connected ? "Connected" : "Disconnected");
 }
+
+// ─── Class Section Visibility ────────────────────────────────
+function updateClassSections() {
+  const val = configSelect.value.toLowerCase();
+  document.querySelectorAll(".class-section").forEach((el) => {
+    const cls = el.dataset.class;
+    el.classList.toggle("visible", val.startsWith(cls));
+  });
+  // If no match, show all
+  const any = document.querySelector(".class-section.visible");
+  if (!any) {
+    document.querySelectorAll(".class-section").forEach((el) => el.classList.add("visible"));
+  }
+}
+
+configSelect.addEventListener("change", updateClassSections);
+updateClassSections();
+
+// ─── Config Persistence ──────────────────────────────────────
+// Save all data-cfg values to chrome.storage.local
+function saveAllSettings() {
+  const settings = {};
+  document.querySelectorAll("[data-cfg]").forEach((el) => {
+    const key = el.dataset.cfg;
+    if (el.type === "checkbox") {
+      settings[key] = el.checked;
+    } else if (el.type === "number" || el.type === "range") {
+      settings[key] = parseFloat(el.value);
+    } else {
+      settings[key] = el.value;
+    }
+  });
+  chrome.storage.local.set({ kzbConfig: settings });
+}
+
+function loadAllSettings() {
+  chrome.storage.local.get(["kzbConfig", "selectedConfig"], (result) => {
+    if (result.selectedConfig) {
+      configSelect.value = result.selectedConfig;
+      updateClassSections();
+    }
+    if (result.kzbConfig) {
+      const cfg = result.kzbConfig;
+      document.querySelectorAll("[data-cfg]").forEach((el) => {
+        const key = el.dataset.cfg;
+        if (key in cfg) {
+          if (el.type === "checkbox") {
+            el.checked = cfg[key];
+          } else {
+            el.value = cfg[key];
+          }
+        }
+      });
+    }
+  });
+}
+
+// Debounced save on any setting change
+let saveTimeout = null;
+function debouncedSave() {
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(saveAllSettings, 300);
+}
+
+document.querySelectorAll("[data-cfg]").forEach((el) => {
+  el.addEventListener("change", debouncedSave);
+  if (el.type === "number" || el.type === "range") {
+    el.addEventListener("input", debouncedSave);
+  }
+});
 
 // ─── Poll Loop ───────────────────────────────────────────────
 async function refresh() {
@@ -111,6 +191,7 @@ btnResume.addEventListener("click", async () => {
 
 configSelect.addEventListener("change", async () => {
   const val = configSelect.value;
+  chrome.storage.local.set({ selectedConfig: val });
   if (val) {
     await send("update_config", { data: { config_name: val } });
   }
@@ -142,18 +223,42 @@ opacitySlider.addEventListener("change", async () => {
   await send("setOpacity", { value: parseInt(opacitySlider.value, 10) });
 });
 
+// Cache stats button
+const btnCacheStats = $("btn-cache-stats");
+if (btnCacheStats) {
+  btnCacheStats.addEventListener("click", async () => {
+    await send("getCacheStats");
+  });
+}
+
+// ─── Bulk Config Push ────────────────────────────────────────
+// When settings change, push entire config object to agent
+function pushConfigToAgent() {
+  const settings = {};
+  document.querySelectorAll("[data-cfg]").forEach((el) => {
+    const key = el.dataset.cfg;
+    if (el.type === "checkbox") {
+      settings[key] = el.checked;
+    } else if (el.type === "number" || el.type === "range") {
+      settings[key] = parseFloat(el.value);
+    } else {
+      settings[key] = el.value;
+    }
+  });
+  send("update_config", { data: settings });
+}
+
+// Push on any data-cfg change (debounced)
+let pushTimeout = null;
+document.querySelectorAll("[data-cfg]").forEach((el) => {
+  el.addEventListener("change", () => {
+    clearTimeout(pushTimeout);
+    pushTimeout = setTimeout(pushConfigToAgent, 500);
+  });
+});
+
 // ─── Start ───────────────────────────────────────────────────
-// Load persisted config selection
-chrome.storage.local.get(["selectedConfig"], (result) => {
-  if (result.selectedConfig) {
-    configSelect.value = result.selectedConfig;
-  }
-});
-
-configSelect.addEventListener("change", () => {
-  chrome.storage.local.set({ selectedConfig: configSelect.value });
-});
-
+loadAllSettings();
 refresh();
 pollTimer = setInterval(refresh, 2000);
 
