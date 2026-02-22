@@ -1,5 +1,6 @@
 pub mod config;
 pub mod decision;
+pub mod host_registry;
 pub mod input;
 pub mod native_messaging;
 pub mod stealth;
@@ -41,6 +42,17 @@ async fn main() {
         .init();
 
     tracing::info!("Agent starting — PID {}", std::process::id());
+
+    // ─── Load Host Registry ────────────────────────────────────
+    let registry = match host_registry::HostRegistry::load_or_create() {
+        Ok(r) => r,
+        Err(e) => {
+            tracing::warn!("Failed to load host registry: {}", e);
+            std::process::exit(1);
+        }
+    };
+    let host_name = registry.agent_host_name();
+    tracing::info!("Using native host: {}", host_name);
 
     // ─── Load Config ───────────────────────────────────────────
     // Priority: CLI arg > D2R_CONFIG env var > config.yaml in data dir

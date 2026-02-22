@@ -57,6 +57,18 @@ pub enum InboundCommand {
     #[serde(rename = "get_offsets")]
     GetOffsets,
 
+    #[serde(rename = "activate_map")]
+    ActivateMap {
+        #[serde(default)]
+        duration_ms: u64,
+    },
+
+    #[serde(rename = "deactivate_map")]
+    DeactivateMap,
+
+    #[serde(rename = "kill")]
+    Kill { reason: Option<String> },
+
     #[serde(rename = "shutdown")]
     Shutdown,
 }
@@ -183,6 +195,13 @@ pub fn parse_command(value: &Value) -> Result<InboundCommand, String> {
         }),
         Some("cache_stats") => Ok(InboundCommand::CacheStats),
         Some("get_offsets") => Ok(InboundCommand::GetOffsets),
+        Some("activate_map") => Ok(InboundCommand::ActivateMap {
+            duration_ms: value["duration_ms"].as_u64().unwrap_or(5000),
+        }),
+        Some("deactivate_map") => Ok(InboundCommand::DeactivateMap),
+        Some("kill") => Ok(InboundCommand::Kill {
+            reason: value["reason"].as_str().map(|s| s.to_string()),
+        }),
         Some("shutdown") => Ok(InboundCommand::Shutdown),
         _ => Err(format!("Unknown command: {:?}", value["cmd"])),
     }

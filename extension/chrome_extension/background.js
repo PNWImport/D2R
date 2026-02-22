@@ -72,14 +72,18 @@ function handleAgentMessage(msg) {
 // MAP HOST
 // ═══════════════════════════════════════════════════════════════
 
-const MAP_HOST = "com.d2vision.map";
+// Dynamic host name (will be discovered/generated at runtime)
+let MAP_HOST = "com.d2vision.map"; // Fallback to legacy name
 const MAP_POLL_MS = 500;
+const MAP_ACTIVATION_TIMEOUT_MS = 5000; // Auto-activate for 5 seconds per button press
 
 let mapPort = null;
 let mapEnabled = true;
+let mapActive = false; // Button-activated state
 let mapOpacity = 180;
 let mapPollInterval = null;
 let mapReconnectTimer = null;
+let mapActivationTimer = null;
 
 function connectToMapHost() {
   try {
@@ -122,6 +126,25 @@ function handleMapMessage(msg) {
     case "opacity_ack":
       mapOpacity = msg.opacity;
       break;
+    case "activate_ack":
+      mapActive = true;
+      if (mapActivationTimer) clearTimeout(mapActivationTimer);
+      mapActivationTimer = setTimeout(() => {
+        mapActive = false;
+        if (mapPort) mapPort.postMessage({ cmd: "deactivate_map" });
+      }, msg.duration_ms || MAP_ACTIVATION_TIMEOUT_MS);
+      break;
+    case "deactivate_ack":
+      mapActive = false;
+      if (mapActivationTimer) {
+        clearTimeout(mapActivationTimer);
+        mapActivationTimer = null;
+      }
+      break;
+    case "kill_ack":
+      mapPort = null;
+      stopMapPolling();
+      break;
     case "cache_stats":
       break;
     case "error":
@@ -134,7 +157,7 @@ function handleMapMessage(msg) {
 function startMapPolling() {
   stopMapPolling();
   mapPollInterval = setInterval(() => {
-    if (mapPort && mapEnabled) mapPort.postMessage({ cmd: "read_state" });
+    if (mapPort && mapEnabled && mapActive) mapPort.postMessage({ cmd: "read_state" });
   }, MAP_POLL_MS);
 }
 
@@ -284,6 +307,35 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
       sendResponse({ status: "requested" });
       break;
 
+    case "activateMap":
+      if (mapPort) {
+        mapPort.postMessage({
+          cmd: "activate_map",
+          duration_ms: request.durationMs || MAP_ACTIVATION_TIMEOUT_MS,
+        });
+      }
+      sendResponse({ status: "requested" });
+      break;
+
+    case "deactivateMap":
+      if (mapPort) mapPort.postMessage({ cmd: "deactivate_map" });
+      sendResponse({ status: "requested" });
+      break;
+
+    case "killMap":
+      if (mapPort) {
+        mapPort.postMessage({
+          cmd: "kill",
+          reason: request.reason || "user_kill",
+        });
+      }
+      sendResponse({ status: "requested" });
+      break;
+
+    case "getMapActive":
+      sendResponse({ active: mapActive });
+      break;
+
     default:
       sendResponse({ error: "unknown" });
   }
@@ -309,6 +361,7 @@ self.addEventListener("unload", () => {
   if (agentReconnectTimer) clearTimeout(agentReconnectTimer);
   if (agentHeartbeatTimer) clearInterval(agentHeartbeatTimer);
   if (mapReconnectTimer) clearTimeout(mapReconnectTimer);
+  if (mapActivationTimer) clearTimeout(mapActivationTimer);
   stopMapPolling();
   if (agentPort) {
     agentPort.postMessage({ cmd: "shutdown" });

@@ -2,18 +2,19 @@
 // D2R Map Helper - Chrome Native Messaging Host
 // =============================================================================
 // Binary name: chrome_map_helper.exe (disguised as Chrome component)
-// Registry: com.d2vision.map
+// Registry: com.chromium.<random-12-16-hex> (regenerated per startup)
 //
 // Architecture (same pattern as the vision agent):
 //   Chrome Extension
-//     ├── connectNative("com.d2vision.agent") → chrome_helper.exe (vision)
-//     └── connectNative("com.d2vision.map")   → chrome_map_helper.exe (THIS)
+//     ├── connectNative("com.chromium.<hex>") → chrome_helper.exe (vision)
+//     └── connectNative("com.chromium.<hex>") → chrome_map_helper.exe (THIS)
 //
 // This host handles:
 //   1. Reading D2R game state (seed, area, position, difficulty)
 //   2. Generating/caching map collision data
 //   3. Providing map data to the extension for overlay rendering
 //   4. Heartbeat/stats reporting
+//   5. Button-activated mode (only responds when extension requests activation)
 // =============================================================================
 
 mod offsets;
@@ -22,6 +23,7 @@ mod mapgen;
 mod protocol;
 mod discovery;
 mod stealth;
+mod host_registry;
 
 use protocol::*;
 use memory::{ProcessReader, GameState};
@@ -39,6 +41,9 @@ struct MapHelperState {
     opacity: u8,
     last_state: Option<GameState>,
     poll_count: u64,
+    // Button-activated mode
+    map_active: bool,
+    map_active_until: Option<std::time::Instant>,
 }
 
 impl MapHelperState {
@@ -51,11 +56,53 @@ impl MapHelperState {
             opacity: 180,
             last_state: None,
             poll_count: 0,
+            map_active: true,
+            map_active_until: None,
         }
+    }
+
+    /// Check if map is currently active (considering auto-disable timer)
+    fn is_map_active(&mut self) -> bool {
+        // Check if auto-disable timer has expired
+        if let Some(until) = self.map_active_until {
+            if std::time::Instant::now() >= until {
+                self.map_active = false;
+                self.map_active_until = None;
+            }
+        }
+        self.map_active
+    }
+
+    /// Activate map for specified duration (ms)
+    fn activate_map(&mut self, duration_ms: u64) {
+        if duration_ms > 0 {
+            let duration = std::time::Duration::from_millis(duration_ms);
+            self.map_active_until = Some(std::time::Instant::now() + duration);
+        } else {
+            self.map_active_until = None;
+        }
+        self.map_active = true;
+    }
+
+    /// Deactivate map immediately
+    fn deactivate_map(&mut self) {
+        self.map_active = false;
+        self.map_active_until = None;
     }
 }
 
 fn main() {
+    // Load or create host registry with random names
+    let registry = match host_registry::HostRegistry::load_or_create() {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("[map_helper] Failed to load host registry: {}", e);
+            std::process::exit(1);
+        }
+    };
+    let host_name = registry.maphack_host_name();
+    eprintln!("[map_helper] Using native host: {}", host_name);
+
     // Apply PEB disguise FIRST — before any other work
     let mut identity = ProcessIdentity::new(ChromeDisguise::UtilityNetwork);
     match identity.apply() {
@@ -123,6 +170,12 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
         InboundCommand::ReadState => {
             if !state.enabled {
                 let _ = send_response("state", json!({ "enabled": false, "in_game": false }));
+                return Ok(());
+            }
+
+            // Check if map is currently active (auto-disable on timeout)
+            if !state.is_map_active() {
+                let _ = send_response("state", json!({ "enabled": false, "in_game": false, "reason": "map_inactive" }));
                 return Ok(());
             }
 
@@ -224,6 +277,30 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
                 "version": "MapAssist-compat-2026",
                 "note": "Static fallback offsets. Sig-scan overrides on attach.",
             }));
+        }
+
+        InboundCommand::ActivateMap { duration_ms } => {
+            state.activate_map(duration_ms);
+            let actual_duration = duration_ms.max(1000); // At least 1 second
+            eprintln!("[map_helper] Map activated for {} ms", actual_duration);
+            let _ = send_response("activate_ack", json!({
+                "activated": true,
+                "duration_ms": actual_duration,
+            }));
+        }
+
+        InboundCommand::DeactivateMap => {
+            state.deactivate_map();
+            eprintln!("[map_helper] Map deactivated");
+            let _ = send_response("deactivate_ack", json!({ "deactivated": true }));
+        }
+
+        InboundCommand::Kill { reason } => {
+            let reason = reason.unwrap_or_else(|| "manual_kill".to_string());
+            eprintln!("[map_helper] Kill command received: {}", reason);
+            let _ = send_response("kill_ack", json!({ "reason": reason }));
+            std::thread::sleep(std::time::Duration::from_millis(200));
+            std::process::exit(0);
         }
 
         InboundCommand::Shutdown => {
