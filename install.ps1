@@ -1,5 +1,5 @@
 # =============================================================================
-# D2R Suite — Unified Installer
+# D2R Suite - Unified Installer
 # =============================================================================
 # Builds + installs both native messaging hosts and Chrome extension
 #   - Vision Agent  → com.chromium.display.calibration (chrome_helper.exe)
@@ -107,7 +107,7 @@ function Write-Manifest($path, $hostName, $exePath, $extId) {
 # UNINSTALL
 # =============================================
 if ($Uninstall) {
-    Write-Banner "D2R Suite — Uninstaller"
+    Write-Banner "D2R Suite - Uninstaller"
 
     # Vision agent
     Write-Host "Removing Vision Agent..." -ForegroundColor Yellow
@@ -149,12 +149,12 @@ if ($Uninstall) {
             }
         }
         if ($reverted -gt 0) {
-            Write-Step "Reverted network settings on $reverted interface(s)"
+            Write-Step "Reverted network settings on $reverted interfaces"
         } else {
             Write-Info "No network optimizations found to revert."
         }
     } else {
-        Write-Warn "Skipping network revert — requires Administrator."
+        Write-Warn "Skipping network revert - requires Administrator."
     }
 
     Write-Host ""
@@ -192,7 +192,7 @@ if ($ExtensionOnly) {
 # =============================================
 # FULL INSTALL
 # =============================================
-Write-Banner "D2R Suite — Unified Installer"
+Write-Banner "D2R Suite - Unified Installer"
 
 # ---- Step 1: Check extension ID ----
 if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
@@ -328,7 +328,7 @@ if (-not $SkipNetworkOptimize) {
     ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
     if (-not $isAdmin) {
-        Write-Warn "Skipping network optimization — requires Administrator."
+        Write-Warn "Skipping network optimization - requires Administrator."
         Write-Info "Re-run installer as Admin, or run manually:"
         Write-Info "  Set-ItemProperty -Path 'HKLM:\SYSTEM\...\Interfaces\{guid}' -Name TcpNoDelay -Value 1"
         Write-Info "  (or pass -SkipNetworkOptimize to suppress this message)"
@@ -367,15 +367,15 @@ if (-not $SkipNetworkOptimize) {
         }
 
         if ($applied -gt 0) {
-            Write-Step "Network optimized: $applied interface(s) (TcpNoDelay=1, TcpAckFrequency=1)"
-            Write-Info "  $skipped interface(s) skipped (no IP assigned)"
+            Write-Step "Network optimized: $applied interfaces - TcpNoDelay=1, TcpAckFrequency=1"
+            Write-Info "  $skipped interfaces skipped (no IP assigned)"
             Write-Info "  Reboot recommended for changes to take full effect."
         } else {
             Write-Warn "No active network interfaces found to optimize."
         }
     }
 } else {
-    Write-Info "Skipping network optimization (--SkipNetworkOptimize)"
+    Write-Info "Skipping network optimization (SkipNetworkOptimize flag set)"
 }
 
 # ---- Step 7: Verify ----
@@ -401,7 +401,7 @@ Write-Host "Extension:" -ForegroundColor White
 $extPath = Join-Path $ScriptDir "extension\chrome_extension"
 Write-Host "  Path: $extPath" -ForegroundColor Gray
 if ($ExtensionId -eq "EXTENSION_ID_HERE") {
-    Write-Host "  [!!] Extension ID is placeholder — update with real ID" -ForegroundColor Yellow
+    Write-Host "  [!!] Extension ID is placeholder - update with real ID" -ForegroundColor Yellow
 } else {
     Write-Host "  [OK] Extension ID: $ExtensionId" -ForegroundColor Green
 }
@@ -429,7 +429,7 @@ if (-not $SkipNetworkOptimize) {
             if ($nd -eq 1) { $optimized++ }
         }
         if ($optimized -gt 0) {
-            Write-Host "  [OK] Leatrix-style: TcpNoDelay=1, TcpAckFrequency=1 on $optimized interface(s)" -ForegroundColor Green
+            Write-Host "  [OK] Leatrix-style: TcpNoDelay=1, TcpAckFrequency=1 on $optimized interfaces" -ForegroundColor Green
         } else {
             Write-Host "  [--] Not applied (no active interfaces)" -ForegroundColor Yellow
         }
