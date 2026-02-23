@@ -14,6 +14,7 @@ use super::engine::{Action, Decision, DecisionEngine};
 use super::progression::{
     ProgressionEngine, Script, ScriptStep, script_plan,
 };
+use super::script_executor::ScriptExecutor;
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
@@ -175,12 +176,16 @@ pub struct GameManager {
     progression: Option<ProgressionEngine>,
     /// Currently executing script (selected by progression engine).
     current_script: Option<Script>,
-    /// Steps remaining for the current script.
+    /// Steps remaining for the current script (legacy, kept for current_step/check_level_gate).
     script_steps: Vec<ScriptStep>,
-    /// Index into script_steps.
+    /// Index into script_steps (legacy).
     script_step_index: usize,
     /// When the current script step started (for timeouts).
     step_started: Instant,
+
+    // ─── Script Executor ──────────────────────────────────────
+    /// Drives ScriptStep plans into per-frame Actions.
+    executor: ScriptExecutor,
 }
 
 impl GameManager {
@@ -210,6 +215,7 @@ impl GameManager {
             script_steps: Vec::new(),
             script_step_index: 0,
             step_started: now,
+            executor: ScriptExecutor::new(),
         }
     }
 
@@ -507,7 +513,7 @@ impl GameManager {
             }
             TownTask::Done => {
                 // All town tasks complete.
-                // If progression is active, select the next quest script.
+                // If no script is loaded yet (first town visit), select one.
                 if self.progression.is_some() && self.current_script.is_none() {
                     if !self.select_next_script() {
                         // No more scripts — exit game
@@ -519,23 +525,13 @@ impl GameManager {
                             reason: "town: all scripts done, exiting",
                         };
                     }
-                    // Check level gate on the newly selected script
-                    let current_level = state.char_level;
-                    if self.check_level_gate(current_level) {
-                        // Level too low — exit game and retry next game
-                        self.phase = GamePhase::ExitingGame;
-                        return Decision {
-                            action: Action::Wait,
-                            delay: Duration::from_millis(500),
-                            priority: 0,
-                            reason: "town: level gate failed, exiting to retry",
-                        };
-                    }
                 }
 
-                tracing::info!("Town prep complete — heading to waypoint");
+                // Resume executor — it will handle WP navigation, walking, etc.
+                tracing::info!("Town prep complete — resuming script executor");
                 self.phase = GamePhase::LeavingTown;
-                self.walk_to(npcs.waypoint, "town: walking to waypoint")
+                // First tick of the executor from LeavingTown
+                self.drive_executor(state)
             }
         }
     }
@@ -545,19 +541,16 @@ impl GameManager {
         self.town_task_started = Instant::now();
     }
 
-    // ─── Leaving Town Handler ────────────────────────────────────
+    // ─── Leaving Town / Farming Handler ────────────────────────────
+    // Both phases are now driven by the ScriptExecutor. The executor
+    // interprets the ScriptStep plan loaded by select_next_script().
+    // LeavingTown transitions to Farming once we leave town (handled
+    // by detect_phase_transitions). Both phases tick the executor.
 
     fn handle_leaving_town(&mut self, state: &FrameState) -> Decision {
-        let npcs = npcs_for_act(state.current_act);
-
-        // Click waypoint to open it, then select destination
-        // For now, just click the waypoint area — the vision pipeline
-        // will eventually detect the WP menu and select the right destination
-        self.click_at(npcs.waypoint, "leaving: using waypoint")
+        // Drive the executor — it handles waypoint clicks, walking, etc.
+        self.drive_executor(state)
     }
-
-    // ─── Farming Handler ─────────────────────────────────────────
-    // Delegates to DecisionEngine for combat. Checks town triggers.
 
     fn handle_farming(&mut self, state: &FrameState) -> Decision {
         // Update character level from vision
@@ -570,7 +563,7 @@ impl GameManager {
             self.on_quest_complete_visual();
         }
 
-        // Check if we should return to town
+        // Check if we should return to town (belt empty, inventory full, merc dead)
         if self.should_return_to_town(state) {
             tracing::info!("Town trigger hit — casting TP");
             self.phase = GamePhase::Returning;
@@ -595,16 +588,127 @@ impl GameManager {
             };
         }
 
-        // Normal combat — delegate to DecisionEngine
-        let decision = self.engine.decide(state);
-
-        // If engine decided to chicken, track it
-        if matches!(decision.action, Action::ChickenQuit) {
-            self.total_chickens += 1;
-            self.phase = GamePhase::ExitingGame;
+        // ─── Survival always takes priority over script execution ───
+        // Check immediate survival needs BEFORE executor (chicken, potions, etc.)
+        if state.in_combat {
+            let survival = self.engine.decide(state);
+            match &survival.action {
+                Action::ChickenQuit => {
+                    self.total_chickens += 1;
+                    self.phase = GamePhase::ExitingGame;
+                    return survival;
+                }
+                Action::DrinkPotion { .. } | Action::TownPortal | Action::Dodge { .. } => {
+                    return survival;
+                }
+                _ => {} // Non-survival action — let executor drive
+            }
         }
 
-        decision
+        // ─── Script executor drives navigation + combat ─────────────
+        self.drive_executor(state)
+    }
+
+    /// Tick the ScriptExecutor and handle its output.
+    /// Called by both handle_leaving_town and handle_farming.
+    fn drive_executor(&mut self, state: &FrameState) -> Decision {
+        // If executor has no plan loaded or is done, fall back
+        if self.executor.is_done() {
+            if self.current_script.is_some() {
+                // Script complete — mark done and select next
+                self.complete_current_script();
+                // Try to load next script
+                if !self.select_next_script() {
+                    self.phase = GamePhase::ExitingGame;
+                    return Decision {
+                        action: Action::Wait,
+                        delay: Duration::from_millis(500),
+                        priority: 0,
+                        reason: "executor: all scripts done, exiting",
+                    };
+                }
+            } else {
+                // No progression engine — fall back to DecisionEngine
+                let decision = self.engine.decide(state);
+                if matches!(decision.action, Action::ChickenQuit) {
+                    self.total_chickens += 1;
+                    self.phase = GamePhase::ExitingGame;
+                }
+                return decision;
+            }
+        }
+
+        // Check if current step is TownChores — if so, transition to TownPrep
+        if let Some(ScriptStep::TownChores) = self.executor.current_step() {
+            self.executor.skip_step(); // Mark TownChores as handled
+            self.phase = GamePhase::TownPrep;
+            self.town_task = TownTask::Heal;
+            self.town_task_started = Instant::now();
+            tracing::info!("Script step: TownChores — entering town prep");
+            return Decision {
+                action: Action::Wait,
+                delay: Duration::from_millis(200),
+                priority: 1,
+                reason: "executor: starting town chores",
+            };
+        }
+
+        // Check level gate
+        if let Some(min_level) = self.executor.level_gate() {
+            if state.char_level < min_level {
+                tracing::info!(
+                    "Level gate: need {}, have {} — retry next game",
+                    min_level, state.char_level
+                );
+                if let Some(script) = self.current_script {
+                    if let Some(ref mut progression) = self.progression {
+                        progression.retry_next_game(script);
+                    }
+                }
+                self.current_script = None;
+                // Try to select next script
+                if !self.select_next_script() {
+                    self.phase = GamePhase::ExitingGame;
+                }
+                return Decision {
+                    action: Action::Wait,
+                    delay: Duration::from_millis(500),
+                    priority: 0,
+                    reason: "executor: level gate failed",
+                };
+            }
+        }
+
+        // Check RetryNextGame step
+        if let Some(ScriptStep::RetryNextGame) = self.executor.current_step() {
+            if let Some(script) = self.current_script {
+                if let Some(ref mut progression) = self.progression {
+                    progression.retry_next_game(script);
+                }
+            }
+            self.executor.skip_step();
+            return Decision {
+                action: Action::Wait,
+                delay: Duration::from_millis(200),
+                priority: 0,
+                reason: "executor: retry next game",
+            };
+        }
+
+        // Tick the executor
+        match self.executor.tick(state, &mut self.engine) {
+            Some(decision) => decision,
+            None => {
+                // Executor returned None — usually means TownChores or level gate
+                // which we already handle above. Shouldn't happen, but safe fallback.
+                Decision {
+                    action: Action::Wait,
+                    delay: Duration::from_millis(200),
+                    priority: 5,
+                    reason: "executor: no action (fallback)",
+                }
+            }
+        }
     }
 
     fn should_return_to_town(&self, state: &FrameState) -> bool {
@@ -640,16 +744,45 @@ impl GameManager {
     fn handle_returning(&mut self, state: &FrameState) -> Decision {
         self.runs_this_game += 1;
 
-        // Check if farming sequence is complete (all runs done)
-        let sequence_complete = if self.config.farming.sequence.is_empty() {
-            // No explicit sequence — one run per game
-            true
+        // If executor still has steps (TP back to town mid-script is normal),
+        // resume the executor — it handles talk-to-NPC, stash, next script, etc.
+        if !self.executor.is_done() {
+            // The script still has steps to run (e.g. "TalkToNpc" after a boss).
+            // Check if the next step is TownChores
+            if let Some(ScriptStep::TownChores) = self.executor.current_step() {
+                // Run town chores first, then resume
+                self.executor.skip_step();
+                self.phase = GamePhase::TownPrep;
+                self.town_task = TownTask::Heal;
+                self.town_task_started = Instant::now();
+                tracing::info!("Back in town — running script TownChores");
+                return self.handle_town(state);
+            }
+
+            // Resume executor directly (e.g. for TalkToNpc steps in town)
+            self.phase = GamePhase::LeavingTown;
+            tracing::info!("Back in town — resuming script executor");
+            return self.drive_executor(state);
+        }
+
+        // Executor done — script complete. Try next script.
+        self.complete_current_script();
+
+        // Check farming sequence (legacy config mode)
+        let sequence_complete = if self.progression.is_some() {
+            // Progression mode: let select_next_script decide
+            if !self.select_next_script() {
+                true // No more scripts
+            } else {
+                false // New script loaded
+            }
+        } else if self.config.farming.sequence.is_empty() {
+            true // No explicit sequence — one run per game
         } else {
             self.run_index >= self.config.farming.sequence.len()
         };
 
         if sequence_complete {
-            // All runs done — exit game
             tracing::info!("Farming sequence complete ({} runs) — exiting game",
                 self.runs_this_game);
             self.phase = GamePhase::ExitingGame;
@@ -661,7 +794,7 @@ impl GameManager {
             };
         }
 
-        // More runs to do — start town prep again
+        // More runs/scripts to do — start town prep
         self.phase = GamePhase::TownPrep;
         self.town_task = TownTask::Heal;
         self.town_task_started = Instant::now();
@@ -784,7 +917,8 @@ impl GameManager {
         self.progression.as_mut()
     }
 
-    /// Select the next script from the progression engine and load its plan.
+    /// Select the next script from the progression engine and load its plan
+    /// into the ScriptExecutor.
     /// Returns true if a script was selected, false if all scripts are done
     /// (game should end).
     pub fn select_next_script(&mut self) -> bool {
@@ -802,17 +936,30 @@ impl GameManager {
                     plan.len()
                 );
                 self.current_script = Some(script);
-                self.script_steps = plan;
+                self.script_steps = plan.clone();
                 self.script_step_index = 0;
                 self.step_started = Instant::now();
+                // Load into executor
+                self.executor.load_plan(plan);
                 true
             }
             None => {
                 tracing::info!("All scripts done for this game — exiting");
                 self.current_script = None;
                 self.script_steps.clear();
+                self.executor.load_plan(Vec::new());
                 false
             }
+        }
+    }
+
+    /// Mark current script as complete in the progression engine.
+    fn complete_current_script(&mut self) {
+        if let Some(script) = self.current_script.take() {
+            if let Some(ref mut progression) = self.progression {
+                progression.mark_done(script);
+            }
+            tracing::info!("Script {} completed", script.name());
         }
     }
 
@@ -861,6 +1008,7 @@ impl GameManager {
         self.current_script = None;
         self.script_steps.clear();
         self.script_step_index = 0;
+        self.executor.load_plan(Vec::new());
     }
 
     /// Notify progression on game end + save state.
