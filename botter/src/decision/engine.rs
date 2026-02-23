@@ -1,5 +1,6 @@
 use crate::config::*;
 use crate::vision::{FrameState, ItemQuality};
+use super::quad_cache::ThresholdBins;
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
@@ -43,6 +44,10 @@ pub struct Decision {
 
 pub struct DecisionEngine {
     config: AgentConfig,
+    /// Lane 3 — flattened survival thresholds.
+    /// Hot path reads this instead of traversing self.config.survival.* every tick.
+    /// Updated atomically alongside self.config in reload_config().
+    thresholds: ThresholdBins,
     rng: StdRng,
 
     // Timing state
@@ -80,10 +85,12 @@ impl DecisionEngine {
 
         let mut rng = StdRng::from_entropy();
         let next_mistake = rng.gen_range(20..100);
+        let thresholds = ThresholdBins::from_config(&config);
 
         let now = Instant::now();
         Self {
             config,
+            thresholds,
             rng,
             last_hp_potion: now,
             last_mana_potion: now,
@@ -115,7 +122,7 @@ impl DecisionEngine {
         }
 
         // Priority 1: CHICKEN (HP)
-        if state.hp_pct <= self.config.survival.chicken_hp_pct && state.in_combat {
+        if state.hp_pct <= self.thresholds.chicken_hp && state.in_combat {
             return Decision {
                 action: Action::ChickenQuit,
                 delay: Duration::ZERO,
@@ -145,7 +152,7 @@ impl DecisionEngine {
         }
 
         // Priority 4: TP RETREAT
-        if state.hp_pct <= self.config.survival.tp_retreat_pct && state.in_combat {
+        if state.hp_pct <= self.thresholds.tp_retreat && state.in_combat {
             return Decision {
                 action: Action::TownPortal,
                 delay: self.survival_delay(),
@@ -213,12 +220,12 @@ impl DecisionEngine {
     fn check_rejuv(&mut self, state: &FrameState) -> Option<Decision> {
         let now = Instant::now();
         if now.duration_since(self.last_rejuv)
-            < Duration::from_millis(self.config.survival.rejuv_cooldown_ms)
+            < Duration::from_millis(self.thresholds.rejuv_cooldown_ms)
         {
             return None;
         }
 
-        let threshold = self.humanize_threshold(self.config.survival.hp_rejuv_pct);
+        let threshold = self.humanize_threshold(self.thresholds.rejuv_hp);
 
         if state.hp_pct <= threshold {
             if state.hp_pct > 25
@@ -240,15 +247,15 @@ impl DecisionEngine {
     fn check_hp_potion(&mut self, state: &FrameState) -> Option<Decision> {
         let now = Instant::now();
         if now.duration_since(self.last_hp_potion)
-            < Duration::from_millis(self.config.survival.hp_potion_cooldown_ms)
+            < Duration::from_millis(self.thresholds.hp_potion_cooldown_ms)
         {
             return None;
         }
 
-        let threshold = self.humanize_threshold(self.config.survival.hp_potion_pct);
+        let threshold = self.humanize_threshold(self.thresholds.hp_potion);
 
         if state.hp_pct <= threshold {
-            if state.hp_pct > self.config.survival.hp_rejuv_pct
+            if state.hp_pct > self.thresholds.rejuv_hp
                 && self.rng.gen::<f32>() < self.config.humanization.potion_forget_rate
             {
                 return None;
@@ -267,12 +274,12 @@ impl DecisionEngine {
     fn check_mana_potion(&mut self, state: &FrameState) -> Option<Decision> {
         let now = Instant::now();
         if now.duration_since(self.last_mana_potion)
-            < Duration::from_millis(self.config.survival.mana_potion_cooldown_ms)
+            < Duration::from_millis(self.thresholds.mp_potion_cooldown_ms)
         {
             return None;
         }
 
-        let threshold = self.humanize_threshold(self.config.survival.mana_potion_pct);
+        let threshold = self.humanize_threshold(self.thresholds.mp_potion);
 
         if state.mana_pct <= threshold && !state.in_town {
             self.last_mana_potion = now;
@@ -289,7 +296,7 @@ impl DecisionEngine {
     // --- Mana / Merc Chicken (kolbot Config.ManaChicken, Config.MercChicken) ---
 
     fn check_mana_chicken(&self, state: &FrameState) -> Option<Decision> {
-        let threshold = self.config.survival.mana_chicken_pct;
+        let threshold = self.thresholds.chicken_mana;
         if threshold == 0 || state.in_town {
             return None;
         }
@@ -305,7 +312,7 @@ impl DecisionEngine {
     }
 
     fn check_merc_chicken(&self, state: &FrameState) -> Option<Decision> {
-        let threshold = self.config.survival.merc_chicken_pct;
+        let threshold = self.thresholds.chicken_merc;
         if threshold == 0 || state.in_town || !self.config.merc.use_merc {
             return None;
         }
@@ -885,6 +892,7 @@ impl DecisionEngine {
             config.humanization.reaction_stddev_ms as f64,
         )
         .unwrap_or_else(|_| Normal::new(280.0, 90.0).unwrap());
+        self.thresholds = ThresholdBins::from_config(&config);
         self.config = config;
     }
 

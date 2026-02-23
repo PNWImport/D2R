@@ -1,6 +1,7 @@
 pub mod engine;
 pub mod game_manager;
 pub mod progression;
+pub mod quad_cache;
 pub mod script_executor;
 
 pub use engine::{Action, Decision, DecisionEngine, TargetType};

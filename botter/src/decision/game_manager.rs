@@ -14,6 +14,7 @@ use super::engine::{Action, Decision, DecisionEngine};
 use super::progression::{
     ProgressionEngine, Script, ScriptStep, script_plan,
 };
+use super::quad_cache::QuadCache;
 use super::script_executor::ScriptExecutor;
 use rand::prelude::*;
 use rand::rngs::StdRng;
@@ -145,6 +146,11 @@ fn npcs_for_act(act: u8) -> TownNpcs {
 pub struct GameManager {
     config: AgentConfig,
     engine: DecisionEngine,
+    /// QuadCache — warmed at startup, re-indexed on config reload.
+    /// Lane 2: pre-loaded farm run scripts (O(1) run lookup)
+    /// Lane 3: threshold bins (owned by engine; mirrored here for run-level logic)
+    /// Lane 4: hot-pattern telemetry for LLM strategic wrapper
+    cache: QuadCache,
     rng: StdRng,
 
     // Phase tracking
@@ -191,10 +197,12 @@ pub struct GameManager {
 impl GameManager {
     pub fn new(config: AgentConfig) -> Self {
         let engine = DecisionEngine::new(config.clone());
+        let cache = QuadCache::warm(&config);
         let now = Instant::now();
         Self {
             config,
             engine,
+            cache,
             rng: StdRng::from_entropy(),
             phase: GamePhase::OutOfGame,
             town_task: TownTask::Heal,
@@ -245,6 +253,10 @@ impl GameManager {
 
     /// Reload config for both manager and engine
     pub fn reload_config(&mut self, config: AgentConfig) {
+        // Lane 3: re-flatten survival thresholds immediately
+        self.cache.reload_thresholds(&config);
+        // Lane 2: re-index run sequence if farming.sequence may have changed
+        self.cache.rewarm_runs(&config);
         self.engine.reload_config(config.clone());
         self.config = config;
     }
