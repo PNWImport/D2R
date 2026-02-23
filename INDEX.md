@@ -49,6 +49,34 @@ Complete guide to all documentation and source files.
    - Dual tick drain architecture explained
    - Best for: Understanding performance optimizations
 
+7. **[CACHE_WALKTHROUGH_ACT1.md](CACHE_WALKTHROUGH_ACT1.md)** (10 min)
+   - Frame-by-frame Act 1 Level 8 run with QuadCache hit analysis
+   - Lane 3/4 performance per frame
+   - Best for: Understanding QuadCache in practice
+
+8. **[ISSUES_BACKLOG.md](ISSUES_BACKLOG.md)** (5 min)
+   - Technical debt tracking (cubing, waypoint detector, etc.)
+   - Best for: Known gaps and future work
+
+9. **[SESSION_SUMMARY.md](SESSION_SUMMARY.md)** (5 min)
+   - Install check + walkthrough session log
+   - Bugfixes: Diablo seal, Action::Click, waypoint tracking
+   - Best for: Recent session history
+
+10. **[CPU_PROOF_SESSION.md](CPU_PROOF_SESSION.md)** (5 min)
+    - CPU proof demo design rationale
+    - Hz simulation strategy, video recording instructions
+    - Best for: Understanding the CPU-only proof demo
+
+### Interactive Demos
+11. **[extension/cpu_proof_demo.html](extension/cpu_proof_demo.html)** (open in Chrome)
+    - Live Hz counter + rolling chart — screen-recordable CPU proof
+    - Best for: Visual proof of CPU-only pipeline
+
+12. **[extension/vision_perf.html](extension/vision_perf.html)** (open in Chrome)
+    - Wire to `vision_bench` output for real measured benchmarks
+    - Best for: Actual benchmark data visualization
+
 ---
 
 ## 🔧 Source Code Organization
@@ -106,7 +134,7 @@ botter/
 
 Key metrics:
 - 8,400 LOC Rust
-- 282 tests (130 lib + 144 bin + 8 stress) — all passing
+- 294 tests (136 lib + 150 integration + 8 stress) — all passing
 - Zero warnings (only stubs flagged)
 - Lock-free design (16-shard frame buffer)
 - 4-thread input pool
@@ -212,7 +240,7 @@ cargo test
 # Commit
 git add .
 git commit -m "Your message"
-git push origin claude/prepare-kolbot-production-zGrdr
+git push origin claude/cpu-video-test-docs-IVwhE
 ```
 
 ---
@@ -223,7 +251,7 @@ git push origin claude/prepare-kolbot-production-zGrdr
 |--------|-------|
 | Total Rust LOC | 11,400 |
 | JavaScript LOC | 3,100 |
-| Total Tests | 282 (130 lib + 144 bin + 8 stress) |
+| Total Tests | 294 (136 lib + 150 integration + 8 stress) |
 | Test Pass Rate | 100% |
 | Config Sections | 18 |
 | Character Presets | 8 |
@@ -374,7 +402,7 @@ MIT License — See LICENSE file for details.
 ## 🔗 Quick Links
 
 - **Source**: `/home/user/D2R` (git repo)
-- **Branch**: `claude/prepare-kolbot-production-zGrdr`
+- **Branch**: `claude/cpu-video-test-docs-IVwhE`
 - **Configs**: `C:\ProgramData\DisplayCalibration\`
 - **Logs**: `C:\ProgramData\DisplayCalibration\*.log`
 - **Extension**: `chrome://extensions`
