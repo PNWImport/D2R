@@ -12,8 +12,10 @@ KZB/
 ├── STRUCTURE.md              ← This file
 ├── .gitignore                ← Git exclusions
 │
-├── install.ps1               ← Unified installer (Windows PowerShell)
+├── install.ps1               ← Unified installer (PowerShell) + Leatrix TCP optimization
 ├── install.bat               ← Batch wrapper for PowerShell
+├── latency_profile.py        ← Monte Carlo latency profiler (50K runs, V1 vs V2)
+├── LATENCY_ANALYSIS.md       ← Config update pipeline latency analysis
 │
 ├── assets/
 │   ├── kzb_header.webp       ← Project header image
@@ -32,7 +34,10 @@ KZB/
 │   │   ├── decision/
 │   │   │   ├── mod.rs        ← Module exports
 │   │   │   ├── engine.rs     ← DecisionEngine (combat, survival, loot logic)
-│   │   │   └── game_manager.rs ← GameManager (7-phase state machine)
+│   │   │   ├── game_manager.rs ← GameManager (7-phase state machine)
+│   │   │   ├── quad_cache.rs ← QuadCache 4-lane acceleration (O(1) decisions)
+│   │   │   ├── progression.rs ← Quest state, difficulty progression, script sequence
+│   │   │   └── script_executor.rs ← Script step execution with visual cue verification
 │   │   ├── vision/
 │   │   │   ├── mod.rs        ← Vision module exports
 │   │   │   ├── capture.rs    ← DXGI frame capture, vision pipeline
@@ -292,8 +297,9 @@ KZB/
 - **`botter/src/main.rs`** -- Vision agent main loop
   - Argument parsing (config path selection)
   - DXGI capture initialization
-  - Frame loop (25 Hz tick)
+  - Frame loop (25 Hz tick) with dual tick drain
   - Native messaging host connection
+  - Direct JSON deserialization (`serde_json::from_value`)
   - Signal handling (graceful shutdown)
 
 - **`maphack/src/main.rs`** -- Map helper main loop
@@ -325,7 +331,7 @@ KZB/
 ### Decision & Logic
 - **`botter/src/decision/engine.rs`**
   - Priority-based decision system
-  - Survival checks (chicken, potions, TP)
+  - Survival checks via ThresholdBins (O(1) flat field reads, no config traversal)
   - Combat logic (dodge, static field, attack slots)
   - Attack target derivation (Boss/Champion/Normal/Immune)
   - Humanization (delays, variance, missed clicks)
@@ -335,6 +341,23 @@ KZB/
   - Town automation (NPC sequences)
   - Game lifecycle (exit, inter-game delays)
   - Per-act NPC coordinates
+  - QuadCache warm/reload integration
+
+- **`botter/src/decision/quad_cache.rs`** — **QuadCache four-lane acceleration**
+  - Lane 2: PreparedRun indexed at startup (farm scripts, act derivation, boss detection)
+  - Lane 3: ThresholdBins — 12 survival fields flattened for O(1) reads
+  - Lane 4: HotKey (HpBin × combat × loot) hit counters + SpanFeatures for LLM
+  - ~22 KB total footprint, all agent-private heap
+  - `warm()` at startup (~5μs), `reload_thresholds()` / `rewarm_runs()` on config change
+
+- **`botter/src/decision/progression.rs`**
+  - Quest state tracking and difficulty progression
+  - Script sequence with area/quest/boss steps
+  - Visual cue detection for script advancement
+
+- **`botter/src/decision/script_executor.rs`**
+  - Script step execution engine
+  - Visual cue verification before step completion
 
 ### Vision & Capture
 - **`botter/src/vision/capture.rs`**
@@ -389,6 +412,7 @@ KZB/
   - Chrome native messaging protocol (4-byte LE length + JSON)
   - Commands: pause, resume, get_stats, update_config, shutdown
   - Stats struct (SharedAgentStats with atomics)
+  - Responses built directly with `json!()` macros (no intermediary struct)
 
 ### Chrome Extension
 - **`extension/chrome_extension/popup.html`** (1521 LOC)

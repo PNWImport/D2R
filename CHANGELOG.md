@@ -4,6 +4,72 @@ Complete version history of KZB, a production D2R farming automation suite built
 
 ---
 
+## [1.5.0] — 2026-02-23
+
+### Performance & Architecture Overhaul
+
+#### QuadCache Four-Lane Acceleration (`quad_cache.rs`)
+- **Lane 2 (Structural)**: Farm run scripts pre-indexed at startup for O(1) lookup
+  - `PreparedRun` struct with act derivation and boss detection
+  - `act_for_run()` / `is_boss_run()` helpers for all D2R areas
+  - `run_sequence` resolved once at warm, reused every cycle
+- **Lane 3 (Metric Range)**: Survival thresholds flattened to `ThresholdBins`
+  - Replaces 11 `self.config.survival.*` traversals per tick with direct field reads
+  - 12 flat fields (chicken_hp, rejuv_hp, hp_potion, cooldowns, etc.)
+  - Re-materialized on every `reload_config` — zero hot-path overhead
+- **Lane 4 (Hot Joins)**: Recurring `(HpBin × in_combat × has_loot)` pattern telemetry
+  - `HotKey` lookup table with hit counters
+  - `SpanFeatures` emitted to optional LLM wrapper (openclaw)
+  - `top_patterns(n)` for session context and diagnostics
+  - Hit rate tracking for cache effectiveness monitoring
+- **Lane 1 (Exact Query)**: Deliberately unused — game states are never pixel-identical
+- Total footprint: ~22 KB (runs + thresholds + hot keys), all in agent-private heap
+
+#### Dual Tick Drain — Config Update Latency Fix
+- Added second `cmd_rx.try_recv()` drain after action execution in `main.rs`
+- Config updates (chicken_hp, hp_potion_pct, etc.) now processed twice per tick:
+  1. At tick start (existing)
+  2. After action dispatch, before idle sleep (new)
+- Worst-case "missed chicken/potion" window: **40ms → ~5ms** (5.2× speedup)
+- Mean config update latency: **23.5ms → 4.5ms** (Monte Carlo verified, 50K runs)
+
+#### Direct JSON Deserialization
+- Eliminated `serde_json::to_string()` → `serde_yaml::from_str()` roundabout
+- Now uses `serde_json::from_value::<AgentConfig>(data)` directly
+- Saves ~2ms per config update and removes unnecessary serde_yaml dependency on hot path
+
+#### Progression Engine & Script Executor
+- `progression.rs`: Quest state tracking, difficulty progression, visual cue detection
+  - Script sequence with area/quest/boss steps
+  - `should_run()` for conditional script execution
+- `script_executor.rs`: Script step execution with visual cue verification
+
+#### Leatrix-Style TCP Optimization (Installer)
+- Added `TcpNoDelay=1` and `TcpAckFrequency=1` registry tweaks to `install.ps1`
+- Applied to all active network interfaces at install time
+- Reduces TCP latency for D2R online play (~15-40ms improvement)
+- New `-SkipNetworkOptimize` flag to opt out
+- Admin privilege check with graceful skip
+- Uninstall path reverts registry changes
+
+#### Code Quality
+- Full `cargo clippy` cleanup: **41 warnings → 0 warnings**
+  - Fixed dead code annotations, vec init patterns, identical if blocks
+  - Replaced manual Default impls with `#[derive(Default)]`
+  - Fixed doc formatting, range contains, iterator patterns
+  - Applied `is_multiple_of()`, `.clamp()`, `is_some_and()` idioms
+- `cargo fmt` applied across all 23 touched files
+- Removed dead `HostResponse` struct from native messaging (unused — responses are raw `json!()`)
+- All 8 stress tests passing
+
+#### Latency Profiler
+- New `latency_profile.py` Monte Carlo simulator (50,000 runs per scenario)
+- Three scenarios: standard (5KB), survival-critical (500B), full reload (50KB)
+- V1 vs V2 comparison with statistical analysis
+- Results documented in `LATENCY_ANALYSIS.md`
+
+---
+
 ## [1.4.0] — 2026-02-23
 
 ### Chrome Extension GUI Rebuild

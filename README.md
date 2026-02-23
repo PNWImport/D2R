@@ -31,6 +31,13 @@
 - **Buff tracking**: visual buff indicators (16-slot bitfield)
 - **Town state**: in_town, at_menu, loading_screen, inventory_full
 
+### 🚀 QuadCache Four-Lane Acceleration
+- **Lane 2 (Structural)**: Farm run scripts pre-indexed at startup — O(1) run lookup
+- **Lane 3 (Metric Range)**: Survival thresholds flattened to plain fields — O(1) reads, no config traversal
+- **Lane 4 (Hot Joins)**: Recurring `(HpBin × combat × loot)` patterns tracked for LLM wrapper
+- **Dual tick drain**: Config updates processed twice per tick — **5ms worst-case** (was 40ms)
+- **~22 KB total footprint** — all in agent-private heap, no Warden surface
+
 ### ⚔️ Combat System (Kolbot Foundation)
 - **7 attack skill slots**: Preattack, Boss/Mob/Immune (timed + untimed variants)
 - **Intelligent targeting**: Boss → Champion → Normal → Immune with fallback
@@ -130,14 +137,17 @@ notepad C:\ProgramData\DisplayCalibration\config.yaml
 
 ## 🏗️ Architecture
 
-### Vision Agent (`botter/` — 8,400 LOC)
+### Vision Agent (`botter/` — 8,400+ LOC)
 ```
 src/
-├── main.rs                          Entry point, config loading, main loop
+├── main.rs                          Entry point, config loading, dual-drain main loop
 ├── config/                          AgentConfig (YAML, 18 sections)
 ├── decision/
 │   ├── engine.rs                    DecisionEngine (1200 LOC) — combat, survival, loot
-│   └── game_manager.rs              GameManager (900 LOC) — 7-phase lifecycle
+│   ├── game_manager.rs              GameManager (900 LOC) — 7-phase lifecycle
+│   ├── quad_cache.rs                QuadCache — 4-lane O(1) acceleration (~22 KB)
+│   ├── progression.rs               Quest state, difficulty, script sequence
+│   └── script_executor.rs           Script step execution + visual cue verification
 ├── vision/
 │   ├── capture.rs                   DXGI capture, enemy/loot detection
 │   └── shard_buffer.rs              Lock-free FrameState buffer
@@ -194,6 +204,7 @@ chrome_extension/
 | **[INSTALL.md](INSTALL.md)** | Detailed installation + troubleshooting | 15 min |
 | **[STRUCTURE.md](STRUCTURE.md)** | Complete codebase walkthrough | 20 min |
 | **[CHANGELOG.md](CHANGELOG.md)** | Version history + roadmap | 10 min |
+| **[LATENCY_ANALYSIS.md](LATENCY_ANALYSIS.md)** | Config pipeline latency deep-dive | 10 min |
 
 **For end users:** Start with [QUICKSTART.md](QUICKSTART.md)
 **For developers:** Start with [STRUCTURE.md](STRUCTURE.md)
@@ -315,9 +326,10 @@ farming:                                      # Farming sequence
 - ✅ **Map Helper** (Rust) — Complete, tested, production-ready
 - ✅ **Chrome Extension** — Complete, tested, production-ready
 - ✅ **8 Character Presets** — YAML configs for common builds
-- ✅ **Unified Installer** — One PowerShell script to rule them all
-- ✅ **192 Tests** — Unit, integration, and stress tests (100% passing)
-- ✅ **5 Documentation Files** — INDEX.md, QUICKSTART.md, INSTALL.md, STRUCTURE.md, CHANGELOG.md (plus test_gui.html test harness)
+- ✅ **Unified Installer** — One PowerShell script + Leatrix TCP optimization
+- ✅ **QuadCache Acceleration** — Four-lane O(1) decision cache (~22 KB)
+- ✅ **192 Tests** — Unit, integration, and stress tests (100% passing, 0 clippy warnings)
+- ✅ **6 Documentation Files** — INDEX, QUICKSTART, INSTALL, STRUCTURE, CHANGELOG, LATENCY_ANALYSIS (plus test_gui.html test harness)
 
 ---
 
@@ -409,7 +421,10 @@ This tool is for educational and personal entertainment purposes.
 |--------|-------|
 | Frame Capture | 25 Hz (40 ms per frame) |
 | Decision Latency | <10 ms (lock-free buffer) |
-| Memory Usage | ~50 MB (vision agent) |
+| Config Update Latency | ~4.5 ms mean (dual tick drain) |
+| QuadCache Warm | ~5 μs (startup) |
+| Threshold Lookup | O(1) flat field read (was config traversal) |
+| Memory Usage | ~50 MB (vision agent) + ~22 KB QuadCache |
 | CPU Usage | 5-10% (single core) |
 | Downtime | <1% (robust state machine) |
 
@@ -417,12 +432,15 @@ This tool is for educational and personal entertainment purposes.
 
 ## 🚀 Future Roadmap
 
+- [x] QuadCache four-lane acceleration (O(1) decisions, LLM wrapper ready)
+- [x] Config update latency optimization (dual tick drain, 5ms worst-case)
+- [x] Leatrix TCP optimization (installer auto-applies)
 - [ ] Advanced pathfinding (A* on vision-detected map)
 - [ ] Multi-resolution scaling (dynamic resolution detection)
 - [ ] D2R 3.x offset updates (when Blizzard releases)
 - [ ] Linux/Mac stealth variant (process disguise)
 - [ ] Streaming mode (bot controls visible on stream)
-- [ ] Telemetry dashboard (MCP server integration)
+- [ ] openclaw LLM strategic wrapper (run selection, config suggestions)
 
 ---
 
@@ -443,6 +461,6 @@ Special thanks to:
 
 ### 🎯 Ready to farm? Start with [QUICKSTART.md](QUICKSTART.md)
 
-**v1.4.0** — Production Release — [Documentation](INDEX.md) — MIT License
+**v1.5.0** — Production Release — [Documentation](INDEX.md) — MIT License
 
 </div>

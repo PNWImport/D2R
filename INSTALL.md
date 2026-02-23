@@ -96,6 +96,12 @@ cd C:\Users\YourName\Downloads\D2R
 # ✓ Copy binaries to Program Files
 # ✓ Copy default configs to C:\ProgramData\DisplayCalibration\
 # ✓ Register with Chrome
+# ✓ Apply Leatrix TCP optimization (TcpNoDelay, TcpAckFrequency)
+#
+# Optional flags:
+#   -SkipNetworkOptimize    Skip TCP optimization
+#   -SkipBuild              Skip Rust compilation
+#   -Uninstall              Remove everything
 ```
 
 **Verify installation:**
@@ -258,6 +264,8 @@ copy "C:\Users\YourName\Downloads\D2R\botter\configs\*.yaml" `
 ```powershell
 cd C:\Users\YourName\Downloads\D2R
 .\install.ps1 -Uninstall
+# Removes: registry entries, binaries, TCP optimizations
+# Keeps: configs (manual cleanup) and Chrome extension (manual removal)
 ```
 
 ### Option 2: Manual
@@ -270,6 +278,13 @@ Remove-Item -Path "HKLM:\Software\Google\Chrome\NativeMessagingHosts\com.d2visio
 # Remove binaries
 rmdir "C:\Program Files\D2R Agent\" -Recurse -Force
 rmdir "C:\Program Files\D2R Maphack\" -Recurse -Force
+
+# Remove TCP optimizations (Leatrix)
+Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces" |
+  ForEach-Object {
+    Remove-ItemProperty $_.PSPath -Name TcpNoDelay -ErrorAction SilentlyContinue
+    Remove-ItemProperty $_.PSPath -Name TcpAckFrequency -ErrorAction SilentlyContinue
+  }
 
 # Remove configs (optional, keeps your edits)
 # rmdir "C:\ProgramData\DisplayCalibration\" -Recurse -Force
@@ -360,6 +375,20 @@ rmdir "C:\Program Files\D2R Maphack\" -Recurse -Force
 
 3. Test map toggle: Ctrl+Shift+M in game window (should appear/disappear)
 
+### TCP optimization didn't apply
+
+**Cause**: Needs admin privileges.
+
+**Fix**:
+1. Right-click PowerShell → "Run as Administrator"
+2. Re-run: `.\install.ps1`
+3. To skip: `.\install.ps1 -SkipNetworkOptimize`
+4. To verify, check registry:
+   ```powershell
+   Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\*" |
+     Select-Object TcpNoDelay, TcpAckFrequency
+   ```
+
 ### Game runs but bot never starts
 
 **Cause**: Bot doesn't detect game loaded.
@@ -382,6 +411,7 @@ Quick checklist:
 - [ ] Native hosts registered in registry
 - [ ] Binaries exist in Program Files
 - [ ] Configs exist in ProgramData
+- [ ] TCP optimization applied (TcpNoDelay=1, TcpAckFrequency=1)
 - [ ] Extension loads in Chrome
 - [ ] Extension popup shows "Agent: Connected"
 - [ ] D2R loads and bot stats update in popup

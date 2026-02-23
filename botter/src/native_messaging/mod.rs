@@ -106,15 +106,6 @@ pub enum ChromeCommand {
     UpdateConfig { data: Option<Value> },
 }
 
-/// Commands the agent can send to Chrome (via stdout)
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize)]
-struct HostResponse {
-    cmd: String,
-    #[serde(flatten)]
-    data: Value,
-}
-
 /// The native messaging host. Owns the stdio pipe and bridges
 /// Chrome <-> Agent communication.
 pub struct NativeMessagingHost {

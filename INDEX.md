@@ -43,6 +43,12 @@ Complete guide to all documentation and source files.
    - Statistics and metrics
    - Best for: What's new, version history
 
+6. **[LATENCY_ANALYSIS.md](LATENCY_ANALYSIS.md)** (10 min)
+   - Config update pipeline profiling (Monte Carlo, 50K runs)
+   - V1 vs V2 comparison (23.5ms → 4.5ms mean)
+   - Dual tick drain architecture explained
+   - Best for: Understanding performance optimizations
+
 ---
 
 ## 🔧 Source Code Organization
@@ -50,11 +56,14 @@ Complete guide to all documentation and source files.
 ### Vision Agent (Rust — Farming AI)
 ```
 botter/
-├── src/main.rs                    Entry point, config loading, main loop
+├── src/main.rs                    Entry point, config loading, dual-drain main loop
 ├── src/config/mod.rs              AgentConfig (YAML, 18 sections, 100+ fields)
 ├── src/decision/
 │   ├── engine.rs                  DecisionEngine (combat, survival, loot) — 1200 LOC
 │   ├── game_manager.rs            GameManager (7-phase lifecycle) — 900 LOC
+│   ├── quad_cache.rs              QuadCache 4-lane acceleration (O(1) decisions)
+│   ├── progression.rs             Quest state, difficulty, script sequence
+│   ├── script_executor.rs         Script step execution + visual cues
 │   └── mod.rs                     Module exports
 ├── src/vision/
 │   ├── capture.rs                 Vision pipeline (DXGI, enemy/loot detection) — 600 LOC
@@ -233,6 +242,9 @@ git push origin claude/prepare-kolbot-production-zGrdr
 ### Core Decision Making
 - **engine.rs** — Decides what action to take each frame (attack, drink, dodge, etc.)
 - **game_manager.rs** — Manages game phases (town prep, farming, exiting)
+- **quad_cache.rs** — Four-lane O(1) acceleration (thresholds, run scripts, hot patterns)
+- **progression.rs** — Quest state tracking and difficulty progression
+- **script_executor.rs** — Script step execution with visual cue verification
 
 ### Vision Pipeline
 - **capture.rs** — Extracts FrameState from DXGI screenshot
@@ -310,14 +322,17 @@ KZB avoids detection by:
 - DXGI frame capture (25 Hz)
 - Enemy/loot/buff detection
 - Combat decision engine (7 attack slots)
-- Survival checks (chicken, potions, TP)
+- Survival checks (chicken, potions, TP) via QuadCache ThresholdBins
 - Town automation (NPC sequences, all 5 acts)
 - Game lifecycle (7-phase state machine)
 - Chrome control panel (stats, pause/resume, config select)
 - Config system (18 sections, 8 presets)
+- QuadCache four-lane acceleration (~22 KB, O(1) decisions)
+- Dual tick drain (config updates in ~4.5ms mean)
+- Leatrix TCP optimization (installer auto-applies)
 - Stealth features (thread pool, jitter, PEB disguise)
 - Input dispatch (4-worker pool, humanization)
-- 192 tests (all passing)
+- 192 tests (all passing, 0 clippy warnings)
 
 ⚠️ **Implemented, Config Only** (needs runtime execution)
 - Cubing/runewords
