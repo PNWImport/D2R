@@ -71,9 +71,8 @@ botter/
 ├── src/native_messaging/
 │   └── mod.rs                     Chrome native messaging host (stdio protocol)
 ├── src/input/
-│   ├── windows_input.rs           SendInput dispatch (Windows API)
-│   ├── simulator.rs               Simulation stubs (Linux testing)
-│   └── mod.rs                     Input trait & types
+│   ├── mod.rs                     Input trait & types
+│   └── simulator.rs               Simulation stubs (Linux testing)
 ├── src/training/
 │   ├── logger.rs                  Decision logging for analysis
 │   └── mod.rs                     Training module
