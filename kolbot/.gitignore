@@ -10,8 +10,9 @@
 
 # Track these hidden directories
 !.github/
+!.vscode/
 
-# Track these files from vscodes
+# Track these files from vscode
 !.vscode/settings.json
 !.vscode/extensions.json
 
