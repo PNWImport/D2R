@@ -192,10 +192,8 @@ async fn main() {
                     }
                     AgentCommand::UpdateConfig(data) => {
                         tracing::info!("Config update received");
-                        if let Ok(yaml_str) = serde_json::to_string(&data) {
-                            if let Ok(new_config) = serde_yaml::from_str::<AgentConfig>(&yaml_str) {
-                                game_mgr.reload_config(new_config);
-                            }
+                        if let Ok(new_config) = serde_json::from_value::<AgentConfig>(data) {
+                            game_mgr.reload_config(new_config);
                         }
                     }
                 }
@@ -313,6 +311,26 @@ async fn main() {
                     input_pool.dispatch(InputCommand::KeyPress { key: 'w', hold_ms: 35 });
                 }
                 decision::Action::Wait => {}
+            }
+
+            // ─── Post-execution command flush ──────────────────
+            // Drain commands that arrived during humanized delays,
+            // jitter sleeps, and input dispatch so survival config
+            // (chicken_hp_pct, hp_potion_pct, tp_retreat_pct) is
+            // fresh before the next tick's decide(). Cuts worst-case
+            // "missed chicken/potion" window from ~40ms down to ~5ms.
+            while let Ok(cmd) = cmd_rx.try_recv() {
+                match cmd {
+                    AgentCommand::Shutdown => {
+                        loop_shutdown.store(true, Ordering::Release);
+                    }
+                    AgentCommand::UpdateConfig(data) => {
+                        if let Ok(new_config) = serde_json::from_value::<AgentConfig>(data) {
+                            game_mgr.reload_config(new_config);
+                        }
+                    }
+                    _ => {} // Pause/Resume handled at tick start
+                }
             }
 
             // Precise tick timing
