@@ -500,10 +500,10 @@ KZB/
   - Maphack verification tests (Python)
 
 - **Unit tests** (scattered throughout src/)
-  - 85 library tests
-  - 99 binary integration tests
+  - 130 library tests
+  - 144 binary integration tests
   - 8 stress tests
-  - 192 total
+  - 282 total
 
 ---
 
@@ -558,7 +558,7 @@ cargo build --release              # Map helper
 
 # Test
 cd ../botter
-cargo test                          # All tests (192)
+cargo test                          # All tests (282)
 cargo test decision::               # Decision tests only
 cargo test game_manager::           # Game lifecycle tests
 cargo test --test stress            # Stress tests (8)
@@ -629,17 +629,17 @@ All hardcoded at 800x600 base resolution (scales with math):
 
 | Test Suite | Count |
 |------------|-------|
-| Library unit tests | 85 |
-| Binary integration tests | 99 |
+| Library unit tests | 130 |
+| Binary integration tests | 144 |
 | Stress tests | 8 |
-| **Total** | **192** |
+| **Total** | **282** |
 
 ---
 
 ## Development Workflow
 
 1. **Make changes** to Rust code in `botter/src/` or `maphack/src/`
-2. **Run tests**: `cargo test` (all 192 tests should pass)
+2. **Run tests**: `cargo test` (all 282 tests should pass)
 3. **Check lints**: `cargo clippy`
 4. **Format code**: `cargo fmt`
 5. **Commit**: `git commit -m "Clear message"`
@@ -716,7 +716,7 @@ All hardcoded at 800x600 base resolution (scales with math):
 
 ## Release Checklist
 
-- [ ] All tests pass (192/192)
+- [ ] All tests pass (282/282)
 - [ ] No clippy warnings
 - [ ] Code formatted (`cargo fmt`)
 - [ ] Documentation updated (README, CHANGELOG)

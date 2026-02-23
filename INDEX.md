@@ -106,7 +106,7 @@ botter/
 
 Key metrics:
 - 8,400 LOC Rust
-- 192 tests (85 lib + 99 bin + 8 stress) — all passing
+- 282 tests (130 lib + 144 bin + 8 stress) — all passing
 - Zero warnings (only stubs flagged)
 - Lock-free design (16-shard frame buffer)
 - 4-thread input pool
@@ -182,7 +182,7 @@ kolbot/
 
 # Run tests
 cd botter
-cargo test                      # All 192 tests
+cargo test                      # All 282 tests
 cargo test decision::           # Decision engine tests only
 
 # Format & lint
@@ -223,7 +223,7 @@ git push origin claude/prepare-kolbot-production-zGrdr
 |--------|-------|
 | Total Rust LOC | 11,400 |
 | JavaScript LOC | 3,100 |
-| Total Tests | 192 (85 lib + 99 bin + 8 stress) |
+| Total Tests | 282 (130 lib + 144 bin + 8 stress) |
 | Test Pass Rate | 100% |
 | Config Sections | 18 |
 | Character Presets | 8 |
@@ -332,7 +332,7 @@ KZB avoids detection by:
 - Leatrix TCP optimization (installer auto-applies)
 - Stealth features (thread pool, jitter, PEB disguise)
 - Input dispatch (4-worker pool, humanization)
-- 192 tests (all passing, 0 clippy warnings)
+- 282 tests (all passing, 0 clippy warnings)
 
 ⚠️ **Implemented, Config Only** (needs runtime execution)
 - Cubing/runewords

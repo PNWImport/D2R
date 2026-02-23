@@ -4,7 +4,7 @@
 
 > **Production-ready Diablo II: Resurrected farming bot built in Rust**
 >
-> Vision-based automation • Zero game memory access • Chrome control panel • 192 tests (100% passing)
+> Vision-based automation • Zero game memory access • Chrome control panel • 282 tests (100% passing)
 
 ---
 
@@ -122,7 +122,7 @@ notepad C:\ProgramData\DisplayCalibration\config.yaml
 | Metric | Value |
 |--------|-------|
 | **Source Code** | 11,400 LOC Rust + 3,100 LOC JS/CSS/HTML |
-| **Tests** | 192 total (85 library, 99 binary, 8 stress) — **100% passing** |
+| **Tests** | 282 total (130 library, 144 binary, 8 stress) — **100% passing** |
 | **Config Sections** | 18 (Survival, Combat, Loot, Town, Buffs, Session, Farming, etc.) |
 | **Character Presets** | 8 (Sorceress, Paladin, Amazon, Necromancer, Assassin, Barbarian, Druid) |
 | **NPC Locations** | 35 across 5 acts |
@@ -165,7 +165,7 @@ Key Design:
 ✓ Lock-free capture buffer (no contention, deterministic latency)
 ✓ Per-thread input jitter (avoids single-point detection)
 ✓ Humanization throughout (reaction time, aim variance, idle pauses)
-✓ 192 tests covering decision logic, game lifecycle, vision pipeline
+✓ 282 tests covering decision logic, game lifecycle, vision pipeline
 ```
 
 ### Map Helper (`maphack/`)
@@ -328,7 +328,7 @@ farming:                                      # Farming sequence
 - ✅ **8 Character Presets** — YAML configs for common builds
 - ✅ **Unified Installer** — One PowerShell script + Leatrix TCP optimization
 - ✅ **QuadCache Acceleration** — Four-lane O(1) decision cache (~22 KB)
-- ✅ **192 Tests** — Unit, integration, and stress tests (100% passing, 0 clippy warnings)
+- ✅ **282 Tests** — Unit, integration, and stress tests (100% passing, 0 clippy warnings)
 - ✅ **6 Documentation Files** — INDEX, QUICKSTART, INSTALL, STRUCTURE, CHANGELOG, LATENCY_ANALYSIS (plus test_gui.html test harness)
 
 ---
@@ -361,7 +361,7 @@ farming:                                      # Farming sequence
 - Vision-based farming bot (DXGI, no memory access)
 - Game lifecycle manager (7-phase state machine)
 - Chrome control panel (native messaging)
-- Complete testing suite (192 tests)
+- Complete testing suite (282 tests)
 
 ### Kolbot (Foundation)
 - 20+ years of D2BS JavaScript bot logic
