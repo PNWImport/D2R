@@ -110,25 +110,178 @@ KZB/
 │       ├── map_content.js    ← Content script (map overlay injection, 260 LOC)
 │       └── kzb_header.webp   ← Extension header image
 │
-└── kolbot/                   ← Classic D2 Bot (D2BS JavaScript reference)
-    ├── D2Bot.exe             ← Manager executable
-    ├── setup.bat             ← Setup batch wrapper
-    ├── update.bat            ← Update batch script
+└── kolbot/                   ← Complete D2 Bot ecosystem (D2BS + SoloPlay levelbot)
+    ├── D2Bot.exe             ← Manager executable (4.5 MB)
+    ├── setup.bat             ← Batch setup wrapper
+    ├── update.bat            ← Update & submodule init script
+    ├── README.md             ← Kolbot quickstart guide
+    ├── package.json          ← Node.js dependencies
+    ├── tsconfig.json         ← TypeScript config
+    ├── biome.json            ← Biome linter config
+    ├── .eslintrc.js          ← ESLint rules
+    ├── .editorconfig         ← Editor formatting rules
     ├── .gitignore            ← Git exclusions
-    ├── .gitmodules           ← Git submodule definitions
-    ├── d2bs/
-    │   ├── D2BS.dll          ← D2BS engine
-    │   ├── HISTORY.txt       ← D2BS version history
-    │   ├── LICENSE.rtf       ← License (RTF)
-    │   ├── LICENSE.txt       ← License (text)
-    │   └── api.html          ← API documentation (TiddlyWiki)
+    ├── .github/
+    │   ├── copilot-instructions.md    ← AI coding guidelines
+    │   ├── ISSUE_TEMPLATE/bug_report.md
+    │   ├── instructions/typescript.instructions.md
+    │   └── workflows/eslint.yml       ← CI linting
+    ├── .vscode/
+    │   ├── settings.json     ← VS Code workspace settings
+    │   └── extensions.json   ← Recommended extensions
+    ├── data/                 ← Runtime data directory
+    │   └── .gitkeep
+    ├── logs/                 ← Runtime logs directory
+    │   └── .gitkeep
     │
-    └── +setup/               ← Setup/installation scripts
-        ├── d2bs.ini          ← D2BS configuration
-        ├── setup.ps1         ← PowerShell installer
-        └── starter/          ← Starter config templates
-            ├── AdvancedConfig.js
-            └── StarterConfig.js
+    ├── d2bs/                 ← D2BS Bot Engine (~35 MB)
+    │   ├── D2BS.dll          ← D2BS native engine DLL
+    │   ├── HISTORY.txt       ← D2BS version history
+    │   ├── LICENSE.rtf       ← License (RTF format)
+    │   ├── LICENSE.txt       ← License (text format)
+    │   ├── api.html          ← API reference (TiddlyWiki)
+    │   └── kolbot/           ← Kolbot scripts & library
+    │       ├── D2BotBlank.dbj              ← Blank template entry
+    │       ├── D2BotChannel.dbj            ← Channel bot entry
+    │       ├── D2BotCleaner.dbj           ← Area cleaner entry
+    │       ├── D2BotCharRefresher.dbj     ← Character refresh entry
+    │       ├── D2BotFollow.dbj            ← Follower bot entry
+    │       ├── D2BotGameAction.dbj        ← Game action entry
+    │       ├── D2BotLead.dbj              ← Lead control entry
+    │       ├── D2BotMap.dbj               ← Map mode entry
+    │       ├── D2BotMule.dbj              ← Mule manager entry
+    │       ├── D2BotPubJoin.dbj           ← Public game joiner entry
+    │       ├── D2BotSoloPlay.dbj          ← LEVELBOT ENTRY POINT ★
+    │       ├── default.dbj                ← Default game script entry
+    │       ├── console/                   ← Console interface scripts
+    │       ├── data/                      ← Runtime config/data storage
+    │       ├── libs/
+    │       │   ├── core/                  ← Core framework (~2000 LOC)
+    │       │   │   ├── Attack.js          ← Attack system
+    │       │   │   ├── Common.js          ← Common routines
+    │       │   │   ├── Config.js          ← Config loader
+    │       │   │   ├── Cubing.js          ← Cube recipes
+    │       │   │   ├── Experience.js      ← EXP tracking & leveling math
+    │       │   │   ├── Loader.js          ← Script loader
+    │       │   │   ├── Me.js              ← Character stats
+    │       │   │   ├── Misc.js            ← Misc utilities
+    │       │   │   ├── NPC.js             ← NPC interactions
+    │       │   │   ├── Pather.js          ← Pathfinding
+    │       │   │   ├── Pickit.js          ← Item picking
+    │       │   │   ├── Precast.js         ← Spell precasting
+    │       │   │   ├── Skill.js           ← Skill system
+    │       │   │   ├── Storage.js         ← Inventory management
+    │       │   │   ├── Town.js            ← Town automation
+    │       │   │   ├── Util.js            ← Utilities
+    │       │   │   ├── Attacks/           ← Class-specific attacks (7 classes)
+    │       │   │   ├── Auto/              ← Auto systems (Build, Skill, Stat)
+    │       │   │   ├── Common/            ← Common routines
+    │       │   │   ├── GameData/          ← Game databases
+    │       │   │   └── ...
+    │       │   ├── config/                ← Character configs
+    │       │   │   ├── Amazon.js
+    │       │   │   ├── Assassin.js
+    │       │   │   ├── Barbarian.js
+    │       │   │   ├── Druid.js
+    │       │   │   ├── Necromancer.js
+    │       │   │   ├── Paladin.js
+    │       │   │   ├── Sorceress.js
+    │       │   │   ├── Builds/            ← Build templates
+    │       │   │   └── Templates/         ← Config templates
+    │       │   ├── modules/               ← Async, events, workers
+    │       │   ├── scripts/               ← 85+ farming/leveling scripts ★
+    │       │   │   ├── AutoBaal.js        ← Auto Baal runs
+    │       │   │   ├── AutoChaos.js       ← Auto Chaos/Diablo runs
+    │       │   │   ├── Baal.js            ← Baal run (primary leveling)
+    │       │   │   ├── Cows.js            ← Cow levels (early leveling)
+    │       │   │   ├── Questing.js        ← Quest progression
+    │       │   │   ├── Rushee.js          ← Rush completion
+    │       │   │   ├── Pindleskin.js
+    │       │   │   ├── Mephisto.js
+    │       │   │   ├── Nihlathak.js
+    │       │   │   ├── Countess.js
+    │       │   │   ├── Andariel.js
+    │       │   │   └── ... 70+ more ...
+    │       │   ├── SoloPlay/              ← SOLOPLAY LEVELBOT (251 files) ★★
+    │       │   │   ├── SoloPlay.js        ← Entry point
+    │       │   │   ├── OOG/               ← Out-of-game logic
+    │       │   │   │   └── SoloEntry.js   ← Main leveling controller
+    │       │   │   ├── BuildFiles/        ← Class-specific builds & runewords
+    │       │   │   │   ├── amazon/        ← Amazon builds
+    │       │   │   │   ├── assassin/      ← Assassin builds
+    │       │   │   │   ├── barbarian/     ← Barbarian builds
+    │       │   │   │   ├── druid/         ← Druid builds
+    │       │   │   │   ├── necromancer/   ← Necromancer builds
+    │       │   │   │   ├── paladin/       ← Paladin builds
+    │       │   │   │   ├── sorceress/     ← Sorceress builds (Blizz, Meteor, Light, etc.)
+    │       │   │   │   └── Runewords/     ← Runeword definitions
+    │       │   │   ├── Config/            ← Build configurations
+    │       │   │   ├── Core/              ← SoloPlay core library
+    │       │   │   ├── Modules/           ← SoloPlay modules
+    │       │   │   ├── Settings/          ← Leveling settings
+    │       │   │   ├── Threads/           ← Threading logic
+    │       │   │   ├── Tools/             ← Utility tools
+    │       │   │   └── Workers/           ← Worker threads
+    │       │   ├── systems/               ← Bot systems
+    │       │   │   ├── automule/          ← Auto mule system
+    │       │   │   ├── autorush/          ← Auto rush system
+    │       │   │   ├── charrefresher/     ← Character refresh
+    │       │   │   ├── cleaner/           ← Area cleaner
+    │       │   │   ├── crafting/          ← Crafting system
+    │       │   │   ├── gameaction/        ← Game action handler
+    │       │   │   ├── gambling/          ← Gambling system
+    │       │   │   └── torch/             ← Torch system
+    │       │   ├── oog/                   ← Out-of-game library
+    │       │   ├── manualplay/            ← Manual play mode hooks
+    │       │   ├── sdk/                   ← SDK definitions
+    │       │   └── OOG.js, Polyfill.js, json2.js, require.js
+    │       ├── mules/                     ← Mule character data
+    │       ├── logs/                      ← Runtime logs
+    │       ├── pickit/                    ← Item picker configs
+    │       │   ├── kolton.nip             ← Main pickit (59 KB)
+    │       │   ├── LLD.nip                ← Low-level dueling items
+    │       │   ├── classic.nip            ← Classic items
+    │       │   └── ... 6 more ...
+    │       ├── threads/                   ← Game scripts
+    │       │   ├── HeartBeat.js           ← Main loop
+    │       │   ├── Party.js               ← Party coordination
+    │       │   ├── AntiHostile.js         ← Anti-hostile control
+    │       │   └── ... more ...
+    │       ├── sdk/                       ← SDK definitions
+    │       └── ...
+    │
+    ├── limedrop/             ← Drop notification system (15 files)
+    │   ├── index.html        ← Drop notification viewer
+    │   ├── js/
+    │   ├── css/
+    │   └── assets/
+    │
+    └── +setup/               ← Setup templates & configs
+        ├── data/
+        │   ├── cdkeys.json   ← CD keys placeholder
+        │   └── .gitkeep
+        ├── logs/             ← Log templates
+        │   ├── Console.rtf
+        │   ├── exceptions.log
+        │   └── keyinfo.log
+        ├── d2bs.ini          ← D2BS engine configuration
+        ├── setup.ps1         ← PowerShell installer script
+        ├── starter/          ← Global starter configs
+        │   ├── StarterConfig.js  ← Connection & timing settings
+        │   └── AdvancedConfig.js ← Profile-specific settings
+        ├── automule/         ← Mule system configs
+        ├── channel/          ← Channel configs
+        ├── charrefresher/    ← Character refresh configs
+        ├── cleaner/          ← Cleaner system configs
+        ├── config/           ← Character build configs
+        ├── crafting/         ← Crafting system configs
+        ├── follow/           ← Follower configs
+        ├── gambling/         ← Gambling system configs
+        ├── gameaction/       ← Game action configs
+        ├── lead/             ← Lead control configs
+        ├── mulelogger/       ← Mule logging configs
+        ├── pubjoin/          ← Public game join configs
+        └── torch/            ← Torch system configs
 ```
 
 ---
@@ -152,6 +305,22 @@ KZB/
   - Manages two native messaging hosts
   - Bridges Chrome UI <-> Agent communication
   - Stats caching and event handling
+
+- **`kolbot/D2Bot.exe`** -- Kolbot manager (4.5 MB)
+  - D2Bot instance manager and game controller
+  - Multi-profile game creation and automation
+  - Entry point selection (default.dbj, D2BotSoloPlay.dbj, etc.)
+
+- **`kolbot/d2bs/kolbot/D2BotSoloPlay.dbj`** -- **LEVELBOT ENTRY POINT** ★
+  - Launcher for SoloPlay automated leveling system
+  - Delegates to SoloPlay/OOG/SoloEntry.js
+  - Handles 1-99 progression across all difficulties
+
+- **`kolbot/d2bs/kolbot/libs/SoloPlay/OOG/SoloEntry.js`** -- **MAIN LEVELBOT CONTROLLER** ★★
+  - Orchestrates complete leveling automation
+  - Handles game creation, progression strategy, leveling thresholds
+  - Manages character skill/stat advancement
+  - Coordinates multi-phase leveling (Normal -> Nightmare -> Hell)
 
 ### Decision & Logic
 - **`botter/src/decision/engine.rs`**
@@ -244,6 +413,52 @@ KZB/
 - **`extension/chrome_extension/map_content.js`** (260 LOC)
   - Content script injected into page
   - Map overlay rendering
+
+### Kolbot Leveling System
+- **`kolbot/d2bs/kolbot/libs/SoloPlay/`** (251 files) -- **COMPLETE LEVELBOT**
+  - Full automated 1-99 leveling system
+  - Handles game creation, progression strategy, skill/stat allocation
+  - All 7 classes with multiple build paths per class
+
+- **`kolbot/d2bs/kolbot/libs/SoloPlay/BuildFiles/`**
+  - Per-class build definitions with runewords
+  - Example: `sorceress/` has 9 builds (Blizzard, Meteorb, Lightning, Ensorb, Blova, Cold, Start, Stepping, Leveling)
+  - Each class has Start, Stepping, and Leveling builds for progression
+
+- **`kolbot/d2bs/kolbot/libs/core/Experience.js`**
+  - EXP tracking system with all 99 level thresholds
+  - Functions: `progress()`, `gain()`, `gainPercent()`, `runsToLevel()`, `timeToLevel()`, `log()`
+  - Core math for leveling progression calculations
+
+- **`kolbot/d2bs/kolbot/libs/scripts/`** (85+ scripts)
+  - **Leveling-focused:** Baal.js, AutoBaal.js, AutoChaos.js, Cows.js, Questing.js, Rushee.js
+  - **Boss scripts:** Mephisto.js, Diablo.js, Nihlathak.js, Pindleskin.js, Countess.js, Andariel.js
+  - **Leech/helper scripts:** BaalHelper.js, DiabloHelper.js, SealLeecher.js, MFHelper.js
+  - **Utility:** Gamble.js, Crafting.js, GetEssences.js, GetFade.js, TownChicken.js
+
+- **`kolbot/d2bs/kolbot/libs/config/`**
+  - Character build templates (Amazon.js, Assassin.js, Barbarian.js, Druid.js, Necromancer.js, Paladin.js, Sorceress.js)
+  - Build inheritance system with base config template
+
+- **`kolbot/d2bs/kolbot/libs/systems/`**
+  - **automule/** - Auto mule system for gear management
+  - **autorush/** - Auto rush system for fast progression
+  - **crafting/**, **gambling/** - Crafting and gambling automation
+  - **torch/** - Torch farming system
+
+- **`kolbot/+setup/starter/StarterConfig.js`**
+  - Global connection settings (server IP, character name, password)
+  - Game creation timing and delays
+  - Profile management
+
+- **`kolbot/+setup/starter/AdvancedConfig.js`**
+  - Per-profile character selection and build
+  - Game difficulty selection (Normal, Nightmare, Hell)
+  - Leveling strategy and run selection
+
+- **`kolbot/pickit/kolton.nip`** (59 KB)
+  - Main item picker configuration
+  - Item quality and type filtering
 
 ### Testing
 - **`botter/tests/stress.rs`**
@@ -377,12 +592,16 @@ All hardcoded at 800x600 base resolution (scales with math):
 
 ## Codebase Statistics
 
-| Component | Language | LOC |
-|-----------|----------|-----|
-| botter | Rust | ~8,400 |
-| maphack | Rust | ~3,000 |
-| **Total Rust** | | **~11,400** |
-| extension | JS/CSS/HTML | ~3,100 |
+| Component | Language | LOC | Files |
+|-----------|----------|-----|-------|
+| botter | Rust | ~8,400 | 15 |
+| maphack | Rust | ~3,000 | 10 |
+| **Total Rust** | | **~11,400** | **25** |
+| extension | JS/CSS/HTML | ~3,100 | 11 |
+| kolbot core | JavaScript | ~2,000 | 30+ |
+| kolbot scripts | JavaScript | ~70,000 | 85+ |
+| **SoloPlay levelbot** | **JavaScript** | **~15,000** | **251** |
+| **Total Project** | | **~100,000+** | **400+** |
 
 | Test Suite | Count |
 |------------|-------|
@@ -400,6 +619,50 @@ All hardcoded at 800x600 base resolution (scales with math):
 3. **Check lints**: `cargo clippy`
 4. **Format code**: `cargo fmt`
 5. **Commit**: `git commit -m "Clear message"`
+
+---
+
+## Kolbot Levelbot Setup
+
+**To use the levelbot (SoloPlay) on your local machine:**
+
+1. **Clone/pull the repository**
+   ```bash
+   git clone <repo-url> D2R
+   cd D2R/kolbot
+   ```
+
+2. **Initialize submodules** (downloads SoloPlay + limedrop)
+   ```bash
+   update.bat
+   # or manually:
+   git submodule update --init --recursive
+   ```
+
+3. **Configure D2R installation path**
+   - Edit `+setup/d2bs.ini` - Set `D2RPath` to your D2R installation directory
+   - Edit `+setup/starter/StarterConfig.js` - Set server IP and account details
+
+4. **Create a leveling character**
+   - Edit `+setup/starter/AdvancedConfig.js` - Select character name and class
+   - Copy appropriate class config to `d2bs/kolbot/libs/config/YourClass.YourChar.js`
+   - Example: `Sorceress.LevelBot.js` for a Sorceress named "LevelBot"
+
+5. **Select leveling build**
+   - In AdvancedConfig.js, choose your build strategy
+   - SoloPlay automatically selects optimal builds per level (Start -> Stepping -> Leveling)
+
+6. **Run the levelbot**
+   - Double-click `setup.bat` to initialize D2BS
+   - Select your character profile in D2Bot manager
+   - Start with `D2BotSoloPlay.dbj` entry point
+   - Monitor progress in bot console
+
+**Key configuration files:**
+- `+setup/starter/StarterConfig.js` - Connection settings, game creation delays
+- `+setup/starter/AdvancedConfig.js` - Profile selection, character build, difficulty
+- `d2bs/kolbot/libs/config/YourClass.js` - Character build and attack patterns
+- `pickit/kolton.nip` - Item picking rules
 
 ---
 
