@@ -20,7 +20,8 @@ param(
     [string]$MapInstallPath = "$env:ProgramData\Google\Chrome\NativeMessagingHosts",
     [switch]$Uninstall,
     [switch]$SkipBuild,
-    [switch]$ExtensionOnly
+    [switch]$ExtensionOnly,
+    [switch]$SkipNetworkOptimize
 )
 
 $ErrorActionPreference = "Stop"
@@ -125,6 +126,35 @@ if ($Uninstall) {
     Unregister-Host $MapHostName
     @("$MapInstallPath\$MapExe", "$MapInstallPath\map_manifest.json") | ForEach-Object {
         if (Test-Path $_) { Remove-Item $_ -Force; Write-Step "Removed: $_" }
+    }
+
+    # Revert network optimizations
+    Write-Host ""
+    Write-Host "Reverting network optimizations..." -ForegroundColor Yellow
+    $isAdmin = ([Security.Principal.WindowsPrincipal] `
+        [Security.Principal.WindowsIdentity]::GetCurrent() `
+    ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+    if ($isAdmin) {
+        $ifacesRoot = "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces"
+        $reverted = 0
+        Get-ChildItem $ifacesRoot -ErrorAction SilentlyContinue | ForEach-Object {
+            $ifacePath = $_.PSPath
+            $noDelay = (Get-ItemProperty $ifacePath -Name "TcpNoDelay" -ErrorAction SilentlyContinue).TcpNoDelay
+            $ackFreq = (Get-ItemProperty $ifacePath -Name "TcpAckFrequency" -ErrorAction SilentlyContinue).TcpAckFrequency
+            if ($noDelay -eq 1 -or $ackFreq -eq 1) {
+                Remove-ItemProperty -Path $ifacePath -Name "TcpNoDelay" -ErrorAction SilentlyContinue
+                Remove-ItemProperty -Path $ifacePath -Name "TcpAckFrequency" -ErrorAction SilentlyContinue
+                $reverted++
+            }
+        }
+        if ($reverted -gt 0) {
+            Write-Step "Reverted network settings on $reverted interface(s)"
+        } else {
+            Write-Info "No network optimizations found to revert."
+        }
+    } else {
+        Write-Warn "Skipping network revert — requires Administrator."
     }
 
     Write-Host ""
@@ -278,7 +308,77 @@ if (Test-Path $sourceConfigs) {
     Write-Warn "No config directory found at $sourceConfigs"
 }
 
-# ---- Step 6: Verify ----
+# ---- Step 6: Network Latency Optimization (Leatrix-style) ----
+# Disables Nagle's algorithm (TcpNoDelay) and forced ACK batching (TcpAckFrequency)
+# on all network interfaces. Same principle as the classic Leatrix Latency Fix:
+#   - Nagle's algorithm batches small TCP packets → adds 40-200ms delay
+#   - ACK frequency batching delays acknowledgements → adds 200ms round-trip
+#   - For D2R online play, these tweaks can reduce rubberbanding/input lag
+#   - For offline/single-player: no effect (no TCP traffic), but harmless
+#
+# Requires Administrator privileges to write to HKLM.
+# Pass -SkipNetworkOptimize to skip this step.
+
+if (-not $SkipNetworkOptimize) {
+    Write-Host ""
+    Write-Host "Applying network latency optimizations (Leatrix-style)..." -ForegroundColor Yellow
+
+    $isAdmin = ([Security.Principal.WindowsPrincipal] `
+        [Security.Principal.WindowsIdentity]::GetCurrent() `
+    ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+    if (-not $isAdmin) {
+        Write-Warn "Skipping network optimization — requires Administrator."
+        Write-Info "Re-run installer as Admin, or run manually:"
+        Write-Info "  Set-ItemProperty -Path 'HKLM:\SYSTEM\...\Interfaces\{guid}' -Name TcpNoDelay -Value 1"
+        Write-Info "  (or pass -SkipNetworkOptimize to suppress this message)"
+    } else {
+        $ifacesRoot = "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces"
+        $interfaces = Get-ChildItem $ifacesRoot -ErrorAction SilentlyContinue
+        $applied = 0
+        $skipped = 0
+
+        foreach ($iface in $interfaces) {
+            $ifacePath = $iface.PSPath
+            $guid = Split-Path $iface.Name -Leaf
+
+            # Only apply to interfaces that have an IP address configured
+            $ipAddr = (Get-ItemProperty $ifacePath -Name "DhcpIPAddress" -ErrorAction SilentlyContinue).DhcpIPAddress
+            if (-not $ipAddr) {
+                $ipAddr = (Get-ItemProperty $ifacePath -Name "IPAddress" -ErrorAction SilentlyContinue).IPAddress
+            }
+            if (-not $ipAddr -or $ipAddr -eq "0.0.0.0" -or $ipAddr -eq "") {
+                $skipped++
+                continue
+            }
+
+            # TcpNoDelay = 1: Disable Nagle's algorithm
+            # Sends TCP packets immediately instead of batching small writes.
+            # Effect: ~40-200ms reduction on small packet games (D2R uses small state packets)
+            Set-ItemProperty -Path $ifacePath -Name "TcpNoDelay" -Value 1 -Type DWord -Force
+
+            # TcpAckFrequency = 1: Acknowledge every TCP packet immediately
+            # Default Windows behavior batches ACKs, adding up to 200ms round-trip delay.
+            # Effect: Server sees ACKs faster → responds faster → less rubberbanding
+            Set-ItemProperty -Path $ifacePath -Name "TcpAckFrequency" -Value 1 -Type DWord -Force
+
+            Write-Info "  Applied: $guid ($ipAddr)"
+            $applied++
+        }
+
+        if ($applied -gt 0) {
+            Write-Step "Network optimized: $applied interface(s) (TcpNoDelay=1, TcpAckFrequency=1)"
+            Write-Info "  $skipped interface(s) skipped (no IP assigned)"
+            Write-Info "  Reboot recommended for changes to take full effect."
+        } else {
+            Write-Warn "No active network interfaces found to optimize."
+        }
+    }
+} else {
+    Write-Info "Skipping network optimization (--SkipNetworkOptimize)"
+}
+
+# ---- Step 7: Verify ----
 Write-Host ""
 Write-Banner "Installation Complete"
 
@@ -313,6 +413,31 @@ if (Test-Path $configDir) {
     Get-ChildItem "$configDir\*.yaml" | ForEach-Object {
         Write-Host "    - $($_.Name)" -ForegroundColor Gray
     }
+}
+
+Write-Host ""
+Write-Host "Network Optimization:" -ForegroundColor White
+if (-not $SkipNetworkOptimize) {
+    $isAdmin = ([Security.Principal.WindowsPrincipal] `
+        [Security.Principal.WindowsIdentity]::GetCurrent() `
+    ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    if ($isAdmin) {
+        $ifacesRoot = "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces"
+        $optimized = 0
+        Get-ChildItem $ifacesRoot -ErrorAction SilentlyContinue | ForEach-Object {
+            $nd = (Get-ItemProperty $_.PSPath -Name "TcpNoDelay" -ErrorAction SilentlyContinue).TcpNoDelay
+            if ($nd -eq 1) { $optimized++ }
+        }
+        if ($optimized -gt 0) {
+            Write-Host "  [OK] Leatrix-style: TcpNoDelay=1, TcpAckFrequency=1 on $optimized interface(s)" -ForegroundColor Green
+        } else {
+            Write-Host "  [--] Not applied (no active interfaces)" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "  [--] Skipped (requires Administrator)" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  [--] Skipped (-SkipNetworkOptimize)" -ForegroundColor Gray
 }
 
 Write-Host ""
