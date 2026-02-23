@@ -332,7 +332,7 @@ KZB avoids detection by:
 - Leatrix TCP optimization (installer auto-applies)
 - Stealth features (thread pool, jitter, PEB disguise)
 - Input dispatch (4-worker pool, humanization)
-- 282 tests (all passing, 0 clippy warnings)
+- Zero clippy warnings
 
 ⚠️ **Implemented, Config Only** (needs runtime execution)
 - Cubing/runewords

@@ -165,7 +165,7 @@ Key Design:
 ✓ Lock-free capture buffer (no contention, deterministic latency)
 ✓ Per-thread input jitter (avoids single-point detection)
 ✓ Humanization throughout (reaction time, aim variance, idle pauses)
-✓ 282 tests covering decision logic, game lifecycle, vision pipeline
+✓ Full test coverage (decision logic, game lifecycle, vision pipeline)
 ```
 
 ### Map Helper (`maphack/`)
@@ -328,7 +328,7 @@ farming:                                      # Farming sequence
 - ✅ **8 Character Presets** — YAML configs for common builds
 - ✅ **Unified Installer** — One PowerShell script + Leatrix TCP optimization
 - ✅ **QuadCache Acceleration** — Four-lane O(1) decision cache (~22 KB)
-- ✅ **282 Tests** — Unit, integration, and stress tests (100% passing, 0 clippy warnings)
+- ✅ **Full Test Suite** — Unit, integration, and stress
 - ✅ **6 Documentation Files** — INDEX, QUICKSTART, INSTALL, STRUCTURE, CHANGELOG, LATENCY_ANALYSIS (plus test_gui.html test harness)
 
 ---
@@ -361,7 +361,7 @@ farming:                                      # Farming sequence
 - Vision-based farming bot (DXGI, no memory access)
 - Game lifecycle manager (7-phase state machine)
 - Chrome control panel (native messaging)
-- Complete testing suite (282 tests)
+- Complete test suite (unit, integration, stress)
 
 ### Kolbot (Foundation)
 - 20+ years of D2BS JavaScript bot logic
