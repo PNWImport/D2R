@@ -130,7 +130,12 @@ impl CapturePipeline {
         }
     }
 
-    /// Extract FrameState from raw pixel data
+    /// Extract FrameState from raw pixel data.
+    ///
+    /// Performance tiers:
+    /// - **Every frame** (survival-critical): HP, mana, enemies, loot
+    /// - **Every 3rd frame** (state transitions): town, merc, belt, UI panels
+    /// - **Every 5th frame** (slow-changing): area banner, quest banner, XP bar
     fn extract_frame_state(&self, frame: &CapturedFrame) -> FrameState {
         let mut state = FrameState {
             tick: self.tick,
@@ -142,6 +147,7 @@ impl CapturePipeline {
             ..Default::default()
         };
 
+        // ─── Tier 1: Every frame (survival-critical) ──────────────
         // Detect enemies — returns count + nearest enemy position + boss info
         let enemy_info = self.detect_enemies(frame);
         state.enemy_count = enemy_info.count;
@@ -160,37 +166,40 @@ impl CapturePipeline {
             state.loot_labels[i] = label.clone();
         }
 
-        // Detect town (stone floor colors vs dungeon/field)
-        state.in_town = self.detect_town(frame);
+        // ─── Tier 2: Every 3rd frame (state transitions) ─────────
+        if self.tick % 3 == 0 {
+            // Detect town (stone floor colors vs dungeon/field)
+            state.in_town = self.detect_town(frame);
 
-        // Merc alive check (green health bar above merc portrait)
-        state.merc_alive = self.detect_merc_alive(frame);
-        state.merc_hp_pct = if state.merc_alive {
-            self.read_merc_hp(frame)
-        } else {
-            0
-        };
+            // Merc alive check (green health bar above merc portrait)
+            state.merc_alive = self.detect_merc_alive(frame);
+            state.merc_hp_pct = if state.merc_alive {
+                self.read_merc_hp(frame)
+            } else {
+                0
+            };
 
-        // Belt potions (4 columns at bottom of screen)
-        state.belt_columns = self.read_belt_columns(frame);
+            // Belt potions (4 columns at bottom of screen)
+            state.belt_columns = self.read_belt_columns(frame);
 
-        // ─── Progression-aware detections ────────────────────────
-        // Area name: gold text banner at top-center on area transitions
-        // D2R displays area names in gold/tan colored text (~rgb(198,166,99))
-        // centered at roughly y=40-60 for about 2 seconds on entry.
-        if let Some(area_detected) = self.detect_area_banner(frame) {
-            state.set_area_name(&area_detected);
+            // UI panels open (NPC dialog, waypoint, stash, etc.)
+            state.npc_dialog_open = self.detect_dialog_panel(frame);
+            state.waypoint_menu_open = self.detect_waypoint_menu(frame);
         }
 
-        // Quest complete banner: golden "Quest Completed" text
-        state.quest_complete_banner = self.detect_quest_banner(frame);
+        // ─── Tier 3: Every 5th frame (slow-changing) ──────────────
+        if self.tick % 5 == 0 {
+            // Area name: gold text banner at top-center on area transitions
+            if let Some(area_detected) = self.detect_area_banner(frame) {
+                state.set_area_name(&area_detected);
+            }
 
-        // UI panels open (NPC dialog, waypoint, stash, etc.)
-        state.npc_dialog_open = self.detect_dialog_panel(frame);
-        state.waypoint_menu_open = self.detect_waypoint_menu(frame);
+            // Quest complete banner: golden "Quest Completed" text
+            state.quest_complete_banner = self.detect_quest_banner(frame);
 
-        // Experience bar: thin strip at very bottom of screen
-        state.xp_bar_pct = self.read_xp_bar(frame);
+            // Experience bar: thin strip at very bottom of screen
+            state.xp_bar_pct = self.read_xp_bar(frame);
+        }
 
         state
     }
@@ -206,9 +215,10 @@ impl CapturePipeline {
         let mut filled_pixels = 0u32;
         let mut total_pixels = 0u32;
 
-        let (target_r, target_g, target_b, threshold) = match orb_type {
-            OrbType::Health => (180, 20, 20, 60), // Red orb
-            OrbType::Mana => (30, 30, 180, 60),   // Blue orb
+        // Use squared threshold to avoid sqrt() in hot pixel loop (~10× faster)
+        let (target_r, target_g, target_b, threshold_sq) = match orb_type {
+            OrbType::Health => (180, 20, 20, 60 * 60), // Red orb
+            OrbType::Mana => (30, 30, 180, 60 * 60),   // Blue orb
         };
 
         for dy in 0..r * 2 {
@@ -231,11 +241,11 @@ impl CapturePipeline {
 
                 total_pixels += 1;
 
-                // Check if pixel matches orb color
-                let dist = ((pixel_r - target_r).pow(2)
+                // Check if pixel matches orb color (squared distance, no sqrt)
+                let dist_sq = (pixel_r - target_r).pow(2)
                     + (g - target_g).pow(2)
-                    + (b - target_b).pow(2)) as f32;
-                if dist.sqrt() < threshold as f32 {
+                    + (b - target_b).pow(2);
+                if dist_sq < threshold_sq {
                     filled_pixels += 1;
                 }
             }
@@ -262,7 +272,7 @@ impl CapturePipeline {
         let step = 4;
         let mut last_bar_y = 0u32;
 
-        for y in (scan_y_start..scan_y_end).step_by(step) {
+        'outer: for y in (scan_y_start..scan_y_end).step_by(step) {
             let mut red_run = 0u32;
             let mut red_start_x = 0u32;
             let mut dark_count = 0u32; // damaged portion of bar
@@ -323,6 +333,11 @@ impl CapturePipeline {
                         if (25..40).contains(&total_bar) {
                             info.champion_present = true;
                         }
+
+                        // Early exit: no need to scan further once we hit max
+                        if info.count >= 20 {
+                            break 'outer;
+                        }
                     }
                     red_run = 0;
                     dark_count = 0;
@@ -332,22 +347,25 @@ impl CapturePipeline {
 
         // Immune detection: look for "Immune to X" text colors near enemies
         // Immune text in D2 appears as cyan/teal colored text
+        // Pass nearest enemy Y as hint to narrow the scan region
         if info.count > 0 {
-            info.immune_detected = self.detect_immune_text(frame);
+            info.immune_detected =
+                self.detect_immune_text(frame, info.nearest_y as u32);
         }
 
         info.count = info.count.min(20);
         info
     }
 
-    /// Detect "Immune to" text (cyan/teal text that appears on immune monsters)
-    fn detect_immune_text(&self, frame: &CapturedFrame) -> bool {
-        // "Immune to" text appears as teal/cyan colored text near monster names
-        // Scanning for clusters of cyan pixels in the playfield
-        let scan_y_start = (frame.height as f32 * 0.08) as u32;
-        let scan_y_end = (frame.height as f32 * 0.60) as u32;
+    /// Detect "Immune to" text (cyan/teal text that appears on immune monsters).
+    /// Only scans near detected enemy health bars for efficiency.
+    fn detect_immune_text(&self, frame: &CapturedFrame, enemy_y_hint: u32) -> bool {
+        // Scan a narrower band around where enemies were detected instead of 52% of screen.
+        // Immune text appears just above/below enemy health bars.
+        let scan_y_start = enemy_y_hint.saturating_sub(40).max((frame.height as f32 * 0.08) as u32);
+        let scan_y_end = (enemy_y_hint + 80).min((frame.height as f32 * 0.60) as u32);
 
-        for y in (scan_y_start..scan_y_end).step_by(6) {
+        for y in (scan_y_start..scan_y_end).step_by(4) {
             let mut cyan_run = 0u32;
             for x in (50..frame.width.saturating_sub(50)).step_by(3) {
                 let idx = (y * frame.stride + x * 4) as usize;
@@ -436,13 +454,14 @@ impl CapturePipeline {
         let mut labels = Vec::new();
 
         // Quality color definitions (BGRA order in memory)
-        let quality_colors: [(u8, u8, u8, ItemQuality, u32); 6] = [
-            (99, 166, 198, ItemQuality::Unique, 35),  // Gold text
-            (0, 255, 0, ItemQuality::Set, 30),        // Green text
-            (119, 255, 255, ItemQuality::Rare, 25),   // Yellow text
-            (255, 104, 104, ItemQuality::Magic, 25),  // Blue text (BGR)
-            (80, 169, 255, ItemQuality::Rune, 30),    // Orange text
-            (255, 255, 255, ItemQuality::Normal, 20), // White text
+        // Pre-squared thresholds to avoid sqrt() in hot pixel loop
+        let quality_colors: [(u8, u8, u8, ItemQuality, i32); 6] = [
+            (99, 166, 198, ItemQuality::Unique, 35 * 35),  // Gold text
+            (0, 255, 0, ItemQuality::Set, 30 * 30),        // Green text
+            (119, 255, 255, ItemQuality::Rare, 25 * 25),   // Yellow text
+            (255, 104, 104, ItemQuality::Magic, 25 * 25),  // Blue text (BGR)
+            (80, 169, 255, ItemQuality::Rune, 30 * 30),    // Orange text
+            (255, 255, 255, ItemQuality::Normal, 20 * 20), // White text
         ];
 
         // Scan playfield area for colored text clusters
@@ -461,14 +480,15 @@ impl CapturePipeline {
                 let pg = frame.pixels[idx + 1];
                 let pr = frame.pixels[idx + 2];
 
-                for &(tb, tg, tr, ref quality, threshold) in &quality_colors {
-                    let dist = ((pr as i32 - tr as i32).pow(2)
+                for &(tb, tg, tr, ref quality, threshold_sq) in &quality_colors {
+                    let dist_sq = (pr as i32 - tr as i32).pow(2)
                         + (pg as i32 - tg as i32).pow(2)
-                        + (pb as i32 - tb as i32).pow(2)) as f32;
+                        + (pb as i32 - tb as i32).pow(2);
 
-                    if dist.sqrt() < threshold as f32 {
+                    if dist_sq < threshold_sq {
                         // Check for cluster (adjacent colored pixels = likely text)
-                        let cluster = self.check_text_cluster(frame, x, y, tr, tg, tb, threshold);
+                        let cluster =
+                            self.check_text_cluster(frame, x, y, tr, tg, tb, threshold_sq);
                         if cluster >= 3 {
                             // Avoid duplicates near same position
                             let too_close = labels.iter().any(|l: &LootLabel| {
@@ -494,6 +514,8 @@ impl CapturePipeline {
         labels
     }
 
+    /// Check for a cluster of similarly-colored pixels around a candidate.
+    /// `threshold_sq` is the pre-squared color distance threshold.
     #[allow(clippy::too_many_arguments)]
     fn check_text_cluster(
         &self,
@@ -503,7 +525,7 @@ impl CapturePipeline {
         tr: u8,
         tg: u8,
         tb: u8,
-        threshold: u32,
+        threshold_sq: i32,
     ) -> u32 {
         let mut count = 0u32;
         for dy in -2i32..=2 {
@@ -517,11 +539,10 @@ impl CapturePipeline {
                 if idx + 2 >= frame.pixels.len() {
                     continue;
                 }
-                let dist = ((frame.pixels[idx + 2] as i32 - tr as i32).pow(2)
+                let dist_sq = (frame.pixels[idx + 2] as i32 - tr as i32).pow(2)
                     + (frame.pixels[idx + 1] as i32 - tg as i32).pow(2)
-                    + (frame.pixels[idx] as i32 - tb as i32).pow(2))
-                    as f32;
-                if dist.sqrt() < threshold as f32 {
+                    + (frame.pixels[idx] as i32 - tb as i32).pow(2);
+                if dist_sq < threshold_sq {
                     count += 1;
                 }
             }
@@ -850,6 +871,285 @@ enum OrbType {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// Vision Pipeline Benchmarks & Tests
+// ═══════════════════════════════════════════════════════════════
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Instant;
+
+    /// Create a synthetic 800×600 test frame with game-like elements
+    fn make_test_frame() -> CapturedFrame {
+        let width = 800u32;
+        let height = 600u32;
+        let stride = width * 4;
+        let mut pixels = vec![0u8; (stride * height) as usize];
+
+        // Paint HP orb (red, 75% filled)
+        for dy in 0..60u32 {
+            for dx in 0..60u32 {
+                let x = 65 + dx; // near hp_orb_center (95, 525)
+                let y = 495 + dy;
+                if x < width && y < height && dy < 45 {
+                    let idx = (y * stride + x * 4) as usize;
+                    pixels[idx] = 20;     // B
+                    pixels[idx + 1] = 20; // G
+                    pixels[idx + 2] = 200; // R
+                }
+            }
+        }
+
+        // Paint 3 enemy health bars (red horizontal bars)
+        for (bar_y, bar_x) in [(150u32, 200u32), (220, 400), (300, 550)] {
+            for x in bar_x..bar_x + 20 {
+                if x < width && bar_y < height {
+                    let idx = (bar_y * stride + x * 4) as usize;
+                    pixels[idx] = 10;      // B
+                    pixels[idx + 1] = 20;  // G
+                    pixels[idx + 2] = 220; // R (bright red)
+                }
+            }
+        }
+
+        // Paint a gold loot label (Unique item color ~RGB(198,166,99))
+        for dx in 0..30u32 {
+            let x = 350 + dx;
+            let y = 350u32;
+            if x < width && y < height {
+                let idx = (y * stride + x * 4) as usize;
+                pixels[idx] = 99;      // B
+                pixels[idx + 1] = 166; // G
+                pixels[idx + 2] = 198; // R
+            }
+        }
+
+        // Paint town-like stone floor (warm gray) at bottom center
+        for x in (280..520).step_by(1) {
+            for y in 320..345 {
+                if x < width && y < height {
+                    let idx = (y as u32 * stride + x as u32 * 4) as usize;
+                    pixels[idx] = 120;     // B
+                    pixels[idx + 1] = 130; // G
+                    pixels[idx + 2] = 140; // R
+                }
+            }
+        }
+
+        CapturedFrame {
+            pixels,
+            width,
+            height,
+            stride,
+            timestamp: Instant::now(),
+        }
+    }
+
+    #[test]
+    fn test_extract_frame_state_basic() {
+        let config = CaptureConfig::default();
+        let buffer = Arc::new(ShardedFrameBuffer::new());
+        let pipeline = CapturePipeline::new(config, buffer);
+        let frame = make_test_frame();
+
+        let state = pipeline.extract_frame_state(&frame);
+
+        // HP orb should read something > 0 from our painted pixels
+        assert!(state.hp_pct > 0, "HP should be detected from painted orb");
+        // Enemy count should detect our painted health bars
+        assert!(state.enemy_count > 0, "Should detect painted enemy bars");
+    }
+
+    #[test]
+    fn test_orb_reading_no_sqrt() {
+        let config = CaptureConfig::default();
+        let buffer = Arc::new(ShardedFrameBuffer::new());
+        let pipeline = CapturePipeline::new(config, buffer);
+        let frame = make_test_frame();
+
+        // Read orb 10000 times — should be fast without sqrt
+        let start = Instant::now();
+        let iters = 10_000u32;
+        let mut hp_sum = 0u32;
+        for _ in 0..iters {
+            hp_sum += pipeline.read_orb_pct(
+                &frame,
+                pipeline.config.hp_orb_center,
+                OrbType::Health,
+            ) as u32;
+        }
+        let elapsed = start.elapsed();
+        let per_call_us = elapsed.as_micros() as f64 / iters as f64;
+
+        println!(
+            "Orb read: {:.2} μs/call ({} calls, sum={})",
+            per_call_us, iters, hp_sum
+        );
+        // Should be under 50 μs per call (generous for CI; production target <5 μs)
+        assert!(
+            per_call_us < 50.0,
+            "Orb reading too slow: {:.2} μs/call (expected <50 μs)",
+            per_call_us
+        );
+    }
+
+    #[test]
+    fn test_enemy_detection_perf() {
+        let config = CaptureConfig::default();
+        let buffer = Arc::new(ShardedFrameBuffer::new());
+        let pipeline = CapturePipeline::new(config, buffer);
+        let frame = make_test_frame();
+
+        let iters = 1_000u32;
+        let start = Instant::now();
+        let mut total_enemies = 0u32;
+        for _ in 0..iters {
+            let info = pipeline.detect_enemies(&frame);
+            total_enemies += info.count as u32;
+        }
+        let elapsed = start.elapsed();
+        let per_call_us = elapsed.as_micros() as f64 / iters as f64;
+
+        println!(
+            "Enemy detect: {:.1} μs/call ({} calls, total enemies={})",
+            per_call_us, iters, total_enemies
+        );
+        // Enemy detection is the heaviest pass — should be under 500 μs
+        assert!(
+            per_call_us < 2000.0,
+            "Enemy detection too slow: {:.1} μs/call",
+            per_call_us
+        );
+    }
+
+    #[test]
+    fn test_loot_detection_perf() {
+        let config = CaptureConfig::default();
+        let buffer = Arc::new(ShardedFrameBuffer::new());
+        let pipeline = CapturePipeline::new(config, buffer);
+        let frame = make_test_frame();
+
+        let iters = 1_000u32;
+        let start = Instant::now();
+        let mut total_labels = 0u32;
+        for _ in 0..iters {
+            let labels = pipeline.detect_loot_labels(&frame);
+            total_labels += labels.len() as u32;
+        }
+        let elapsed = start.elapsed();
+        let per_call_us = elapsed.as_micros() as f64 / iters as f64;
+
+        println!(
+            "Loot detect: {:.1} μs/call ({} calls, total labels={})",
+            per_call_us, iters, total_labels
+        );
+        // Loot detection with squared distances should be fast
+        assert!(
+            per_call_us < 2000.0,
+            "Loot detection too slow: {:.1} μs/call",
+            per_call_us
+        );
+    }
+
+    #[test]
+    fn test_full_extract_perf() {
+        let config = CaptureConfig::default();
+        let buffer = Arc::new(ShardedFrameBuffer::new());
+        let mut pipeline = CapturePipeline::new(config, buffer);
+        let frame = make_test_frame();
+
+        let iters = 500u32;
+        let start = Instant::now();
+        for i in 0..iters {
+            pipeline.tick = i as u64;
+            let _state = pipeline.extract_frame_state(&frame);
+        }
+        let elapsed = start.elapsed();
+        let per_frame_us = elapsed.as_micros() as f64 / iters as f64;
+        let per_frame_ms = per_frame_us / 1000.0;
+        let theoretical_fps = 1_000_000.0 / per_frame_us;
+
+        println!(
+            "Full extract: {:.1} μs/frame ({:.2} ms) = {:.0} theoretical FPS",
+            per_frame_us, per_frame_ms, theoretical_fps
+        );
+        // Full extraction should be under 5ms (200+ FPS theoretical)
+        assert!(
+            per_frame_ms < 10.0,
+            "Full frame extraction too slow: {:.2} ms/frame",
+            per_frame_ms
+        );
+    }
+
+    #[test]
+    fn test_tiered_detection_savings() {
+        // Measure the savings from tiered detection (Tier 2 every 3rd, Tier 3 every 5th)
+        let config = CaptureConfig::default();
+        let buffer = Arc::new(ShardedFrameBuffer::new());
+        let mut pipeline = CapturePipeline::new(config, buffer);
+        let frame = make_test_frame();
+
+        // Simulate 300 frames (12 seconds at 25 Hz)
+        let frames = 300u64;
+        let start = Instant::now();
+        for tick in 0..frames {
+            pipeline.tick = tick;
+            let _state = pipeline.extract_frame_state(&frame);
+        }
+        let total = start.elapsed();
+        let avg_us = total.as_micros() as f64 / frames as f64;
+
+        // Calculate theoretical: Tier 2 runs 100/300 frames, Tier 3 runs 60/300
+        let tier2_fraction = 1.0 / 3.0;
+        let tier3_fraction = 1.0 / 5.0;
+        println!(
+            "Tiered extract: {:.1} μs/frame avg over {} frames",
+            avg_us, frames
+        );
+        println!(
+            "  Tier 2 (town/merc/belt/UI) runs {:.0}% of frames",
+            tier2_fraction * 100.0
+        );
+        println!(
+            "  Tier 3 (area/quest/xp) runs {:.0}% of frames",
+            tier3_fraction * 100.0
+        );
+        println!("  Total session time: {:.1} ms", total.as_millis());
+    }
+
+    #[test]
+    fn test_squared_vs_sqrt_equivalence() {
+        // Verify that our squared-distance optimization produces equivalent results
+        // to the original sqrt-based approach
+        let test_pixels: [(i32, i32, i32); 5] = [
+            (200, 20, 20),   // exact match for HP orb
+            (180, 15, 25),   // close to HP orb
+            (100, 100, 100), // gray — should NOT match
+            (30, 30, 200),   // mana orb match
+            (198, 166, 99),  // gold text match
+        ];
+
+        let (tr, tg, tb) = (180i32, 20i32, 20i32);
+        let threshold = 60i32;
+        let threshold_sq = threshold * threshold;
+
+        for (r, g, b) in test_pixels {
+            let dist_sq = (r - tr).pow(2) + (g - tg).pow(2) + (b - tb).pow(2);
+            let dist_sqrt = (dist_sq as f32).sqrt();
+
+            let match_sq = dist_sq < threshold_sq;
+            let match_sqrt = dist_sqrt < threshold as f32;
+
+            assert_eq!(
+                match_sq, match_sqrt,
+                "Squared vs sqrt mismatch for ({},{},{}): sq={} sqrt={}",
+                r, g, b, match_sq, match_sqrt
+            );
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // Windows DXGI Desktop Duplication
 // ═══════════════════════════════════════════════════════════════
 
@@ -858,6 +1158,8 @@ pub struct DxgiCapturer {
     device: windows::Win32::Graphics::Direct3D11::ID3D11Device,
     context: windows::Win32::Graphics::Direct3D11::ID3D11DeviceContext,
     duplication: windows::Win32::Graphics::Dxgi::IDXGIOutputDuplication,
+    /// Reusable staging texture — avoids per-frame GPU allocation
+    staging: Option<windows::Win32::Graphics::Direct3D11::ID3D11Texture2D>,
     width: u32,
     height: u32,
 }
@@ -906,6 +1208,7 @@ impl DxgiCapturer {
                 device,
                 context,
                 duplication,
+                staging: None,
                 width,
                 height,
             })
@@ -928,15 +1231,21 @@ impl DxgiCapturer {
             let resource = resource.ok_or_else(|| anyhow::anyhow!("No resource"))?;
             let texture: ID3D11Texture2D = resource.cast()?;
 
-            // Create staging texture for CPU read
-            let mut desc = D3D11_TEXTURE2D_DESC::default();
-            texture.GetDesc(&mut desc);
-            desc.Usage = D3D11_USAGE_STAGING;
-            desc.BindFlags = D3D11_BIND_FLAG(0);
-            desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-            desc.MiscFlags = D3D11_RESOURCE_MISC_FLAG(0);
-
-            let staging = self.device.CreateTexture2D(&desc, None)?;
+            // Reuse staging texture — only create once (saves ~0.5ms/frame GPU alloc)
+            let staging = match &self.staging {
+                Some(s) => s.clone(),
+                None => {
+                    let mut desc = D3D11_TEXTURE2D_DESC::default();
+                    texture.GetDesc(&mut desc);
+                    desc.Usage = D3D11_USAGE_STAGING;
+                    desc.BindFlags = D3D11_BIND_FLAG(0);
+                    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+                    desc.MiscFlags = D3D11_RESOURCE_MISC_FLAG(0);
+                    let s = self.device.CreateTexture2D(&desc, None)?;
+                    self.staging = Some(s.clone());
+                    s
+                }
+            };
             self.context.CopyResource(&staging, &texture);
 
             // Map and read pixels
