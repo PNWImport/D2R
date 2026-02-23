@@ -43,22 +43,28 @@
     .stat-box { display: flex; gap: 16px; margin-bottom: 12px; padding: 8px 12px; background: #12122a; border-radius: 6px; border: 1px solid #2a2a44; font-size: 11px; }
     .stat-box span { color: #8888a0; }
     .stat-box strong { color: #e0c070; margin-left: 4px; }
+
+    .serve-hint {
+      margin-top: 12px; padding: 12px; background: #1a1020; border: 1px solid #442244;
+      border-radius: 6px; font-size: 12px; color: #c8a; display: none;
+    }
+    .serve-hint code { background: #221133; padding: 2px 6px; border-radius: 3px; color: #e8c; }
   </style>
 </head>
 <body>
 
 <div class="column col-popup">
   <div class="col-title">Popup Preview (360px)</div>
-  <iframe id="popup-frame" src="chrome_extension/popup.html"></iframe>
+  <iframe id="popup-frame"></iframe>
 </div>
 
 <div class="column col-controls">
-  <div class="col-title">Test Harness — Full GUI (all kolbot settings)</div>
+  <div class="col-title">Test Harness &mdash; Full GUI (all kolbot settings)</div>
 
   <div class="stat-box" id="stats-bar">
-    <span>Tabs: <strong id="st-tabs">—</strong></span>
-    <span>Settings: <strong id="st-cfg">—</strong></span>
-    <span>Scripts: <strong id="st-scripts">—</strong></span>
+    <span>Tabs: <strong id="st-tabs">&mdash;</strong></span>
+    <span>Settings: <strong id="st-cfg">&mdash;</strong></span>
+    <span>Scripts: <strong id="st-scripts">&mdash;</strong></span>
   </div>
 
   <div class="scenario-group">
@@ -97,6 +103,12 @@
   </div>
 
   <div id="log"></div>
+
+  <div class="serve-hint" id="serve-hint">
+    This page must be served over HTTP. From the <code>extension/</code> folder run:<br><br>
+    <code>python3 -m http.server 8080</code><br><br>
+    Then open <code>http://localhost:8080/test_gui.html</code>
+  </div>
 </div>
 
 <script>
@@ -113,25 +125,90 @@ function log(msg, cls) {
 const frame = document.getElementById('popup-frame');
 let popupDoc = null;
 
+// Chrome API mock injected into the popup iframe
+const CHROME_MOCK = `<script>
+  window.chrome = {
+    runtime: {
+      sendMessage: function(msg, cb) { if (cb) cb({}); return true; },
+      getManifest: function() { return { version: "1.4.0" }; },
+      onMessage: { addListener: function() {} }
+    },
+    storage: {
+      local: {
+        get: function(keys, cb) { if (cb) cb({}); },
+        set: function(data, cb) { if (cb) cb(); }
+      }
+    }
+  };
+<\/script>`;
+
+// Load popup.html via fetch + blob URL for same-origin DOM access
+async function loadPopup() {
+  const baseDir = 'chrome_extension/';
+
+  try {
+    const resp = await fetch(baseDir + 'popup.html');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    let html = await resp.text();
+
+    // Compute absolute base URL for the chrome_extension/ directory
+    const absBase = new URL(baseDir, location.href).href;
+
+    // Inject <base> (for CSS/JS/image relative paths) and chrome mock before other scripts
+    const inject = '<base href="' + absBase + '">\n' + CHROME_MOCK;
+    html = html.replace('<head>', '<head>\n' + inject);
+
+    // Load into iframe via blob URL (same-origin = DOM accessible)
+    const blob = new Blob([html], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+    frame.src = blobUrl;
+
+    log('Loading popup via blob URL (same-origin)', 'log-info');
+  } catch (e) {
+    log('Fetch failed: ' + e.message, 'log-err');
+
+    // Fallback: try direct iframe src (works if already on HTTP)
+    log('Falling back to direct iframe src...', 'log-info');
+    frame.src = baseDir + 'popup.html';
+
+    // Show serve instructions if on file:// protocol
+    if (location.protocol === 'file:') {
+      document.getElementById('serve-hint').style.display = 'block';
+      log('file:// detected. Please serve over HTTP (see instructions below).', 'log-err');
+    }
+  }
+}
+
 frame.addEventListener('load', () => {
   try {
     popupDoc = frame.contentDocument || frame.contentWindow.document;
+    if (!popupDoc || !popupDoc.body) throw new Error('empty document');
+
     const tabs = popupDoc.querySelectorAll('.tab');
     const cfgs = popupDoc.querySelectorAll('[data-cfg]');
     const scripts = popupDoc.querySelectorAll('[data-cfg^="Scripts."]');
     document.getElementById('st-tabs').textContent = tabs.length;
     document.getElementById('st-cfg').textContent = cfgs.length;
     document.getElementById('st-scripts').textContent = scripts.length;
-    log('Popup loaded: ' + tabs.length + ' tabs, ' + cfgs.length + ' settings, ' + scripts.length + ' scripts', 'log-ok');
+
+    if (tabs.length > 0) {
+      log('Popup loaded: ' + tabs.length + ' tabs, ' + cfgs.length + ' settings, ' + scripts.length + ' scripts', 'log-ok');
+    } else {
+      log('Popup loaded but no tabs found (DOM may be empty)', 'log-err');
+    }
   } catch (e) {
-    log('Cannot access iframe (CORS). Open via local server.', 'log-err');
+    log('Cannot access iframe DOM: ' + e.message, 'log-err');
+    if (location.protocol === 'file:') {
+      document.getElementById('serve-hint').style.display = 'block';
+      log('Serve over HTTP to enable cross-frame access.', 'log-err');
+    }
   }
 });
 
 function switchTab(tabId) {
   if (!popupDoc) return;
   const tab = popupDoc.querySelector('.tab[data-tab="' + tabId + '"]');
-  if (tab) { tab.click(); log('TAB → ' + tab.textContent, 'log-info'); }
+  if (tab) { tab.click(); log('TAB \u2192 ' + tab.textContent, 'log-info'); }
 }
 
 function setProfile(cls) {
@@ -139,12 +216,12 @@ function setProfile(cls) {
   const sel = popupDoc.querySelector('#config-select');
   if (sel) { sel.value = cls; sel.dispatchEvent(new Event('change')); }
   switchTab('tab-class');
-  log('PROFILE → ' + cls, 'log-info');
+  log('PROFILE \u2192 ' + cls, 'log-info');
 }
 
 function runAllTests() {
   if (!popupDoc) { log('No popup document available', 'log-err'); return; }
-  log('════════════════════════════════════════', 'log-info');
+  log('\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550', 'log-info');
   log('RUNNING ALL TESTS', 'log-info');
   let pass = 0, fail = 0;
 
@@ -211,13 +288,14 @@ function runAllTests() {
   assert('Kill button', !!popupDoc.getElementById('btn-kill'));
 
   // Summary
-  log('════════════════════════════════════════', 'log-info');
+  log('\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550', 'log-info');
   log('RESULTS: ' + pass + '/' + (pass + fail) + ' passed, ' + fail + ' failed', fail > 0 ? 'log-err' : 'log-ok');
   if (fail === 0) log('ALL TESTS PASSED!', 'log-ok');
 }
 
 log('KZB GUI Test Harness loaded', 'log-ok');
-log('Iframing real popup.html with full kolbot settings', 'log-info');
+log('Loading popup.html...', 'log-info');
+loadPopup();
 </script>
 </body>
 </html>
