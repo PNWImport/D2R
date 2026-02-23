@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>KZB GUI Test Harness</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      background: #0d0d1a;
+      display: flex;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #c8c8d4;
+    }
+    .column { display: flex; flex-direction: column; height: 100vh; overflow-y: auto; }
+    .col-popup { width: 384px; flex-shrink: 0; padding: 12px; background: #111122; border-right: 1px solid #2a2a44; }
+    .col-controls { flex: 1; padding: 16px; min-width: 360px; }
+    .col-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #555; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #222; }
+
+    #popup-frame { width: 360px; border: none; border-radius: 8px; flex: 1; min-height: 600px; }
+
+    .scenario-group { margin-bottom: 16px; }
+    .scenario-group h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #666; margin-bottom: 6px; }
+    .test-btn {
+      display: block; width: 100%; padding: 8px 12px; margin-bottom: 4px;
+      background: #1a1a30; border: 1px solid #2a2a44; border-radius: 4px;
+      color: #aab; font-size: 12px; cursor: pointer; text-align: left; transition: all 0.12s;
+    }
+    .test-btn:hover { background: #222244; border-color: #4a4a66; color: #dde; }
+    .test-btn.active { background: #1a2a1a; border-color: #40c040; color: #40c040; }
+    .test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+
+    #log {
+      margin-top: 12px; background: #0a0a14; border: 1px solid #1a1a2a; border-radius: 4px;
+      padding: 10px; font-family: "SF Mono", "Fira Code", monospace; font-size: 11px;
+      color: #6a6; max-height: 300px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5;
+    }
+    .log-err { color: #c44; }
+    .log-info { color: #68a; }
+    .log-ok { color: #4a4; }
+    .log-cmd { color: #a8a; }
+
+    .stat-box { display: flex; gap: 16px; margin-bottom: 12px; padding: 8px 12px; background: #12122a; border-radius: 6px; border: 1px solid #2a2a44; font-size: 11px; }
+    .stat-box span { color: #8888a0; }
+    .stat-box strong { color: #e0c070; margin-left: 4px; }
+
+    .serve-hint {
+      margin-top: 12px; padding: 12px; background: #1a1020; border: 1px solid #442244;
+      border-radius: 6px; font-size: 12px; color: #c8a; display: none;
+    }
+    .serve-hint code { background: #221133; padding: 2px 6px; border-radius: 3px; color: #e8c; }
+  </style>
+</head>
+<body>
+
+<div class="column col-popup">
+  <div class="col-title">Popup Preview (360px)</div>
+  <iframe id="popup-frame"></iframe>
+</div>
+
+<div class="column col-controls">
+  <div class="col-title">Test Harness &mdash; Full GUI (all kolbot settings)</div>
+
+  <div class="stat-box" id="stats-bar">
+    <span>Tabs: <strong id="st-tabs">&mdash;</strong></span>
+    <span>Settings: <strong id="st-cfg">&mdash;</strong></span>
+    <span>Scripts: <strong id="st-scripts">&mdash;</strong></span>
+  </div>
+
+  <div class="scenario-group">
+    <h3>Tab Navigation</h3>
+    <div class="test-grid">
+      <button class="test-btn" onclick="switchTab('tab-control')">Control</button>
+      <button class="test-btn" onclick="switchTab('tab-scripts')">Scripts</button>
+      <button class="test-btn" onclick="switchTab('tab-leech')">Leech</button>
+      <button class="test-btn" onclick="switchTab('tab-combat')">Combat</button>
+      <button class="test-btn" onclick="switchTab('tab-health')">Health</button>
+      <button class="test-btn" onclick="switchTab('tab-class')">Class</button>
+      <button class="test-btn" onclick="switchTab('tab-items')">Items</button>
+      <button class="test-btn" onclick="switchTab('tab-social')">Social</button>
+      <button class="test-btn" onclick="switchTab('tab-general')">General</button>
+      <button class="test-btn" onclick="switchTab('tab-advanced')">Adv</button>
+      <button class="test-btn" onclick="switchTab('tab-map')">Map</button>
+    </div>
+  </div>
+
+  <div class="scenario-group">
+    <h3>Profiles</h3>
+    <div class="test-grid">
+      <button class="test-btn" onclick="setProfile('sorceress')">Sorceress</button>
+      <button class="test-btn" onclick="setProfile('necromancer')">Necromancer</button>
+      <button class="test-btn" onclick="setProfile('paladin')">Paladin</button>
+      <button class="test-btn" onclick="setProfile('barbarian')">Barbarian</button>
+      <button class="test-btn" onclick="setProfile('amazon')">Amazon</button>
+      <button class="test-btn" onclick="setProfile('assassin')">Assassin</button>
+      <button class="test-btn" onclick="setProfile('druid')">Druid</button>
+    </div>
+  </div>
+
+  <div class="scenario-group">
+    <h3>Automated Tests</h3>
+    <button class="test-btn" onclick="runAllTests()" style="background:#1a1a40;border-color:#4040a0;color:#88f;">Run All Tests</button>
+  </div>
+
+  <div id="log"></div>
+
+  <div class="serve-hint" id="serve-hint">
+    This page must be served over HTTP. From the <code>extension/</code> folder run:<br><br>
+    <code>python3 -m http.server 8080</code><br><br>
+    Then open <code>http://localhost:8080/test_gui.html</code>
+  </div>
+</div>
+
+<script>
+const logEl = document.getElementById('log');
+function log(msg, cls) {
+  const d = document.createElement('div');
+  d.className = cls || '';
+  const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
+  d.textContent = '[' + ts + '] ' + msg;
+  logEl.appendChild(d);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+const frame = document.getElementById('popup-frame');
+let popupDoc = null;
+
+// Chrome API mock injected into the popup iframe
+const CHROME_MOCK = `<script>
+  window.chrome = {
+    runtime: {
+      sendMessage: function(msg, cb) { if (cb) cb({}); return true; },
+      getManifest: function() { return { version: "1.4.0" }; },
+      onMessage: { addListener: function() {} }
+    },
+    storage: {
+      local: {
+        get: function(keys, cb) { if (cb) cb({}); },
+        set: function(data, cb) { if (cb) cb(); }
+      }
+    }
+  };
+<\/script>`;
+
+// Load popup.html via fetch + blob URL for same-origin DOM access
+async function loadPopup() {
+  const baseDir = 'chrome_extension/';
+
+  try {
+    const resp = await fetch(baseDir + 'popup.html');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    let html = await resp.text();
+
+    // Compute absolute base URL for the chrome_extension/ directory
+    const absBase = new URL(baseDir, location.href).href;
+
+    // Inject <base> (for CSS/JS/image relative paths) and chrome mock before other scripts
+    const inject = '<base href="' + absBase + '">\n' + CHROME_MOCK;
+    html = html.replace('<head>', '<head>\n' + inject);
+
+    // Load into iframe via blob URL (same-origin = DOM accessible)
+    const blob = new Blob([html], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+    frame.src = blobUrl;
+
+    log('Loading popup via blob URL (same-origin)', 'log-info');
+  } catch (e) {
+    log('Fetch failed: ' + e.message, 'log-err');
+
+    // Fallback: try direct iframe src (works if already on HTTP)
+    log('Falling back to direct iframe src...', 'log-info');
+    frame.src = baseDir + 'popup.html';
+
+    // Show serve instructions if on file:// protocol
+    if (location.protocol === 'file:') {
+      document.getElementById('serve-hint').style.display = 'block';
+      log('file:// detected. Please serve over HTTP (see instructions below).', 'log-err');
+    }
+  }
+}
+
+frame.addEventListener('load', () => {
+  try {
+    popupDoc = frame.contentDocument || frame.contentWindow.document;
+    if (!popupDoc || !popupDoc.body) throw new Error('empty document');
+
+    const tabs = popupDoc.querySelectorAll('.tab');
+    const cfgs = popupDoc.querySelectorAll('[data-cfg]');
+    const scripts = popupDoc.querySelectorAll('[data-cfg^="Scripts."]');
+    document.getElementById('st-tabs').textContent = tabs.length;
+    document.getElementById('st-cfg').textContent = cfgs.length;
+    document.getElementById('st-scripts').textContent = scripts.length;
+
+    if (tabs.length > 0) {
+      log('Popup loaded: ' + tabs.length + ' tabs, ' + cfgs.length + ' settings, ' + scripts.length + ' scripts', 'log-ok');
+    } else {
+      log('Popup loaded but no tabs found (DOM may be empty)', 'log-err');
+    }
+  } catch (e) {
+    log('Cannot access iframe DOM: ' + e.message, 'log-err');
+    if (location.protocol === 'file:') {
+      document.getElementById('serve-hint').style.display = 'block';
+      log('Serve over HTTP to enable cross-frame access.', 'log-err');
+    }
+  }
+});
+
+function switchTab(tabId) {
+  if (!popupDoc) return;
+  const tab = popupDoc.querySelector('.tab[data-tab="' + tabId + '"]');
+  if (tab) { tab.click(); log('TAB \u2192 ' + tab.textContent, 'log-info'); }
+}
+
+function setProfile(cls) {
+  if (!popupDoc) return;
+  const sel = popupDoc.querySelector('#config-select');
+  if (sel) { sel.value = cls; sel.dispatchEvent(new Event('change')); }
+  switchTab('tab-class');
+  log('PROFILE \u2192 ' + cls, 'log-info');
+}
+
+function runAllTests() {
+  if (!popupDoc) { log('No popup document available', 'log-err'); return; }
+  log('\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550', 'log-info');
+  log('RUNNING ALL TESTS', 'log-info');
+  let pass = 0, fail = 0;
+
+  function assert(name, cond) {
+    if (cond) { log('  PASS  ' + name, 'log-ok'); pass++; }
+    else { log('  FAIL  ' + name, 'log-err'); fail++; }
+  }
+
+  // Structure
+  const tabs = popupDoc.querySelectorAll('.tab');
+  const panels = popupDoc.querySelectorAll('.tab-panel');
+  assert('11 tabs exist', tabs.length === 11);
+  assert('11 panels exist', panels.length === 11);
+
+  // Tab IDs
+  ['tab-control','tab-scripts','tab-leech','tab-combat','tab-health',
+   'tab-class','tab-items','tab-social','tab-general','tab-advanced','tab-map'].forEach(id => {
+    assert('Panel: ' + id, !!popupDoc.getElementById(id));
+  });
+
+  // Tab switching
+  tabs[1].click();
+  assert('Scripts tab activates', popupDoc.getElementById('tab-scripts').classList.contains('active'));
+  tabs[0].click();
+
+  // Config elements
+  const cfgEls = popupDoc.querySelectorAll('[data-cfg]');
+  assert('500+ config elements', cfgEls.length >= 500);
+  log('  INFO  ' + cfgEls.length + ' config elements found', 'log-info');
+
+  // All 77 scripts from _BaseConfigFile.js
+  const expectedScripts = [
+    'Scripts.Corpsefire','Scripts.Bishibosh','Scripts.Mausoleum','Scripts.Rakanishu',
+    'Scripts.UndergroundPassage','Scripts.Coldcrow','Scripts.Tristram','Scripts.Pit',
+    'Scripts.Treehead','Scripts.Smith','Scripts.BoneAsh','Scripts.Countess',
+    'Scripts.Andariel','Scripts.Cows','Scripts.Radament','Scripts.CreepingFeature',
+    'Scripts.Coldworm','Scripts.AncientTunnels','Scripts.Summoner','Scripts.Tombs',
+    'Scripts.Duriel','Scripts.Stormtree','Scripts.BattlemaidSarina','Scripts.KurastTemples',
+    'Scripts.Icehawk','Scripts.Endugu','Scripts.Travincal','Scripts.Mephisto',
+    'Scripts.OuterSteppes','Scripts.Izual','Scripts.Hephasto','Scripts.Diablo',
+    'Scripts.Pindleskin','Scripts.Nihlathak','Scripts.Eldritch','Scripts.Eyeback',
+    'Scripts.SharpTooth','Scripts.ThreshSocket','Scripts.Abaddon','Scripts.Frozenstein',
+    'Scripts.Bonesaw','Scripts.Snapchip','Scripts.Worldstone','Scripts.Baal',
+    'Scripts.GetFade','Scripts.GetKeys','Scripts.GetEssences','Scripts.Follower',
+    'Scripts.CrushTele','Scripts.Gamble','Scripts.Crafting','Scripts.IPHunter',
+    'Scripts.ShopBot','Scripts.GhostBusters','Scripts.ChestMania','Scripts.ClearAnyArea',
+    'Scripts.GemHunter','Scripts.WPGetter','Scripts.Questing','Scripts.UserAddon',
+    'Scripts.BattleOrders','Scripts.BoBarbHelper','Scripts.AutoBaal','Scripts.BaalHelper',
+    'Scripts.BaalAssistant','Scripts.DiabloHelper','Scripts.AutoChaos','Scripts.SealLeecher',
+    'Scripts.TristramLeech','Scripts.TravincalLeech','Scripts.Wakka','Scripts.MFHelper',
+    'Scripts.OrgTorch','Scripts.OrgTorchHelper','Scripts.Rusher','Scripts.Rushee',
+    'Scripts.ControlBot'
+  ];
+  let missing = [];
+  expectedScripts.forEach(s => {
+    if (!popupDoc.querySelector('[data-cfg="' + s + '"]')) missing.push(s);
+  });
+  assert('All 77 kolbot scripts present', missing.length === 0);
+  if (missing.length > 0) log('  MISSING: ' + missing.join(', '), 'log-err');
+
+  // Buttons
+  assert('Pause button', !!popupDoc.getElementById('btn-pause'));
+  assert('Resume button', !!popupDoc.getElementById('btn-resume'));
+  assert('Kill button', !!popupDoc.getElementById('btn-kill'));
+
+  // Summary
+  log('\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550', 'log-info');
+  log('RESULTS: ' + pass + '/' + (pass + fail) + ' passed, ' + fail + ' failed', fail > 0 ? 'log-err' : 'log-ok');
+  if (fail === 0) log('ALL TESTS PASSED!', 'log-ok');
+}
+
+log('KZB GUI Test Harness loaded', 'log-ok');
+log('Loading popup.html...', 'log-info');
+loadPopup();
+</script>
+</body>
+</html>

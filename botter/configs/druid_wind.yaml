@@ -1,0 +1,172 @@
+# Wind Druid (Tornado/Hurricane) — Full Config
+# Ported from kolbot libs/config/Druid.js
+
+character_class: Druid
+build: wind
+
+survival:
+  chicken_hp_pct: 30
+  mana_chicken_pct: 0
+  merc_chicken_pct: 0
+  hp_potion_pct: 75
+  hp_rejuv_pct: 40
+  mana_potion_pct: 30
+  mana_rejuv_pct: 0
+  tp_retreat_pct: 35
+  merc_hp_pct: 75
+  hp_potion_cooldown_ms: 1000
+  mana_potion_cooldown_ms: 1000
+  rejuv_cooldown_ms: 300
+  belt_column: ["hp", "hp", "mp", "rv"]
+  min_belt_column: [3, 3, 3, 0]
+
+combat:
+  primary_skill_key: "f"                 # Tornado
+  secondary_skill_key: "g"               # Hurricane (cast & forget)
+  mobility_skill_key: "t"                # Teleport if Enigma
+  preattack_key: "g"                     # Hurricane pre-engage
+  immunity_fallback_key: "f"             # Tornado is physical (no immunity issue)
+  boss_priority: true
+  kite_threshold: 8
+  cast_interval_ms: 200
+  max_attack_count: 300
+  use_merc_stomp: true
+  no_tele: false
+  attack_slots:
+    preattack: "g"                       # Hurricane
+    boss_primary: "f"                    # Tornado
+    boss_untimed: null
+    mob_primary: "f"                     # Tornado
+    mob_untimed: null
+    immune_primary: "f"                  # Tornado is physical, Hurricane is cold — covers both
+    immune_untimed: null
+  static_field: null
+
+buffs:
+  - { name: "Hurricane",     hotkey: "g", visual_check: false, duration_secs: 10 }
+  - { name: "Cyclone Armor", hotkey: "b", visual_check: false, duration_secs: 0 }
+  - { name: "Oak Sage",      hotkey: "a", visual_check: false, duration_secs: 999 }
+
+class_specific:
+  summon_raven: false
+  summon_animal: "Grizzly"
+  summon_spirit: "Oak Sage"
+  summon_vine: "Poison Creeper"
+
+farming:
+  min_game_time_secs: 60
+  sequence:
+    - { name: Travincal, enabled: true }
+    - { name: Pit, enabled: true }
+    - { name: Mephisto, enabled: false }
+    - { name: Diablo, enabled: false }
+    - { name: Baal, enabled: false }
+    - { name: Eldritch, enabled: false, options: { kill_shenk: true } }
+    - { name: Pindleskin, enabled: false }
+    - { name: Cows, enabled: false }
+
+leveling:
+  auto_skill:
+    enabled: true
+    save: 0
+    build:
+      - { skill: "Arctic Blast",    hotkey: null, max_points: 1,  satisfy: true  }
+      - { skill: "Cyclone Armor",   hotkey: "b",  max_points: 1,  satisfy: true  }
+      - { skill: "Twister",         hotkey: null, max_points: 1,  satisfy: true  }
+      - { skill: "Tornado",         hotkey: "f",  max_points: 1,  satisfy: false }
+      - { skill: "Hurricane",       hotkey: "g",  max_points: 1,  satisfy: true  }
+      - { skill: "Oak Sage",        hotkey: "a",  max_points: 1,  satisfy: true  }
+      - { skill: "Summon Grizzly",  hotkey: "s",  max_points: 1,  satisfy: true  }
+      - { skill: "Tornado",         hotkey: "f",  max_points: 20, satisfy: true  }
+      - { skill: "Hurricane",       hotkey: "g",  max_points: 20, satisfy: true  }
+      - { skill: "Cyclone Armor",   hotkey: "b",  max_points: 20, satisfy: true  }
+      - { skill: "Twister",         hotkey: null, max_points: 20, satisfy: true  }
+      - { skill: "Oak Sage",        hotkey: "a",  max_points: 20, satisfy: true  }
+  auto_stat:
+    enabled: true
+    save: 0
+    build:
+      - { stat: "strength",  target: 156 }
+      - { stat: "vitality",  target: "all" }
+
+cubing:
+  enabled: false
+  recipes:
+    - { recipe_type: "socket", item: "Monarch", ethereal: "noneth" }
+    - { recipe_type: "rune", item: "Pul Rune" }
+
+runewords:
+  enabled: true
+  make:
+    - { name: "Spirit",  base: "Monarch", ethereal: "noneth" }
+    - { name: "Insight", base: "Thresher", ethereal: "eth" }
+    - { name: "Heart of the Oak", base: "Flail" }
+
+gambling:
+  enabled: false
+  gold_start: 1000000
+  gold_stop: 500000
+  items: ["Amulet", "Ring", "Circlet", "Druid Pelts"]
+
+monster_skip:
+  skip_immune: []
+  skip_enchant: []
+  skip_aura: []
+
+clear:
+  clear_type: "skip_normal"
+  clear_path: "skip_normal"
+  clear_range: 30
+
+merc: { use_merc: true, merc_watch: false }
+
+inventory:
+  grid:
+    - [0,0,0,0,0,0,0,0,0,0]
+    - [0,0,0,0,0,0,0,0,0,0]
+    - [0,0,0,0,0,0,0,0,0,0]
+    - [0,0,0,0,0,0,0,0,0,0]
+
+loot:
+  always_pick: ["unique", "set", "rune"]
+  conditional_pick: ["rare_ring", "rare_amulet"]
+  magic_pick_types: ["grand_charm", "small_charm"]
+  gold_threshold: 5000
+  prioritize_runes_uniques: true
+  max_pickup_distance: 400
+  pick_range: 40
+  stash_gold: 100000
+
+town:
+  heal_hp_pct: 50
+  repair_pct: 40
+  go_to_town_triggers: { belt_potions_below: 2, inventory_slots_below: 4, merc_dead: true, durability_low: true }
+  task_order: [revive_merc, heal, repair, identify, stash, buy_potions]
+  stash_rules:
+    always_stash: ["unique", "set", "rune"]
+    id_then_evaluate: ["rare_ring", "rare_amulet"]
+    always_sell: ["magic_non_charm"]
+
+humanization:
+  reaction_mean_ms: 280.0
+  reaction_stddev_ms: 90.0
+  survival_max_delay_ms: 150
+  potion_threshold_variance: 6
+  skill_miss_rate: 0.03
+  aim_variance_px: 16
+  path_deviate_rate: 0.08
+  path_deviate_px: 40
+  idle_pause_rate: 0.02
+  aggression_drift_per_hour: 0.04
+  caution_drift_per_hour: 0.03
+
+session:
+  max_daily_hours: 8.0
+  session_min_minutes: 60
+  session_max_minutes: 180
+  break_min_minutes: 30
+  break_max_minutes: 120
+  allowed_start_hour: 9
+  allowed_end_hour: 23
+  short_break_rate: 0.12
+  long_break_rate: 0.04

@@ -1,0 +1,176 @@
+# Fishymancer (Summoner Necromancer) — Full Config
+# Ported from kolbot libs/config/Necromancer.js
+
+character_class: Necromancer
+build: fishymancer
+
+survival:
+  chicken_hp_pct: 25
+  mana_chicken_pct: 0
+  merc_chicken_pct: 0
+  hp_potion_pct: 70
+  hp_rejuv_pct: 35
+  mana_potion_pct: 35
+  mana_rejuv_pct: 0
+  tp_retreat_pct: 30
+  merc_hp_pct: 75
+  hp_potion_cooldown_ms: 1000
+  mana_potion_cooldown_ms: 1000
+  rejuv_cooldown_ms: 300
+  belt_column: ["hp", "hp", "mp", "mp"]
+  min_belt_column: [2, 2, 4, 0]
+
+combat:
+  primary_skill_key: "f"                 # Corpse Explosion
+  secondary_skill_key: "g"               # Bone Spear
+  mobility_skill_key: null
+  preattack_key: "d"                     # Amplify Damage curse
+  immunity_fallback_key: "g"             # Bone Spear vs phys immune
+  boss_priority: true
+  kite_threshold: 8
+  cast_interval_ms: 300
+  max_attack_count: 200
+  use_merc_stomp: true
+  no_tele: true
+  attack_slots:
+    preattack: "d"                       # Amplify Damage
+    boss_primary: "f"                    # CE
+    boss_untimed: null
+    mob_primary: "f"                     # CE
+    mob_untimed: null
+    immune_primary: "g"                  # Bone Spear
+    immune_untimed: null
+  static_field: null
+
+buffs:
+  - { name: "Skeleton Raise", hotkey: "a", visual_check: false, duration_secs: 999 }
+  - { name: "Clay Golem",     hotkey: "q", visual_check: false, duration_secs: 999 }
+
+class_specific:
+  boss_curse_key: "d"                    # Amplify Damage on bosses
+  mob_curse_key: "d"                     # Amplify Damage on mobs
+  explode_corpses_key: "f"               # Corpse Explosion
+  golem: "Clay"
+  skeletons: 10
+  skeleton_mages: 0
+  revives: 10
+  active_summon: false
+  poison_nova_delay: 2
+
+farming:
+  min_game_time_secs: 60
+  sequence:
+    - { name: Pit, enabled: true }
+    - { name: AncientTunnels, enabled: true }
+    - { name: Travincal, enabled: true }
+    - { name: Mephisto, enabled: false }
+    - { name: Diablo, enabled: false }
+    - { name: Baal, enabled: false }
+    - { name: Cows, enabled: false }
+    - { name: Worldstone, enabled: false }
+
+leveling:
+  auto_skill:
+    enabled: true
+    save: 0
+    build:
+      - { skill: "Raise Skeleton",     hotkey: "a",  max_points: 1,  satisfy: true  }
+      - { skill: "Amplify Damage",     hotkey: "d",  max_points: 1,  satisfy: true  }
+      - { skill: "Clay Golem",         hotkey: "q",  max_points: 1,  satisfy: true  }
+      - { skill: "Corpse Explosion",   hotkey: "f",  max_points: 1,  satisfy: true  }
+      - { skill: "Skeleton Mastery",   hotkey: null, max_points: 1,  satisfy: false }
+      - { skill: "Raise Skeleton",     hotkey: "a",  max_points: 20, satisfy: true  }
+      - { skill: "Skeleton Mastery",   hotkey: null, max_points: 20, satisfy: true  }
+      - { skill: "Corpse Explosion",   hotkey: "f",  max_points: 20, satisfy: true  }
+      - { skill: "Revive",             hotkey: null, max_points: 1,  satisfy: true  }
+      - { skill: "Golem Mastery",      hotkey: null, max_points: 10, satisfy: true  }
+      - { skill: "Summon Resist",      hotkey: null, max_points: 10, satisfy: true  }
+  auto_stat:
+    enabled: true
+    save: 0
+    build:
+      - { stat: "strength",  target: 156 }
+      - { stat: "dexterity", target: 35 }
+      - { stat: "vitality",  target: "all" }
+
+cubing:
+  enabled: false
+  recipes:
+    - { recipe_type: "rune", item: "Um Rune" }
+    - { recipe_type: "socket", item: "Monarch", ethereal: "noneth" }
+
+runewords:
+  enabled: true
+  make:
+    - { name: "Spirit",  base: "Monarch", ethereal: "noneth" }
+    - { name: "Insight", base: "Thresher", ethereal: "eth" }
+    - { name: "White",   base: "Wand" }
+
+gambling:
+  enabled: false
+  gold_start: 1000000
+  gold_stop: 500000
+  items: ["Amulet", "Ring"]
+
+monster_skip:
+  skip_immune: []
+  skip_enchant: []
+  skip_aura: []
+
+clear:
+  clear_type: "all"
+  clear_path: "all"
+  clear_range: 30
+
+merc: { use_merc: true, merc_watch: true }
+
+inventory:
+  grid:
+    - [0,0,0,0,0,0,0,0,0,0]
+    - [0,0,0,0,0,0,0,0,0,0]
+    - [0,0,0,0,0,0,0,0,0,0]
+    - [0,0,0,0,0,0,0,0,0,0]
+
+loot:
+  always_pick: ["unique", "set", "rune"]
+  conditional_pick: ["rare_ring", "rare_amulet"]
+  magic_pick_types: ["grand_charm", "small_charm"]
+  gold_threshold: 3000
+  prioritize_runes_uniques: true
+  max_pickup_distance: 400
+  pick_range: 40
+  stash_gold: 100000
+
+town:
+  heal_hp_pct: 50
+  repair_pct: 40
+  go_to_town_triggers: { belt_potions_below: 3, inventory_slots_below: 4, merc_dead: true, durability_low: true }
+  task_order: [revive_merc, heal, repair, identify, stash, buy_potions]
+  stash_rules:
+    always_stash: ["unique", "set", "rune"]
+    id_then_evaluate: ["rare_ring", "rare_amulet"]
+    always_sell: ["magic_non_charm"]
+
+humanization:
+  reaction_mean_ms: 300.0
+  reaction_stddev_ms: 100.0
+  survival_max_delay_ms: 160
+  potion_threshold_variance: 7
+  skill_miss_rate: 0.04
+  aim_variance_px: 20
+  path_deviate_rate: 0.10
+  path_deviate_px: 45
+  idle_pause_rate: 0.025
+  aggression_drift_per_hour: 0.03
+  caution_drift_per_hour: 0.03
+
+session:
+  max_daily_hours: 8.0
+  session_min_minutes: 60
+  session_max_minutes: 180
+  break_min_minutes: 30
+  break_max_minutes: 120
+  allowed_start_hour: 9
+  allowed_end_hour: 23
+  short_break_rate: 0.12
+  long_break_rate: 0.04

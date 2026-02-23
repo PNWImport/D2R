@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KZB Control Panel</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <img src="kzb_header.webp" alt="KZB" class="logo">
+    <span id="version" class="version"></span>
+  </div>
+
+  <!-- Tab Bar (11 tabs) -->
+  <div class="tab-bar">
+    <button class="tab active" data-tab="tab-control">Control</button>
+    <button class="tab" data-tab="tab-scripts">Scripts</button>
+    <button class="tab" data-tab="tab-leech">Leech</button>
+    <button class="tab" data-tab="tab-combat">Combat</button>
+    <button class="tab" data-tab="tab-health">Health</button>
+    <button class="tab" data-tab="tab-class">Class</button>
+    <button class="tab" data-tab="tab-items">Items</button>
+    <button class="tab" data-tab="tab-social">Social</button>
+    <button class="tab" data-tab="tab-general">General</button>
+    <button class="tab" data-tab="tab-advanced">Adv</button>
+    <button class="tab" data-tab="tab-map">Map</button>
+  </div>
+
+  <!-- TAB 1: CONTROL -->
+  <div id="tab-control" class="tab-panel active">
+    <div class="section">
+      <div class="section-title">Connection Status</div>
+      <div class="status-row">
+        <span class="dot" id="agent-dot"></span>
+        <span id="agent-status" class="status-text">Disconnected</span>
+      </div>
+      <div class="status-row">
+        <span class="dot" id="map-dot"></span>
+        <span id="map-status" class="status-text">Disconnected</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Statistics</div>
+      <div class="stat-grid">
+        <div class="stat-label">Uptime</div>
+        <div id="stat-uptime" class="stat-value">—</div>
+        <div class="stat-label">Frames</div>
+        <div id="stat-frames" class="stat-value">0</div>
+        <div class="stat-label">Decisions</div>
+        <div id="stat-decisions" class="stat-value">0</div>
+        <div class="stat-label">Potions</div>
+        <div id="stat-potions" class="stat-value">0</div>
+        <div class="stat-label">Loots</div>
+        <div id="stat-loots" class="stat-value">0</div>
+        <div class="stat-label">Chickens</div>
+        <div id="stat-chickens" class="stat-value">0</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Profile</div>
+      <div class="control-row">
+        <label>Config</label>
+        <select id="config-select">
+          <option value="">—</option>
+          <option value="amazon">Amazon</option>
+          <option value="sorceress">Sorceress</option>
+          <option value="necromancer">Necromancer</option>
+          <option value="paladin">Paladin</option>
+          <option value="druid">Druid</option>
+          <option value="assassin">Assassin</option>
+          <option value="barbarian">Barbarian</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Controls</div>
+      <div style="display: flex; gap: 4px;">
+        <button id="btn-pause" class="btn">Pause</button>
+        <button id="btn-resume" class="btn">Resume</button>
+        <button id="btn-kill" class="btn btn-danger">Kill</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Map Overlay</div>
+      <div style="display: flex; gap: 4px; margin-bottom: 6px;">
+        <button id="btn-map-activate" class="btn btn-ok">Activate</button>
+        <button id="btn-map-deactivate" class="btn btn-warn">Deactivate</button>
+      </div>
+      <div class="setting-row">
+        <label>Opacity</label>
+        <input type="range" id="opacity-slider" min="10" max="255" value="180" style="flex: 1;">
+        <span id="opacity-value" style="min-width: 30px; text-align: right;">180</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: SCRIPTS -->
+  <div id="tab-scripts" class="tab-panel">
+    <div class="section">
+      <div class="section-title">Act 1</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Corpsefire" data-subs="opts-corpsefire"><span>Corpsefire</span></label>
+        <div id="opts-corpsefire" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Corpsefire.ClearDen"><span>Clear Den</span></label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Bishibosh"><span>Bishibosh</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Mausoleum" data-subs="opts-mausoleum"><span>Mausoleum</span></label>
+        <div id="opts-mausoleum" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Mausoleum.KillBishibosh"><span>Kill Bishibosh</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Mausoleum.KillBloodRaven"><span>Kill Blood Raven</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Mausoleum.ClearCrypt"><span>Clear Crypt</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Rakanishu" data-subs="opts-rakanishu"><span>Rakanishu</span></label>
+        <div id="opts-rakanishu" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Rakanishu.KillGriswold"><span>Kill Griswold</span></label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.UndergroundPassage"><span>Underground Passage</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Coldcrow"><span>Coldcrow</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Tristram" data-subs="opts-tristram"><span>Tristram</span></label>
+        <div id="opts-tristram" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Tristram.WalkClear"><span>Walk Clear</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Tristram.PortalLeech"><span>Portal Leech</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Pit" data-subs="opts-pit"><span>Pit</span></label>
+        <div id="opts-pit" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Pit.ClearPit1"><span>Clear Pit 1</span></label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Treehead"><span>Treehead Woodfist</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Smith"><span>Smith</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.BoneAsh"><span>Bone Ash</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Countess" data-subs="opts-countess"><span>Countess</span></label>
+        <div id="opts-countess" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Countess.KillGhosts"><span>Kill Ghosts</span></label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Andariel"><span>Andariel</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Cows" data-subs="opts-cows"><span>Cows</span></label>
+        <div id="opts-cows" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Cows.DontMakePortal"><span>Don't Make Portal</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Cows.JustMakePortal"><span>Just Make Portal</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Cows.KillKing"><span>Kill King</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Act 2</div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Radament"><span>Radament</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.CreepingFeature"><span>Creeping Feature</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Coldworm" data-subs="opts-coldworm"><span>Coldworm</span></label>
+        <div id="opts-coldworm" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Coldworm.KillBeetleburst"><span>Kill Beetleburst</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Coldworm.ClearMaggotLair"><span>Clear Maggot Lair</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.AncientTunnels" data-subs="opts-ancienttunnels"><span>Ancient Tunnels</span></label>
+        <div id="opts-ancienttunnels" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="AncientTunnels.OpenChest"><span>Open Chest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="AncientTunnels.KillDarkElder"><span>Kill Dark Elder</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Summoner" data-subs="opts-summoner"><span>Summoner</span></label>
+        <div id="opts-summoner" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Summoner.FireEye"><span>Kill Fire Eye</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Tombs" data-subs="opts-tombs"><span>Tombs</span></label>
+        <div id="opts-tombs" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Tombs.KillDuriel"><span>Kill Duriel</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Tombs.WalkClear"><span>Walk Clear</span></label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Duriel"><span>Duriel</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Act 3</div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Stormtree"><span>Stormtree</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.BattlemaidSarina"><span>Battlemaid Sarina</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.KurastTemples"><span>Kurast Temples</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Icehawk"><span>Icehawk</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Endugu"><span>Endugu</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Travincal" data-subs="opts-travincal"><span>Travincal</span></label>
+        <div id="opts-travincal" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Travincal.PortalLeech"><span>Portal Leech</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Mephisto" data-subs="opts-meph"><span>Mephisto</span></label>
+        <div id="opts-meph" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Mephisto.MoatTrick"><span>Moat Trick</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Mephisto.KillCouncil"><span>Kill Council</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Mephisto.TakeRedPortal" checked><span>Take Red Portal</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Act 4</div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.OuterSteppes"><span>Outer Steppes</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Izual"><span>Izual</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Hephasto"><span>Hephasto</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Diablo" data-subs="opts-diablo"><span>Diablo</span></label>
+        <div id="opts-diablo" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Diablo.WalkClear"><span>Walk Clear</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Diablo.Entrance" checked><span>Start Entrance</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Diablo.JustViz"><span>Just Vizier</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Diablo.SealLeader"><span>Seal Leader</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Diablo.Fast"><span>Fast Run</span></label>
+          <div class="setting-row"><label>Clear Radius</label><input type="number" data-cfg="Diablo.ClearRadius" class="input-xs" value="30"></div>
+          <div class="setting-row"><label>Clear Type</label><input type="number" data-cfg="Diablo.ClearType" class="input-xs" value="0"></div>
+          <div class="setting-row"><label>Seal Order</label><input type="text" data-cfg="Diablo.SealOrder" class="input-full" value="vizier,seis,infector"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Act 5</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Pindleskin" data-subs="opts-pindleskin"><span>Pindleskin</span></label>
+        <div id="opts-pindleskin" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Pindleskin.UseWaypoint"><span>Use Waypoint</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Pindleskin.KillNihlathak" checked><span>Kill Nihlathak</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Pindleskin.ViperQuit"><span>Viper Quit</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Nihlathak" data-subs="opts-nihlathak"><span>Nihlathak</span></label>
+        <div id="opts-nihlathak" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Nihlathak.ViperQuit"><span>Viper Quit</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Nihlathak.UseWaypoint"><span>Use Waypoint</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Eldritch" data-subs="opts-eldritch"><span>Eldritch</span></label>
+        <div id="opts-eldritch" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Eldritch.OpenChest" checked><span>Open Chest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Eldritch.KillShenk" checked><span>Kill Shenk</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Eldritch.KillDacFarren" checked><span>Kill Dac Farren</span></label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Eyeback"><span>Eyeback</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.SharpTooth"><span>SharpTooth</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.ThreshSocket"><span>Thresh Socket</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Abaddon"><span>Abaddon</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Frozenstein" data-subs="opts-frozenstein"><span>Frozenstein</span></label>
+        <div id="opts-frozenstein" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Frozenstein.ClearFrozenRiver" checked><span>Clear Frozen River</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Bonesaw" data-subs="opts-bonesaw"><span>Bonesaw</span></label>
+        <div id="opts-bonesaw" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Bonesaw.ClearDrifterCavern"><span>Clear Drifter Cavern</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Snapchip" data-subs="opts-snapchip"><span>Snapchip</span></label>
+        <div id="opts-snapchip" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Snapchip.ClearIcyCellar" checked><span>Clear Icy Cellar</span></label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Worldstone"><span>Worldstone</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Baal" data-subs="opts-baal"><span>Baal</span></label>
+        <div id="opts-baal" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Baal.SoulQuit"><span>Soul Quit</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Baal.DollQuit"><span>Doll Quit</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Baal.KillBaal" checked><span>Kill Baal</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Special & Team</div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.GetFade"><span>Get Fade</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.GetKeys"><span>Get Keys (T/H/D)</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.GetEssences" data-subs="opts-essences"><span>Get Essences</span></label>
+        <div id="opts-essences" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="GetEssences.RunDuriel"><span>Run Duriel</span></label>
+          <label class="check"><input type="checkbox" data-cfg="GetEssences.MoatMeph" checked><span>Moat Mephisto</span></label>
+          <label class="check"><input type="checkbox" data-cfg="GetEssences.FastDiablo" checked><span>Fast Diablo</span></label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Follower"><span>Follower</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.CrushTele"><span>Crush Tele</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Gamble"><span>Gamble</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.Crafting"><span>Crafting</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.IPHunter" data-subs="opts-iphunter"><span>IP Hunter</span></label>
+        <div id="opts-iphunter" class="sub-opts">
+          <div class="setting-row"><label>IP List</label><input type="text" data-cfg="IPHunter.IPList" class="input-full" placeholder="165,201,64"></div>
+          <div class="setting-row"><label>Game Length (min)</label><input type="number" data-cfg="IPHunter.GameLength" class="input-xs" value="3"></div>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.ShopBot" data-subs="opts-shopbot"><span>Shop Bot</span></label>
+        <div id="opts-shopbot" class="sub-opts">
+          <div class="setting-row"><label>Shop NPC</label><input type="text" data-cfg="ShopBot.ShopNPC" class="input-full" placeholder="Anya"></div>
+          <div class="setting-row"><label>Cycle Delay (ms)</label><input type="number" data-cfg="ShopBot.CycleDelay" class="input-xs" value="0"></div>
+          <label class="check"><input type="checkbox" data-cfg="ShopBot.QuitOnMatch"><span>Quit on Match</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Misc Scripts</div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.GhostBusters"><span>Ghost Busters</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.ChestMania"><span>Chest Mania</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.ClearAnyArea"><span>Clear Any Area</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.GemHunter"><span>Gem Hunter</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.WPGetter"><span>WP Getter</span></label>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Questing" data-subs="opts-questing"><span>Questing</span></label>
+        <div id="opts-questing" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Questing.StopProfile"><span>Stop Profile on Done</span></label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Config.MFLeader"><span>MF Leader</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Config.BreakClearLevel"><span>Break Clear Level (MFHelper)</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.UserAddon"><span>User Addon</span></label>
+    </div>
+  </div>
+
+  <!-- TAB 3: LEECH -->
+  <div id="tab-leech" class="tab-panel">
+    <div class="section">
+      <div class="section-title">Follow Leader</div>
+      <div class="setting-row">
+        <label>Leader</label>
+        <input type="text" data-cfg="Leader" class="input-full" placeholder="Character name">
+      </div>
+      <label class="textarea-label">Quit List (one per line)</label>
+      <textarea class="textarea-cfg" data-cfg="QuitList" placeholder="Character names to quit with"></textarea>
+      <div class="setting-row">
+        <label>Quit List Mode</label>
+        <select data-cfg="QuitListMode" style="flex: 1;">
+          <option value="0">Character Names</option>
+          <option value="1">Profile Names</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>Quit Delay Min (s)</label>
+        <input type="number" data-cfg="QuitListDelay.0" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Quit Delay Max (s)</label>
+        <input type="number" data-cfg="QuitListDelay.1" class="input-sm" value="0">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Battle Orders</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.BattleOrders" data-subs="opts-bo"><span>Battle Orders</span></label>
+        <div id="opts-bo" class="sub-opts">
+          <div class="setting-row">
+            <label>Mode</label>
+            <select data-cfg="BattleOrders.Mode" style="flex: 1;">
+              <option value="0" selected>Give BO</option>
+              <option value="1">Get BO</option>
+            </select>
+          </div>
+          <label class="check"><input type="checkbox" data-cfg="BattleOrders.Idle"><span>Idle After BO</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BattleOrders.QuitOnFailure"><span>Quit on Failure</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BattleOrders.SkipIfTardy" checked><span>Skip If Tardy</span></label>
+          <div class="setting-row"><label>Wait (s)</label><input type="number" data-cfg="BattleOrders.Wait" class="input-sm" value="10"></div>
+          <label class="textarea-label">Getters (one per line)</label>
+          <textarea class="textarea-cfg" data-cfg="BattleOrders.Getters" placeholder="Player names to wait for"></textarea>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.BoBarbHelper" data-subs="opts-bobarb"><span>BO Barb Helper</span></label>
+        <div id="opts-bobarb" class="sub-opts">
+          <div class="setting-row">
+            <label>Mode</label>
+            <select data-cfg="BoBarbHelper.Mode" style="flex: 1;">
+              <option value="-1" selected>Disabled</option>
+              <option value="0">Give BO</option>
+            </select>
+          </div>
+          <div class="setting-row"><label>Waypoint</label><input type="number" data-cfg="BoBarbHelper.Wp" class="input-sm" value="35"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Baal Leeching</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.AutoBaal" data-subs="opts-autobaal"><span>AutoBaal</span></label>
+        <div id="opts-autobaal" class="sub-opts">
+          <div class="setting-row">
+            <label>Find Shrine</label>
+            <select data-cfg="AutoBaal.FindShrine" style="flex: 1;">
+              <option value="0" selected>Disabled</option>
+              <option value="1">After Hot TP</option>
+              <option value="2">When Leader Found</option>
+            </select>
+          </div>
+          <label class="check"><input type="checkbox" data-cfg="AutoBaal.LongRangeSupport"><span>Long Range Support</span></label>
+          <div class="setting-row"><label>Leech X</label><input type="number" data-cfg="AutoBaal.LeechSpot.0" class="input-sm" value="15115"></div>
+          <div class="setting-row"><label>Leech Y</label><input type="number" data-cfg="AutoBaal.LeechSpot.1" class="input-sm" value="5050"></div>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.BaalHelper" data-subs="opts-baalhelper"><span>BaalHelper</span></label>
+        <div id="opts-baalhelper" class="sub-opts">
+          <div class="setting-row"><label>Wait (min)</label><input type="number" data-cfg="BaalHelper.Wait" class="input-sm" value="5"></div>
+          <label class="check"><input type="checkbox" data-cfg="BaalHelper.KillNihlathak"><span>Kill Nihlathak</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalHelper.FastChaos"><span>Fast Chaos</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalHelper.SoulQuit"><span>Soul Quit</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalHelper.DollQuit"><span>Doll Quit</span></label>
+          <div class="setting-row"><label>Hurt Baal %</label><input type="number" data-cfg="BaalHelper.HurtBaal" class="input-sm" value="0"></div>
+          <label class="check"><input type="checkbox" data-cfg="BaalHelper.KillBaal" checked><span>Kill Baal</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalHelper.SkipTP"><span>Skip TP</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.BaalAssistant" data-subs="opts-baalassist"><span>BaalAssistant</span></label>
+        <div id="opts-baalassist" class="sub-opts">
+          <div class="setting-row"><label>Wait (s)</label><input type="number" data-cfg="BaalAssistant.Wait" class="input-sm" value="120"></div>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.KillNihlathak"><span>Kill Nihlathak</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.FastChaos"><span>Fast Chaos</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.Helper" checked><span>Helper (Attack)</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.GetShrine"><span>Get Shrine</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.GetShrineWaitForHotTP"><span>Get Shrine After Hot TP</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.SkipTP"><span>Skip TP</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.WaitForSafeTP"><span>Wait for Safe TP</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.DollQuit"><span>Doll Quit</span></label>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.SoulQuit"><span>Soul Quit</span></label>
+          <div class="setting-row"><label>Hurt Baal %</label><input type="number" data-cfg="BaalAssistant.HurtBaal" class="input-sm" value="0"></div>
+          <label class="check"><input type="checkbox" data-cfg="BaalAssistant.KillBaal" checked><span>Kill Baal</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Diablo & Chaos</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.DiabloHelper" data-subs="opts-diablohelper"><span>DiabloHelper</span></label>
+        <div id="opts-diablohelper" class="sub-opts">
+          <div class="setting-row"><label>Wait (min)</label><input type="number" data-cfg="DiabloHelper.Wait" class="input-sm" value="5"></div>
+          <div class="setting-row"><label>Clear Type</label><input type="number" data-cfg="DiabloHelper.ClearType" class="input-sm" value="0"></div>
+          <div class="setting-row"><label>Clear Radius</label><input type="number" data-cfg="DiabloHelper.ClearRadius" class="input-sm" value="30"></div>
+          <label class="check"><input type="checkbox" data-cfg="DiabloHelper.Entrance" checked><span>Start Entrance</span></label>
+          <label class="check"><input type="checkbox" data-cfg="DiabloHelper.SkipTP"><span>Skip TP</span></label>
+          <label class="check"><input type="checkbox" data-cfg="DiabloHelper.SkipIfBaal"><span>Skip if Baal</span></label>
+          <label class="check"><input type="checkbox" data-cfg="DiabloHelper.OpenSeals"><span>Open Seals</span></label>
+          <label class="check"><input type="checkbox" data-cfg="DiabloHelper.SafePrecast" checked><span>Safe Precast</span></label>
+          <label class="check"><input type="checkbox" data-cfg="DiabloHelper.RecheckSeals"><span>Recheck Seals</span></label>
+          <div class="setting-row"><label>Hurt Diablo %</label><input type="number" data-cfg="DiabloHelper.HurtDiablo" class="input-sm" value="0"></div>
+          <div class="setting-row"><label>Seal Order</label><input type="text" data-cfg="DiabloHelper.SealOrder" class="input-full" value="vizier,seis,infector"></div>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.AutoChaos" data-subs="opts-autochaos"><span>AutoChaos</span></label>
+        <div id="opts-autochaos" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="AutoChaos.Taxi"><span>Taxi</span></label>
+          <label class="check"><input type="checkbox" data-cfg="AutoChaos.FindShrine"><span>Find Shrine</span></label>
+          <label class="check"><input type="checkbox" data-cfg="AutoChaos.UseShrine"><span>Use Shrine</span></label>
+          <label class="check"><input type="checkbox" data-cfg="AutoChaos.Leech"><span>Leech (Hide)</span></label>
+          <label class="check"><input type="checkbox" data-cfg="AutoChaos.Ranged"><span>Ranged</span></label>
+          <label class="check"><input type="checkbox" data-cfg="AutoChaos.BO"><span>BO Only</span></label>
+          <label class="check"><input type="checkbox" data-cfg="AutoChaos.SealPrecast"><span>Seal Precast</span></label>
+          <div class="setting-row"><label>Seal Delay (s)</label><input type="number" data-cfg="AutoChaos.SealDelay" class="input-sm" value="0"></div>
+          <div class="setting-row"><label>Diablo HP %</label><input type="number" data-cfg="AutoChaos.Diablo" class="input-sm" value="0"></div>
+          <div class="setting-row"><label>Seal Order</label><input type="text" data-cfg="AutoChaos.SealOrder" class="input-full" value="1,2,3"></div>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.SealLeecher"><span>SealLeecher</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Leeching</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.TristramLeech" data-subs="opts-tristramleech"><span>TristramLeech</span></label>
+        <div id="opts-tristramleech" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="TristramLeech.Helper"><span>Helper (Attack)</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.TravincalLeech" data-subs="opts-travleech"><span>TravincalLeech</span></label>
+        <div id="opts-travleech" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="TravincalLeech.Helper" checked><span>Helper (Attack)</span></label>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Wakka" data-subs="opts-wakka"><span>Wakka (Walking Leech)</span></label>
+        <div id="opts-wakka" class="sub-opts">
+          <div class="setting-row"><label>Wait (min)</label><input type="number" data-cfg="Wakka.Wait" class="input-sm" value="1"></div>
+          <div class="setting-row"><label>Stop at Level</label><input type="number" data-cfg="Wakka.StopAtLevel" class="input-sm" value="99"></div>
+          <label class="check"><input type="checkbox" data-cfg="Wakka.StopProfile"><span>Stop Profile</span></label>
+          <label class="check"><input type="checkbox" data-cfg="SkipIfBaal" checked><span>Skip if Baal</span></label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Scripts.MFHelper"><span>MFHelper</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Org Torch</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.OrgTorch" data-subs="opts-orgtorch"><span>Org Torch</span></label>
+        <div id="opts-orgtorch" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="OrgTorch.MakeTorch" checked><span>Make Torch</span></label>
+          <label class="check"><input type="checkbox" data-cfg="OrgTorch.WaitForKeys" checked><span>Wait for Keys</span></label>
+          <div class="setting-row"><label>Wait Timeout (min)</label><input type="number" data-cfg="OrgTorch.WaitTimeout" class="input-sm" value="15"></div>
+          <label class="check"><input type="checkbox" data-cfg="OrgTorch.UseSalvation" checked><span>Use Salvation</span></label>
+          <label class="check"><input type="checkbox" data-cfg="OrgTorch.GetFade"><span>Get Fade</span></label>
+          <div class="setting-row"><label>Taxi Char</label><input type="text" data-cfg="OrgTorch.TaxiChar" class="input-full" placeholder="Taxi character name"></div>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.OrgTorchHelper" data-subs="opts-torchhelper"><span>Org Torch Helper</span></label>
+        <div id="opts-torchhelper" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="OrgTorchHelper.Taxi"><span>Taxi</span></label>
+          <label class="check"><input type="checkbox" data-cfg="OrgTorchHelper.Helper" checked><span>Helper (Attack)</span></label>
+          <label class="check"><input type="checkbox" data-cfg="OrgTorchHelper.UseWalkPath"><span>Use Walk Path</span></label>
+          <label class="check"><input type="checkbox" data-cfg="OrgTorchHelper.SkipTp"><span>Skip TP</span></label>
+          <label class="check"><input type="checkbox" data-cfg="OrgTorchHelper.GetFade"><span>Get Fade</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Rushing</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Rusher" data-subs="opts-rusher"><span>Rusher</span></label>
+        <div id="opts-rusher" class="sub-opts">
+          <div class="setting-row"><label>Wait Players</label><input type="number" data-cfg="Rusher.WaitPlayerCount" class="input-sm" value="0"></div>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.Cain"><span>Cain Quest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.Radament"><span>Radament Quest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.LamEsen"><span>Lam Esen Quest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.Izual"><span>Izual Quest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.Shenk"><span>Shenk Quest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.Anya"><span>Anya Quest</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.HellAncients"><span>Hell Ancients</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rusher.GiveWps"><span>Give WPs</span></label>
+          <div class="setting-row"><label>Last Run</label><input type="text" data-cfg="Rusher.LastRun" class="input-full" placeholder="End after this run"></div>
+        </div>
+      </div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.Rushee" data-subs="opts-rushee"><span>Rushee</span></label>
+        <div id="opts-rushee" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="Rushee.Quester"><span>Quester</span></label>
+          <label class="check"><input type="checkbox" data-cfg="Rushee.Bumper"><span>Bumper</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Control Bot</div>
+      <div class="script-entry">
+        <label class="check"><input type="checkbox" data-cfg="Scripts.ControlBot" data-subs="opts-controlbot"><span>Control Bot</span></label>
+        <div id="opts-controlbot" class="sub-opts">
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.Bo" checked><span>Give BO</span></label>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.DropGold" checked><span>Drop Gold</span></label>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.Cows.MakeCows" checked><span>Make Cows</span></label>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.Cows.GetLeg" checked><span>Get Leg</span></label>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.Chant.Enchant" checked><span>Enchant</span></label>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.Chant.AutoEnchant" checked><span>Auto-Enchant</span></label>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.Wps.GiveWps" checked><span>Give WPs</span></label>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.Wps.SecurePortal" checked><span>Secure Portal</span></label>
+          <div class="note" style="margin: 4px 0;">Rush Quests:</div>
+          <div class="check-grid">
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Andy" checked><span>Andy</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Bloodraven" checked><span>Bloodraven</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Smith" checked><span>Smith</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Cain" checked><span>Cain</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Cube" checked><span>Cube</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Radament" checked><span>Radament</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Staff" checked><span>Staff</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Amulet" checked><span>Amulet</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Summoner" checked><span>Summoner</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Duriel" checked><span>Duriel</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Gidbinn" checked><span>Gidbinn</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.LamEsen" checked><span>Lam Esen</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Eye" checked><span>Eye</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Heart" checked><span>Heart</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Brain" checked><span>Brain</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Travincal" checked><span>Travincal</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Mephisto" checked><span>Mephisto</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Izual" checked><span>Izual</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Diablo" checked><span>Diablo</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Shenk" checked><span>Shenk</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Anya" checked><span>Anya</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Ancients" checked><span>Ancients</span></label>
+            <label class="check"><input type="checkbox" data-cfg="ControlBot.Rush.Baal" checked><span>Baal</span></label>
+          </div>
+          <div class="setting-row"><label>End Message</label><input type="text" data-cfg="ControlBot.EndMessage" class="input-full" placeholder="Message before quit"></div>
+          <div class="setting-row"><label>Game Length (min)</label><input type="number" data-cfg="ControlBot.GameLength" class="input-sm" value="20"></div>
+          <label class="check"><input type="checkbox" data-cfg="ControlBot.NGVoting" checked><span>NG Voting</span></label>
+          <div class="setting-row"><label>Vote Cooldown (min)</label><input type="number" data-cfg="ControlBot.NGVoteCooldown" class="input-sm" value="3"></div>
+          <div class="setting-row"><label>Min Game Length (min)</label><input type="number" data-cfg="ControlBot.MinGameLength" class="input-sm" value="3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: COMBAT -->
+  <div id="tab-combat" class="tab-panel">
+    <div class="section">
+      <div class="section-title">Attack Skills</div>
+      <div class="setting-row">
+        <label>Preattack</label>
+        <input type="number" data-cfg="AttackSkill.0" class="input-sm" value="-1">
+      </div>
+      <div class="setting-row">
+        <label>Primary Boss</label>
+        <input type="number" data-cfg="AttackSkill.1" class="input-sm" value="-1">
+      </div>
+      <div class="setting-row">
+        <label>Primary Boss U</label>
+        <input type="number" data-cfg="AttackSkill.2" class="input-sm" value="-1">
+      </div>
+      <div class="setting-row">
+        <label>Primary Other</label>
+        <input type="number" data-cfg="AttackSkill.3" class="input-sm" value="-1">
+      </div>
+      <div class="setting-row">
+        <label>Primary Other U</label>
+        <input type="number" data-cfg="AttackSkill.4" class="input-sm" value="-1">
+      </div>
+      <div class="setting-row">
+        <label>Secondary</label>
+        <input type="number" data-cfg="AttackSkill.5" class="input-sm" value="-1">
+      </div>
+      <div class="setting-row">
+        <label>Secondary U</label>
+        <input type="number" data-cfg="AttackSkill.6" class="input-sm" value="-1">
+      </div>
+      <div class="setting-row">
+        <label>Low Mana Timed</label>
+        <input type="number" data-cfg="LowManaSkill.0" class="input-sm" value="-1">
+      </div>
+      <div class="setting-row">
+        <label>Low Mana Untimed</label>
+        <input type="number" data-cfg="LowManaSkill.1" class="input-sm" value="-1">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Dodge & Movement</div>
+      <label class="check"><input type="checkbox" data-cfg="Dodge"><span>Dodge Monsters</span></label>
+      <div class="setting-row">
+        <label>Dodge Range</label>
+        <input type="number" data-cfg="DodgeRange" class="input-sm" value="15">
+      </div>
+      <div class="setting-row">
+        <label>Dodge HP %</label>
+        <input type="number" data-cfg="DodgeHP" class="input-sm" value="100">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="NoTele"><span>Restrict Teleport</span></label>
+      <label class="check"><input type="checkbox" data-cfg="TeleSwitch"><span>Switch on Long TP</span></label>
+      <label class="check"><input type="checkbox" data-cfg="TeleStomp"><span>Tele Stomp (Merc)</span></label>
+      <div class="setting-row">
+        <label>MF Switch %</label>
+        <input type="number" data-cfg="MFSwitchPercent" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Primary Slot</label>
+        <input type="number" data-cfg="PrimarySlot" class="input-sm" value="-1">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Clear & Skip</div>
+      <div class="setting-row">
+        <label>Clear Type</label>
+        <input type="number" data-cfg="ClearType" class="input-sm" value="15">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="BossPriority"><span>Boss Priority</span></label>
+      <div class="setting-row">
+        <label>Champion Bias</label>
+        <input type="number" data-cfg="ChampionBias" class="input-sm" value="60">
+      </div>
+      <div class="setting-row">
+        <label>Max Attack Count</label>
+        <input type="number" data-cfg="MaxAttackCount" class="input-sm" value="300">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="UseCta" checked><span>Use Call to Arms</span></label>
+      <label class="check"><input type="checkbox" data-cfg="ForcePrecast"><span>Force Precast</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Skip Immune</div>
+      <div class="check-grid-3">
+        <label class="check"><input type="checkbox" data-cfg="SkipImmune.fire"><span>Fire</span></label>
+        <label class="check"><input type="checkbox" data-cfg="SkipImmune.cold"><span>Cold</span></label>
+        <label class="check"><input type="checkbox" data-cfg="SkipImmune.lightning"><span>Lightning</span></label>
+        <label class="check"><input type="checkbox" data-cfg="SkipImmune.poison"><span>Poison</span></label>
+        <label class="check"><input type="checkbox" data-cfg="SkipImmune.physical"><span>Physical</span></label>
+        <label class="check"><input type="checkbox" data-cfg="SkipImmune.magic"><span>Magic</span></label>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Skip Enchant</div>
+      <label class="textarea-label">Enchantments to skip (one per line)</label>
+      <textarea class="textarea-cfg" data-cfg="SkipEnchant" placeholder="extra fast&#10;cursed&#10;mana burn"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Skip Aura</div>
+      <div class="check-grid">
+        <label class="check"><input type="checkbox" data-cfg="SkipAura.fanaticism"><span>Fanaticism</span></label>
+        <label class="check"><input type="checkbox" data-cfg="SkipAura.might"><span>Might</span></label>
+        <label class="check"><input type="checkbox" data-cfg="SkipAura.holyfire"><span>Holy Fire</span></label>
+        <label class="check"><input type="checkbox" data-cfg="SkipAura.blessedaim"><span>Blessed Aim</span></label>
+        <label class="check"><input type="checkbox" data-cfg="SkipAura.holyfreeze"><span>Holy Freeze</span></label>
+        <label class="check"><input type="checkbox" data-cfg="SkipAura.holyshock"><span>Holy Shock</span></label>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Skip Exception</div>
+      <label class="textarea-label">Always kill these (name or classid, one per line)</label>
+      <textarea class="textarea-cfg" data-cfg="SkipException" placeholder="Grand Vizier of Chaos&#10;Lord De Seis&#10;Infector of Souls"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Charge Cast</div>
+      <div class="setting-row">
+        <label>Skill ID</label>
+        <input type="number" data-cfg="ChargeCast.skill" class="input-sm" value="-1">
+      </div>
+      <div class="setting-row">
+        <label>Spectype</label>
+        <input type="text" data-cfg="ChargeCast.spectype" class="input-sm" value="0x7">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Custom Attack</div>
+      <label class="textarea-label">Monster: [timed, untimed] (one per line)</label>
+      <textarea class="textarea-cfg" data-cfg="CustomAttack" placeholder="Baal: 38, -1"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Clear Path</div>
+      <div class="setting-row">
+        <label>Spectype</label>
+        <input type="number" data-cfg="ClearPath" class="input-sm" value="0">
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: HEALTH -->
+  <div id="tab-health" class="tab-panel">
+    <div class="section">
+      <div class="section-title">Chicken (Quit %)</div>
+      <div class="setting-row">
+        <label>Life Chicken</label>
+        <input type="number" data-cfg="LifeChicken" class="input-sm" value="30">
+      </div>
+      <div class="setting-row">
+        <label>Mana Chicken</label>
+        <input type="number" data-cfg="ManaChicken" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Merc Chicken</label>
+        <input type="number" data-cfg="MercChicken" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Iron Golem Chicken</label>
+        <input type="number" data-cfg="IronGolemChicken" class="input-sm" value="30">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Ping Quit</div>
+      <div class="setting-row">
+        <label>Ping Threshold</label>
+        <input type="number" data-cfg="PingQuit.Ping" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Duration (s)</label>
+        <input type="number" data-cfg="PingQuit.Duration" class="input-sm" value="0">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Town Visit %</div>
+      <div class="setting-row">
+        <label>Town HP</label>
+        <input type="number" data-cfg="TownHP" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Town MP</label>
+        <input type="number" data-cfg="TownMP" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Heal HP</label>
+        <input type="number" data-cfg="HealHP" class="input-sm" value="50">
+      </div>
+      <div class="setting-row">
+        <label>Heal MP</label>
+        <input type="number" data-cfg="HealMP" class="input-sm" value="0">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="HealStatus"><span>Heal Status (Poison/Curse)</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Potion Use %</div>
+      <div class="setting-row">
+        <label>HP Potion</label>
+        <input type="number" data-cfg="UseHP" class="input-sm" value="75">
+      </div>
+      <div class="setting-row">
+        <label>Rejuv HP</label>
+        <input type="number" data-cfg="UseRejuvHP" class="input-sm" value="40">
+      </div>
+      <div class="setting-row">
+        <label>Mana Potion</label>
+        <input type="number" data-cfg="UseMP" class="input-sm" value="30">
+      </div>
+      <div class="setting-row">
+        <label>Rejuv Mana</label>
+        <input type="number" data-cfg="UseRejuvMP" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Merc HP Potion</label>
+        <input type="number" data-cfg="UseMercHP" class="input-sm" value="75">
+      </div>
+      <div class="setting-row">
+        <label>Merc Rejuv</label>
+        <input type="number" data-cfg="UseMercRejuv" class="input-sm" value="0">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Potion Buffers</div>
+      <div class="setting-row">
+        <label>HP Buffer</label>
+        <input type="number" data-cfg="HPBuffer" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>MP Buffer</label>
+        <input type="number" data-cfg="MPBuffer" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Rejuv Buffer</label>
+        <input type="number" data-cfg="RejuvBuffer" class="input-sm" value="0">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Belt Configuration</div>
+      <div class="note">Belt columns (left to right): hp, hp, mp, rv</div>
+      <div style="margin-top: 6px;">
+        <div class="belt-row">
+          <span class="belt-label">Col 1</span>
+          <select data-cfg="BeltColumn.0" style="flex: 1;">
+            <option value="">—</option>
+            <option value="hp">HP</option>
+            <option value="mp">Mana</option>
+            <option value="rv">Rejuv</option>
+          </select>
+          <input type="number" data-cfg="MinColumn.0" class="input-xs" value="3" placeholder="Min">
+        </div>
+        <div class="belt-row">
+          <span class="belt-label">Col 2</span>
+          <select data-cfg="BeltColumn.1" style="flex: 1;">
+            <option value="">—</option>
+            <option value="hp" selected>HP</option>
+            <option value="mp">Mana</option>
+            <option value="rv">Rejuv</option>
+          </select>
+          <input type="number" data-cfg="MinColumn.1" class="input-xs" value="3" placeholder="Min">
+        </div>
+        <div class="belt-row">
+          <span class="belt-label">Col 3</span>
+          <select data-cfg="BeltColumn.2" style="flex: 1;">
+            <option value="">—</option>
+            <option value="hp">HP</option>
+            <option value="mp" selected>Mana</option>
+            <option value="rv">Rejuv</option>
+          </select>
+          <input type="number" data-cfg="MinColumn.2" class="input-xs" value="3" placeholder="Min">
+        </div>
+        <div class="belt-row">
+          <span class="belt-label">Col 4</span>
+          <select data-cfg="BeltColumn.3" style="flex: 1;">
+            <option value="">—</option>
+            <option value="hp">HP</option>
+            <option value="mp">Mana</option>
+            <option value="rv" selected>Rejuv</option>
+          </select>
+          <input type="number" data-cfg="MinColumn.3" class="input-xs" value="0" placeholder="Min">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Special Potions</div>
+      <label class="check"><input type="checkbox" data-cfg="StackThawingPots.enabled"><span>Stack Thawing Pots</span></label>
+      <div class="setting-row">
+        <label>Quantity</label>
+        <input type="number" data-cfg="StackThawingPots.quantity" class="input-sm" value="12">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="StackAntidotePots.enabled"><span>Stack Antidote Pots</span></label>
+      <div class="setting-row">
+        <label>Quantity</label>
+        <input type="number" data-cfg="StackAntidotePots.quantity" class="input-sm" value="12">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="StackStaminaPots.enabled"><span>Stack Stamina Pots</span></label>
+      <div class="setting-row">
+        <label>Quantity</label>
+        <input type="number" data-cfg="StackStaminaPots.quantity" class="input-sm" value="12">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Wells</div>
+      <div class="setting-row">
+        <label>Use Well HP %</label>
+        <input type="number" data-cfg="UseWells.HpPercent" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Use Well Mana %</label>
+        <input type="number" data-cfg="UseWells.MpPercent" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Use Well Stamina %</label>
+        <input type="number" data-cfg="UseWells.StaminaPercent" class="input-sm" value="0">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="UseWells.StatusEffects"><span>Use Well for Status</span></label>
+    </div>
+  </div>
+
+  <!-- TAB 6: CLASS -->
+  <div id="tab-class" class="tab-panel">
+    <div class="section class-section" data-class="amazon">
+      <div class="section-title">Amazon</div>
+      <div class="setting-row">
+        <label>Lightning Fury Delay (s)</label>
+        <input type="number" data-cfg="LightningFuryDelay" class="input-sm" value="10">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="UseInnerSight" checked><span>Use Inner Sight</span></label>
+      <label class="check"><input type="checkbox" data-cfg="UseSlowMissiles" checked><span>Use Slow Missiles</span></label>
+      <label class="check"><input type="checkbox" data-cfg="UseDecoy" checked><span>Use Decoy</span></label>
+      <label class="check"><input type="checkbox" data-cfg="SummonValkyrie" checked><span>Summon Valkyrie</span></label>
+    </div>
+
+    <div class="section class-section" data-class="assassin">
+      <div class="section-title">Assassin</div>
+      <label class="check"><input type="checkbox" data-cfg="UseTraps" checked><span>Use Traps</span></label>
+      <div class="setting-row">
+        <label>Traps Skill IDs</label>
+        <input type="text" data-cfg="Traps" class="input-full" placeholder="271,271,271,276,276">
+      </div>
+      <div class="setting-row">
+        <label>Boss Traps Skill IDs</label>
+        <input type="text" data-cfg="BossTraps" class="input-full" placeholder="271,271,271,271,271">
+      </div>
+      <div class="setting-row">
+        <label>Summon Shadow</label>
+        <select data-cfg="SummonShadow">
+          <option value="0">None</option>
+          <option value="1">Warrior</option>
+          <option value="2" selected>Master</option>
+        </select>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="UseFade" checked><span>Use Fade</span></label>
+      <label class="check"><input type="checkbox" data-cfg="UseBoS"><span>Use Burst of Speed</span></label>
+      <label class="check"><input type="checkbox" data-cfg="UseVenom"><span>Use Venom</span></label>
+      <label class="check"><input type="checkbox" data-cfg="UseBladeShield"><span>Use Blade Shield</span></label>
+      <label class="check"><input type="checkbox" data-cfg="UseCloakofShadows" checked><span>Use Cloak of Shadows</span></label>
+      <label class="check"><input type="checkbox" data-cfg="AggressiveCloak"><span>Aggressive Cloak</span></label>
+    </div>
+
+    <div class="section class-section" data-class="barbarian">
+      <div class="section-title">Barbarian</div>
+      <label class="check"><input type="checkbox" data-cfg="FindItem"><span>Use Find Item</span></label>
+      <label class="check"><input type="checkbox" data-cfg="FastFindItem"><span>Fast Find Item</span></label>
+      <label class="check"><input type="checkbox" data-cfg="FindItemSwitch"><span>Switch for Find Item</span></label>
+      <label class="check"><input type="checkbox" data-cfg="UseWarcries" checked><span>Use Warcries</span></label>
+    </div>
+
+    <div class="section class-section" data-class="druid">
+      <div class="section-title">Druid</div>
+      <div class="setting-row">
+        <label>Wereform</label>
+        <select data-cfg="Wereform">
+          <option value="0" selected>None</option>
+          <option value="1">Werewolf</option>
+          <option value="2">Werebear</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>Summon Raven</label>
+        <input type="number" data-cfg="SummonRaven" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Summon Animal</label>
+        <select data-cfg="SummonAnimal">
+          <option value="0" selected>None</option>
+          <option value="1">Spirit Wolf</option>
+          <option value="2">Dire Wolf</option>
+          <option value="3">Grizzly</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>Summon Spirit</label>
+        <select data-cfg="SummonSpirit">
+          <option value="0">None</option>
+          <option value="1" selected>Oak Sage</option>
+          <option value="2">Heart of Wolverine</option>
+          <option value="3">Spirit of Barbs</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>Summon Vine</label>
+        <select data-cfg="SummonVine">
+          <option value="0">None</option>
+          <option value="1" selected>Poison Creeper</option>
+          <option value="2">Carrion Vine</option>
+          <option value="3">Solar Creeper</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section class-section" data-class="necromancer">
+      <div class="section-title">Necromancer</div>
+      <div class="setting-row">
+        <label>Golem Type</label>
+        <select data-cfg="Golem">
+          <option value="0" selected>None</option>
+          <option value="1">Clay</option>
+          <option value="2">Blood</option>
+          <option value="3">Fire</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>Skeletons</label>
+        <input type="number" data-cfg="Skeletons" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Skeleton Mages</label>
+        <input type="number" data-cfg="SkeletonMages" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Revives</label>
+        <input type="number" data-cfg="Revives" class="input-sm" value="0">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="ReviveUnstackable" checked><span>Revive Unstackable</span></label>
+      <label class="check"><input type="checkbox" data-cfg="ActiveSummon"><span>Active Summon</span></label>
+      <div class="setting-row">
+        <label>Poison Nova Delay (ms)</label>
+        <input type="number" data-cfg="PoisonNovaDelay" class="input-sm" value="2000">
+      </div>
+      <div class="setting-row">
+        <label>Boss Curse Skill</label>
+        <input type="number" data-cfg="Curse.0" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Other Curse Skill</label>
+        <input type="number" data-cfg="Curse.1" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Explode Corpses Skill</label>
+        <input type="number" data-cfg="ExplodeCorpses" class="input-sm" value="0">
+      </div>
+    </div>
+
+    <div class="section class-section" data-class="paladin">
+      <div class="section-title">Paladin</div>
+      <label class="check"><input type="checkbox" data-cfg="AvoidDolls"><span>Avoid Dolls</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Vigor" checked><span>Switch to Vigor</span></label>
+      <div class="setting-row">
+        <label>Running Aura</label>
+        <input type="number" data-cfg="RunningAura" class="input-sm" value="-1">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="Charge" checked><span>Use Charge</span></label>
+      <label class="check"><input type="checkbox" data-cfg="UseVigorOnLowStam"><span>Use Vigor on Low Stam</span></label>
+      <div class="setting-row">
+        <label>Redemption HP %</label>
+        <input type="number" data-cfg="Redemption.0" class="input-sm" value="50">
+      </div>
+      <div class="setting-row">
+        <label>Redemption Mana %</label>
+        <input type="number" data-cfg="Redemption.1" class="input-sm" value="50">
+      </div>
+    </div>
+
+    <div class="section class-section" data-class="sorceress">
+      <div class="section-title">Sorceress</div>
+      <div class="setting-row">
+        <label>Cast Static Until HP %</label>
+        <input type="number" data-cfg="CastStatic" class="input-sm" value="60">
+      </div>
+      <label class="textarea-label">Static List (monsters to static)</label>
+      <textarea class="textarea-cfg" data-cfg="StaticList" placeholder="Monster names or classids"></textarea>
+      <label class="check"><input type="checkbox" data-cfg="UseTelekinesis" checked><span>Use Telekinesis</span></label>
+      <label class="check"><input type="checkbox" data-cfg="UseEnergyShield"><span>Use Energy Shield</span></label>
+      <label class="check"><input type="checkbox" data-cfg="UseColdArmor" checked><span>Use Cold Armor</span></label>
+    </div>
+  </div>
+
+  <!-- TAB 7: ITEMS -->
+  <div id="tab-items" class="tab-panel">
+    <div class="section">
+      <div class="section-title">Picking</div>
+      <div class="setting-row">
+        <label>Pick Range</label>
+        <input type="number" data-cfg="PickRange" class="input-sm" value="40">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="FastPick"><span>Fast Pick (Between Attacks)</span></label>
+      <div class="setting-row">
+        <label>Fast Pick Range</label>
+        <input type="number" data-cfg="FastPickRange" class="input-sm" value="0">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="ManualPlayPick"><span>Manual Play Pick</span></label>
+      <label class="check"><input type="checkbox" data-cfg="MakeRoom" checked><span>Make Room in Inventory</span></label>
+      <label class="check"><input type="checkbox" data-cfg="ClearInvOnStart"><span>Clear Inv on Start</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Identification</div>
+      <label class="check"><input type="checkbox" data-cfg="CainID.Enable"><span>Identify at Cain</span></label>
+      <div class="setting-row">
+        <label>Cain Min Gold</label>
+        <input type="number" data-cfg="CainID.MinGold" class="input-sm" value="2500000">
+      </div>
+      <div class="setting-row">
+        <label>Cain Min Unids</label>
+        <input type="number" data-cfg="CainID.MinUnids" class="input-sm" value="3">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="FieldID.Enabled"><span>Field ID Enabled</span></label>
+      <label class="check"><input type="checkbox" data-cfg="FieldID.PacketID" checked><span>Field ID Packet Mode</span></label>
+      <div class="setting-row">
+        <label>Field ID Trigger %</label>
+        <input type="number" data-cfg="FieldID.UsedSpace" class="input-sm" value="80">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Gambling & Shopping</div>
+      <label class="check"><input type="checkbox" data-cfg="Gamble"><span>Enable Gambling</span></label>
+      <label class="textarea-label">Gamble Items (one per line)</label>
+      <textarea class="textarea-cfg" data-cfg="GambleItems" placeholder="Amulet&#10;Ring&#10;Circlet"></textarea>
+      <div class="setting-row">
+        <label>Gamble Start Gold</label>
+        <input type="number" data-cfg="GambleGoldStart" class="input-sm" value="1000000">
+      </div>
+      <div class="setting-row">
+        <label>Gamble Stop Gold</label>
+        <input type="number" data-cfg="GambleGoldStop" class="input-sm" value="500000">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="MiniShopBot"><span>Scan NPC Shops</span></label>
+      <label class="check"><input type="checkbox" data-cfg="PacketShopping"><span>Packet Shopping</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Cubing</div>
+      <label class="check"><input type="checkbox" data-cfg="Cubing"><span>Enable Cubing</span></label>
+      <label class="check"><input type="checkbox" data-cfg="ShowCubingInfo" checked><span>Show Cubing Info</span></label>
+      <label class="check"><input type="checkbox" data-cfg="CubeRepair"><span>Cube Repair</span></label>
+      <div class="setting-row">
+        <label>Repair Percent</label>
+        <input type="number" data-cfg="RepairPercent" class="input-sm" value="40">
+      </div>
+      <label class="textarea-label">Recipes (one per line)</label>
+      <textarea class="textarea-cfg" data-cfg="Recipes" placeholder="Recipe names"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Runewords</div>
+      <label class="check"><input type="checkbox" data-cfg="MakeRunewords" checked><span>Make Runewords</span></label>
+      <label class="check"><input type="checkbox" data-cfg="LadderOverride"><span>Ladder Override</span></label>
+      <label class="textarea-label">Runewords (one per line)</label>
+      <textarea class="textarea-cfg" data-cfg="Runewords" placeholder="Runeword definitions"></textarea>
+      <label class="textarea-label">Keep Runewords (pickit format)</label>
+      <textarea class="textarea-cfg" data-cfg="KeepRunewords" placeholder="[type] == polearm # [itemfasterattackrate] >= 250"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Pickit Files</div>
+      <label class="textarea-label">Pickit Files (one per line)</label>
+      <textarea class="textarea-cfg" data-cfg="PickitFiles" placeholder="kolton.nip&#10;lld.nip"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Inventory Grid (0=locked, 1=free)</div>
+      <div id="inv-grid" class="inv-grid"></div>
+      <div class="inv-legend">
+        <span><span class="inv-legend-box" style="background: #e04040;"></span>Locked (Keep)</span>
+        <span><span class="inv-legend-box" style="background: #2a4a2a;"></span>Free (Drop/Stash)</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Sorting</div>
+      <label class="check"><input type="checkbox" data-cfg="SortSettings.SortInventory" checked><span>Sort Inventory</span></label>
+      <label class="check"><input type="checkbox" data-cfg="SortSettings.SortStash" checked><span>Sort Stash</span></label>
+      <label class="check"><input type="checkbox" data-cfg="SortSettings.PlugYStash"><span>PlugY Stash</span></label>
+      <label class="check"><input type="checkbox" data-cfg="SortSettings.PrioritySorting" checked><span>Priority Sorting</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Stashing</div>
+      <div class="setting-row">
+        <label>Stash Gold</label>
+        <input type="number" data-cfg="StashGold" class="input-sm" value="100000">
+      </div>
+      <div class="setting-row">
+        <label>Low Gold Threshold</label>
+        <input type="number" data-cfg="LowGold" class="input-sm" value="0">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Open Chests</div>
+      <label class="check"><input type="checkbox" data-cfg="OpenChests.Enabled"><span>Open Chests</span></label>
+      <div class="setting-row">
+        <label>Chest Range</label>
+        <input type="number" data-cfg="OpenChests.Range" class="input-sm" value="15">
+      </div>
+      <label class="textarea-label">Chest Types (one per line)</label>
+      <textarea class="textarea-cfg" data-cfg="OpenChests.Types" placeholder="chest&#10;chest3&#10;armorstand"></textarea>
+    </div>
+  </div>
+
+  <!-- TAB 8: SOCIAL -->
+  <div id="tab-social" class="tab-panel">
+    <div class="section">
+      <div class="section-title">Chat</div>
+      <label class="check"><input type="checkbox" data-cfg="Silence"><span>Silence (No Chat)</span></label>
+      <label class="check"><input type="checkbox" data-cfg="LocalChat.Enabled"><span>Local Chat</span></label>
+      <div class="setting-row">
+        <label>Local Chat Mode</label>
+        <select data-cfg="LocalChat.Mode">
+          <option value="0">Disabled</option>
+          <option value="1" selected>Say</option>
+          <option value="2">All</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Advertising</div>
+      <label class="check"><input type="checkbox" data-cfg="Advertise.Enabled"><span>Enable Advertising</span></label>
+      <div class="setting-row">
+        <label>Advert Message</label>
+        <input type="text" data-cfg="Advertise.Message" class="input-full" placeholder="Message to advertise">
+      </div>
+      <div class="two-col">
+        <div class="setting-row">
+          <label class="narrow">Min Interval (s)</label>
+          <input type="number" data-cfg="Advertise.Interval.0" class="input-sm" value="30">
+        </div>
+        <div class="setting-row">
+          <label class="narrow">Max Interval (s)</label>
+          <input type="number" data-cfg="Advertise.Interval.1" class="input-sm" value="60">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Party</div>
+      <div class="setting-row">
+        <label>Public Mode</label>
+        <select data-cfg="PublicMode">
+          <option value="0" selected>Off</option>
+          <option value="1">Invite & Accept</option>
+          <option value="2">Accept Only</option>
+          <option value="3">Invite Only</option>
+        </select>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="PartyAfterScript"><span>Party After Script</span></label>
+      <label class="check"><input type="checkbox" data-cfg="ShitList"><span>Blacklist Hostile</span></label>
+      <label class="check"><input type="checkbox" data-cfg="UnpartyShitlisted"><span>Unparty if Shitlisted</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Messages</div>
+      <label class="textarea-label">Greetings (one per line)</label>
+      <textarea class="textarea-cfg" data-cfg="Greetings" placeholder="Hello $name (level $level $class)"></textarea>
+      <label class="textarea-label">Death Messages (one per line)</label>
+      <textarea class="textarea-cfg" data-cfg="DeathMessages" placeholder="Watch out for that $killer, $name!"></textarea>
+      <label class="textarea-label">Congratulations (one per line)</label>
+      <textarea class="textarea-cfg" data-cfg="Congratulations" placeholder="Congrats on level $level, $name!"></textarea>
+      <label class="textarea-label">Last Message</label>
+      <input type="text" data-cfg="LastMessage" class="input-full" placeholder="Message before quit">
+    </div>
+
+    <div class="section">
+      <div class="section-title">Anti-Hostile</div>
+      <label class="check"><input type="checkbox" data-cfg="AntiHostile"><span>Anti-Hostile Mode</span></label>
+      <label class="check"><input type="checkbox" data-cfg="RandomPrecast"><span>Random Precast (Anti-PK)</span></label>
+      <div class="setting-row">
+        <label>Hostile Action</label>
+        <select data-cfg="HostileAction">
+          <option value="0" selected>Quit Immediately</option>
+          <option value="1">Quit on Sight</option>
+          <option value="2">Attack</option>
+        </select>
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="TownOnHostile"><span>Town on Hostile</span></label>
+      <label class="check"><input type="checkbox" data-cfg="ViperCheck"><span>Quit on Tomb Vipers</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">DClone</div>
+      <label class="check"><input type="checkbox" data-cfg="StopOnDClone" checked><span>Stop on DClone</span></label>
+      <label class="check"><input type="checkbox" data-cfg="KillDclone"><span>Kill Diablo Clone</span></label>
+      <label class="check"><input type="checkbox" data-cfg="DCloneQuit"><span>Quit on DClone</span></label>
+      <div class="setting-row">
+        <label>SoJ Wait (min)</label>
+        <input type="number" data-cfg="SoJWaitTime" class="input-sm" value="5">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Shrines</div>
+      <label class="textarea-label">Scan Shrines (shrine types)</label>
+      <textarea class="textarea-cfg" data-cfg="ScanShrines" placeholder="Shrine type names"></textarea>
+      <label class="check"><input type="checkbox" data-cfg="AutoShriner"><span>Auto-Use Shrines</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Auto Mule</div>
+      <label class="textarea-label">Mule Trigger (items)</label>
+      <textarea class="textarea-cfg" data-cfg="AutoMule.Trigger" placeholder="Item names or classids"></textarea>
+      <label class="textarea-label">Mule Force (items)</label>
+      <textarea class="textarea-cfg" data-cfg="AutoMule.Force" placeholder="Items to always mule"></textarea>
+      <label class="textarea-label">Mule Exclude (items)</label>
+      <textarea class="textarea-cfg" data-cfg="AutoMule.Exclude" placeholder="Items to never mule"></textarea>
+    </div>
+  </div>
+
+  <!-- TAB 9: GENERAL -->
+  <div id="tab-general" class="tab-panel">
+    <div class="section">
+      <div class="section-title">Timing</div>
+      <div class="setting-row">
+        <label>Start Delay (s)</label>
+        <input type="number" data-cfg="StartDelay" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Pick Delay (s)</label>
+        <input type="number" data-cfg="PickDelay" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Area Delay (s)</label>
+        <input type="number" data-cfg="AreaDelay" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Min Game Time (s)</label>
+        <input type="number" data-cfg="MinGameTime" class="input-sm" value="60">
+      </div>
+      <div class="setting-row">
+        <label>Max Game Time (m)</label>
+        <input type="number" data-cfg="MaxGameTime" class="input-sm" value="0">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Town & Mercenary</div>
+      <label class="check"><input type="checkbox" data-cfg="UseMerc" checked><span>Use Mercenary</span></label>
+      <label class="check"><input type="checkbox" data-cfg="MercWatch"><span>Instant Merc Revive</span></label>
+      <label class="check"><input type="checkbox" data-cfg="TownCheck"><span>Go to Town if Out of Pots</span></label>
+      <label class="check"><input type="checkbox" data-cfg="AutoMap"><span>Open AutoMap</span></label>
+      <label class="check"><input type="checkbox" data-cfg="AnnounceGameTimeRemaing"><span>Announce Time Remaining</span></label>
+      <label class="check"><input type="checkbox" data-cfg="UnpartyForMinGameTimeWait"><span>Unparty During Min Wait</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Performance (FastMod)</div>
+      <div class="setting-row">
+        <label>FCR (Faster Cast Rate %)</label>
+        <input type="number" data-cfg="FCR" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>FHR (Faster Hit Recovery %)</label>
+        <input type="number" data-cfg="FHR" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>FBR (Faster Block Rate %)</label>
+        <input type="number" data-cfg="FBR" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>IAS (Increased Attack Speed %)</label>
+        <input type="number" data-cfg="IAS" class="input-sm" value="0">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="WaypointMenu" checked><span>Waypoint Menu</span></label>
+      <div class="setting-row">
+        <label>Packet Casting</label>
+        <select data-cfg="PacketCasting">
+          <option value="0">Off</option>
+          <option value="1">Teleport</option>
+          <option value="2">Full</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Session Scheduling</div>
+      <div class="setting-row">
+        <label>Max Daily Hours</label>
+        <input type="number" data-cfg="session.max_daily_hours" class="input-sm" value="8" min="1" max="24" step="0.5">
+      </div>
+      <div class="setting-row">
+        <label>Session Min (min)</label>
+        <input type="number" data-cfg="session.session_min_minutes" class="input-sm" value="60" min="5">
+      </div>
+      <div class="setting-row">
+        <label>Session Max (min)</label>
+        <input type="number" data-cfg="session.session_max_minutes" class="input-sm" value="180" min="10">
+      </div>
+      <div class="setting-row">
+        <label>Break Min (min)</label>
+        <input type="number" data-cfg="session.break_min_minutes" class="input-sm" value="30" min="1">
+      </div>
+      <div class="setting-row">
+        <label>Break Max (min)</label>
+        <input type="number" data-cfg="session.break_max_minutes" class="input-sm" value="120" min="1">
+      </div>
+      <div class="setting-row">
+        <label>Start Hour (0–23)</label>
+        <input type="number" data-cfg="session.allowed_start_hour" class="input-sm" value="9" min="0" max="23">
+      </div>
+      <div class="setting-row">
+        <label>End Hour (0–23)</label>
+        <input type="number" data-cfg="session.allowed_end_hour" class="input-sm" value="23" min="0" max="23">
+      </div>
+      <div class="setting-row">
+        <label>Day Off (0=Sun, 6=Sat)</label>
+        <input type="number" data-cfg="session.day_off" class="input-sm" value="" min="0" max="6" placeholder="none">
+      </div>
+      <div class="setting-row">
+        <label>Ladder Start Delay (h)</label>
+        <input type="number" data-cfg="session.ladder_start_delay_hours" class="input-sm" value="48" min="0">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Humanization</div>
+      <div class="setting-row">
+        <label>Reaction Mean (ms)</label>
+        <input type="number" data-cfg="humanization.reaction_mean_ms" class="input-sm" value="280" min="50" max="1000">
+      </div>
+      <div class="setting-row">
+        <label>Reaction StdDev (ms)</label>
+        <input type="number" data-cfg="humanization.reaction_stddev_ms" class="input-sm" value="90" min="10" max="400">
+      </div>
+      <div class="setting-row">
+        <label>Aim Variance (px)</label>
+        <input type="number" data-cfg="humanization.aim_variance_px" class="input-sm" value="15" min="0" max="50">
+      </div>
+      <div class="setting-row">
+        <label>Potion Forget Rate</label>
+        <input type="number" data-cfg="humanization.potion_forget_rate" class="input-sm" value="0.04" min="0" max="0.3" step="0.01">
+      </div>
+      <div class="setting-row">
+        <label>Skill Miss Rate</label>
+        <input type="number" data-cfg="humanization.skill_miss_rate" class="input-sm" value="0.06" min="0" max="0.3" step="0.01">
+      </div>
+      <div class="setting-row">
+        <label>Path Deviate Rate</label>
+        <input type="number" data-cfg="humanization.path_deviate_rate" class="input-sm" value="0.08" min="0" max="0.5" step="0.01">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Logging</div>
+      <label class="check"><input type="checkbox" data-cfg="ItemInfo"><span>Log Item Info</span></label>
+      <div class="textarea-label">Item Info Quality (quality levels)</div>
+      <textarea class="textarea-cfg" data-cfg="ItemInfoQuality" placeholder="6,7,8"></textarea>
+      <label class="check"><input type="checkbox" data-cfg="LogKeys"><span>Log Keys</span></label>
+      <label class="check"><input type="checkbox" data-cfg="LogOrgans" checked><span>Log Organs</span></label>
+      <label class="check"><input type="checkbox" data-cfg="LogLowRunes"><span>Log Low Runes (El-Dol)</span></label>
+      <label class="check"><input type="checkbox" data-cfg="LogMiddleRunes"><span>Log Middle Runes (Hel-Mal)</span></label>
+      <label class="check"><input type="checkbox" data-cfg="LogHighRunes" checked><span>Log High Runes (Ist-Zod)</span></label>
+      <label class="check"><input type="checkbox" data-cfg="LogLowGems"><span>Log Low Gems</span></label>
+      <label class="check"><input type="checkbox" data-cfg="LogHighGems"><span>Log High Gems</span></label>
+      <label class="check"><input type="checkbox" data-cfg="LogExperience"><span>Log Experience</span></label>
+      <label class="textarea-label">Skip Logging (items)</label>
+      <textarea class="textarea-cfg" data-cfg="SkipLogging" placeholder="Item codes or classids"></textarea>
+    </div>
+  </div>
+
+  <!-- TAB 10: ADVANCED -->
+  <div id="tab-advanced" class="tab-panel">
+    <div class="section">
+      <div class="section-title">AutoSkill</div>
+      <label class="check"><input type="checkbox" data-cfg="AutoSkill.Enabled"><span>Enable AutoSkill</span></label>
+      <div class="setting-row">
+        <label>Save Skill Points</label>
+        <input type="number" data-cfg="AutoSkill.Save" class="input-sm" value="0">
+      </div>
+      <label class="textarea-label">Skill Build (skill id, count, satisfy)</label>
+      <textarea class="textarea-cfg" data-cfg="AutoSkill.Build" placeholder="[skillid, count, satisfy]&#10;..."></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-title">AutoStat</div>
+      <label class="check"><input type="checkbox" data-cfg="AutoStat.Enabled"><span>Enable AutoStat</span></label>
+      <div class="setting-row">
+        <label>Save Stat Points</label>
+        <input type="number" data-cfg="AutoStat.Save" class="input-sm" value="0">
+      </div>
+      <div class="setting-row">
+        <label>Block Chance Target</label>
+        <input type="number" data-cfg="AutoStat.BlockChance" class="input-sm" value="0">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="AutoStat.UseBulk" checked><span>Bulk Stat Spending</span></label>
+      <label class="textarea-label">Stat Build (stat type, amount)</label>
+      <textarea class="textarea-cfg" data-cfg="AutoStat.Build" placeholder="[stattype, stat]&#10;..."></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-title">AutoBuild</div>
+      <label class="check"><input type="checkbox" data-cfg="AutoBuild.Enabled"><span>Enable AutoBuild</span></label>
+      <div class="setting-row">
+        <label>Template</label>
+        <input type="text" data-cfg="AutoBuild.Template" class="input-full" placeholder="Build template name">
+      </div>
+      <label class="check"><input type="checkbox" data-cfg="AutoBuild.Verbose" checked><span>Verbose Output</span></label>
+      <label class="check"><input type="checkbox" data-cfg="AutoBuild.DebugMode" checked><span>Debug Mode</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Debug & Experimental</div>
+      <label class="check"><input type="checkbox" data-cfg="DebugMode.Path"><span>Debug Path</span></label>
+      <label class="check"><input type="checkbox" data-cfg="DebugMode.Stack"><span>Debug Stack</span></label>
+      <label class="check"><input type="checkbox" data-cfg="DebugMode.Memory"><span>Debug Memory</span></label>
+      <label class="check"><input type="checkbox" data-cfg="DebugMode.Skill"><span>Debug Skill</span></label>
+      <label class="check"><input type="checkbox" data-cfg="DebugMode.Town"><span>Debug Town</span></label>
+      <label class="check"><input type="checkbox" data-cfg="DebugMode.Shrines"><span>Debug Shrines</span></label>
+      <label class="check"><input type="checkbox" data-cfg="Debug"><span>General Debug</span></label>
+      <label class="check"><input type="checkbox" data-cfg="FastParty"><span>Fast Party</span></label>
+      <label class="check"><input type="checkbox" data-cfg="AutoEquip"><span>Auto Equip</span></label>
+      <label class="check"><input type="checkbox" data-cfg="UseExperimentalAvoid"><span>Experimental Avoid</span></label>
+      <label class="check"><input type="checkbox" data-cfg="UseExperimentalClearLevel"><span>Experimental Clear Level</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Dropped Items</div>
+      <label class="check"><input type="checkbox" data-cfg="DroppedItemsAnnounce.Enable"><span>Announce Dropped Items</span></label>
+      <label class="textarea-label">Announce Quality (quality levels)</label>
+      <textarea class="textarea-cfg" data-cfg="DroppedItemsAnnounce.Quality" placeholder="Quality levels"></textarea>
+      <label class="check"><input type="checkbox" data-cfg="DroppedItemsAnnounce.LogToOOG"><span>Log OOG</span></label>
+      <label class="textarea-label">OOG Quality</label>
+      <textarea class="textarea-cfg" data-cfg="DroppedItemsAnnounce.OOGQuality" placeholder="Quality levels"></textarea>
+    </div>
+  </div>
+
+  <!-- TAB 11: MAP -->
+  <div id="tab-map" class="tab-panel">
+    <div class="section">
+      <div class="section-title">Map Overlay</div>
+      <label class="check"><input type="checkbox" id="map-own-filter" data-cfg="MapMode.UseOwnItemFilter"><span>Use Own Item Filter</span></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Cache Statistics</div>
+      <button id="btn-cache-stats" class="btn">Get Cache Stats</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="popup.js"></script>
+</body>
+</html>

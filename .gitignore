@@ -1,0 +1,33 @@
+# Build artifacts
+botter/target/
+maphack/target/
+*.exe
+*.dll
+# Kolbot ships pre-built binaries (required to run)
+!kolbot/D2Bot.exe
+!kolbot/d2bs/D2BS.dll
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Archives (dev files, not for release)
+*.tar.gz
+*.zip
+extracted/
+
+# Runtime data
+*.yaml
+!botter/configs/*.yaml
+!botter/deploy/default_config.yaml
