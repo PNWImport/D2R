@@ -89,6 +89,30 @@ fn wp_entry_coords(_act_idx: usize, entry_idx: usize) -> (i32, i32) {
     (WP_LIST_X, WP_LIST_Y_START + entry_idx as i32 * WP_LIST_Y_STEP)
 }
 
+/// Where the waypoint object sits in each act's town (screen coords at 800x600).
+/// Used by execute_waypoint to walk to the WP before trying to open it.
+fn town_wp_object_position(act: u8) -> (i32, i32) {
+    match act {
+        1 => (120, 280),  // Rogue Encampment — WP near camp exit
+        2 => (264, 288),  // Lut Gholein — WP south of town
+        3 => (229, 306),  // Kurast Docks — WP south of docks
+        4 => (158, 277),  // Pandemonium Fortress — WP inside fortress
+        _ => (210, 172),  // Harrogath — WP near Malah
+    }
+}
+
+/// Returns true if this NPC requires clicking a travel dialog option
+/// rather than pressing Esc (e.g., Warriv to Act 2, Tyrael to Act 5).
+fn is_travel_npc(npc: &str) -> bool {
+    matches!(npc, "Warriv" | "Meshif" | "Jerhyn")
+}
+
+/// Screen position of the "Travel" button in a travel NPC's dialog.
+/// These dialogs have a "Travel to <Act>" button near screen center.
+fn travel_button_position() -> (i32, i32) {
+    (400, 335) // Travel option sits in lower half of dialog box
+}
+
 // ═══════════════════════════════════════════════════════════════
 // NPC NAME → SCREEN POSITION LOOKUP
 // ═══════════════════════════════════════════════════════════════
@@ -349,13 +373,19 @@ impl ScriptExecutor {
 
     // ─── Step Implementations ───────────────────────────────────
 
-    /// UseWaypoint: open WP panel → click act tab → click destination → wait for load.
+    /// UseWaypoint: walk to WP object → open panel → click act tab → click destination → wait for load.
+    ///
+    /// Phase 0: Walk toward the town waypoint object (1.2s)
+    /// Phase 1: Open the WP panel (click WP object, retry until waypoint_menu_open)
+    /// Phase 2: Click act tab (if needed — already on correct act, may be a no-op)
+    /// Phase 3: Click destination entry
+    /// Phase 4: Wait for loading screen + area transition
     fn execute_waypoint(
         &mut self,
         state: &FrameState,
         destination: &str,
     ) -> Option<Decision> {
-        // Resolve WP panel coordinates on first entry
+        // Resolve WP panel coordinates on first entry (phase 0, tick 1)
         if self.wp_phase == 0 && self.sub_step_ticks == 1 {
             if let Some((act_idx, entry_idx)) = wp_panel_location(destination) {
                 self.wp_act_idx = act_idx;
@@ -369,74 +399,94 @@ impl ScriptExecutor {
 
         match self.wp_phase {
             0 => {
-                // Step 0: Open waypoint (press 'w' which is the WP hotkey in D2R)
-                // If WP menu is already open, skip to tab selection
+                // Phase 0: Walk toward the town WP object so we're in range to click it.
+                // Uses state.current_act to find the waypoint's position in this town.
+                let (wx, wy) = town_wp_object_position(state.current_act);
+
+                // If WP is already open, skip straight to tab selection
                 if state.waypoint_menu_open {
-                    self.wp_phase = 1;
+                    self.wp_phase = 2;
                     self.sub_step_ticks = 0;
                     return self.execute_waypoint(state, destination);
                 }
 
-                // Timeout: if we can't open WP in 5 seconds, we're probably
-                // not near one. Walk toward town WP area first.
-                if self.sub_step_ticks > 125 {
-                    // 5s at 25Hz
-                    tracing::warn!("WP open timeout — walking toward WP area");
-                    self.sub_step_ticks = 0;
-                    // Click center-bottom of screen to move toward WP
-                    return Some(self.jittered_click(400, 350, "wp: walking toward waypoint"));
+                if self.sub_step_ticks < 30 {
+                    // ~1.2s of walking toward the WP position
+                    return Some(Decision {
+                        action: Action::MoveTo {
+                            screen_x: wx + self.rng.gen_range(-8..8),
+                            screen_y: wy + self.rng.gen_range(-8..8),
+                        },
+                        delay: Duration::from_millis(self.rng.gen_range(100..200)),
+                        priority: 2,
+                        reason: "wp: walking to waypoint object",
+                    });
                 }
 
-                // Alternate between pressing 'w' and clicking near WP area
-                if self.sub_step_ticks % 25 == 1 {
-                    // Every second: try clicking an in-world waypoint object
-                    // Waypoints are usually near screen center in town
-                    Some(self.jittered_click(400, 300, "wp: clicking waypoint object"))
-                } else if self.sub_step_ticks % 25 == 13 {
-                    Some(Decision {
-                        action: Action::Wait,
-                        delay: Duration::from_millis(200),
-                        priority: 2,
-                        reason: "wp: waiting for menu to open",
-                    })
-                } else {
-                    Some(self.wait("wp: waiting"))
-                }
+                // Now in range — transition to open phase
+                self.wp_phase = 1;
+                self.sub_step_ticks = 0;
+                self.execute_waypoint(state, destination)
             }
             1 => {
-                // Step 1: Click act tab
-                if self.sub_step_ticks < 3 {
+                // Phase 1: Click WP object to open the panel. Retry every second.
+                if state.waypoint_menu_open {
+                    self.wp_phase = 2;
+                    self.sub_step_ticks = 0;
+                    return self.execute_waypoint(state, destination);
+                }
+
+                // Timeout: 6s. If WP still doesn't open, go back to walking phase.
+                if self.sub_step_ticks > 150 {
+                    tracing::warn!("WP open timeout — re-approaching WP object");
+                    self.wp_phase = 0;
+                    self.sub_step_ticks = 0;
+                    return self.execute_waypoint(state, destination);
+                }
+
+                let (wx, wy) = town_wp_object_position(state.current_act);
+                if self.sub_step_ticks % 20 == 1 {
+                    // Click the WP every ~0.8s
+                    Some(self.jittered_click(wx, wy, "wp: clicking waypoint object"))
+                } else {
+                    Some(self.wait("wp: waiting for panel to open"))
+                }
+            }
+            2 => {
+                // Phase 2: Click the correct act tab.
+                // If the WP panel is already showing our act, this is just cosmetic.
+                if self.sub_step_ticks < 5 {
                     return Some(self.wait("wp: settling before tab click"));
                 }
                 let (tx, ty) = WP_ACT_TABS[self.wp_act_idx];
-                self.wp_phase = 2;
+                self.wp_phase = 3;
                 self.sub_step_ticks = 0;
                 Some(self.jittered_click(tx, ty, "wp: clicking act tab"))
             }
-            2 => {
-                // Step 2: Click destination entry
+            3 => {
+                // Phase 3: Click the destination entry
                 if self.sub_step_ticks < 5 {
                     return Some(self.wait("wp: settling before entry click"));
                 }
                 let (ex, ey) = wp_entry_coords(self.wp_act_idx, self.wp_entry_idx);
-                self.wp_phase = 3;
+                self.wp_phase = 4;
                 self.sub_step_ticks = 0;
-                Some(self.jittered_click(ex, ey, "wp: clicking destination"))
+                Some(self.jittered_click(ex, ey, "wp: clicking destination entry"))
             }
             _ => {
-                // Step 3: Wait for loading screen → area transition
+                // Phase 4: Wait for loading screen → area transition
                 if state.loading_screen {
-                    return Some(self.wait("wp: loading"));
+                    return Some(self.wait("wp: on loading screen"));
                 }
-                // If loading screen ended and we're in a new area, done
+                // Loading screen ended and enough time has passed — arrived
                 if !state.loading_screen && self.sub_step_ticks > 10 {
                     self.wp_phase = 0;
                     self.advance();
                     return Some(self.wait("wp: arrived at destination"));
                 }
-                // Timeout after 15 seconds
+                // Hard timeout: 15s
                 if self.sub_step_ticks > 375 {
-                    tracing::warn!("WP travel timeout — advancing anyway");
+                    tracing::warn!("WP travel timeout for '{}' — advancing", destination);
                     self.wp_phase = 0;
                     self.advance();
                 }
@@ -754,6 +804,10 @@ impl ScriptExecutor {
     }
 
     /// TalkToNpc: walk to NPC position → click to interact → wait for dialog.
+    ///
+    /// For "travel" NPCs (Warriv, Meshif, Jerhyn) the dialog has a travel button
+    /// that must be clicked — pressing Esc just dismisses without traveling.
+    /// For regular NPCs (quest reward, Cain ID, etc.) Esc is fine.
     fn execute_talk_to_npc(
         &mut self,
         state: &FrameState,
@@ -761,6 +815,7 @@ impl ScriptExecutor {
         act: u8,
     ) -> Option<Decision> {
         let npc_pos = npc_position(npc, act);
+        let travel = is_travel_npc(npc);
 
         match self.sub_step {
             SubStep::Approaching => {
@@ -780,7 +835,7 @@ impl ScriptExecutor {
                 })
             }
             SubStep::Interacting => {
-                // Click NPC to interact
+                // Click NPC to open dialog
                 if self.sub_step_ticks > 15 {
                     self.sub_step = SubStep::WaitingForConfirm;
                     self.sub_step_ticks = 0;
@@ -788,26 +843,44 @@ impl ScriptExecutor {
                 Some(self.jittered_click(npc_pos.0, npc_pos.1, "npc: clicking NPC"))
             }
             SubStep::WaitingForConfirm => {
-                // Wait for dialog to open, then close it
                 if state.npc_dialog_open {
-                    // Click a dialog option or press Esc to close
                     self.advance();
-                    return Some(Decision {
-                        action: Action::CastSkill {
-                            key: '\x1b',
-                            screen_x: 400,
-                            screen_y: 300,
-                        },
-                        delay: Duration::from_millis(self.rng.gen_range(300..600)),
-                        priority: 3,
-                        reason: "npc: closing dialog",
-                    });
+                    if travel {
+                        // Travel NPCs: click the "Travel to <next act>" button.
+                        // The travel button sits in the lower half of the dialog box.
+                        let (bx, by) = travel_button_position();
+                        return Some(Decision {
+                            action: Action::PickupLoot {
+                                screen_x: bx + self.rng.gen_range(-10..10),
+                                screen_y: by + self.rng.gen_range(-5..5),
+                            },
+                            delay: Duration::from_millis(self.rng.gen_range(400..700)),
+                            priority: 3,
+                            reason: "npc: clicking travel button",
+                        });
+                    } else {
+                        // Regular NPC: quest reward, Cain ID, etc. — just close dialog.
+                        return Some(Decision {
+                            action: Action::CastSkill {
+                                key: '\x1b',
+                                screen_x: 400,
+                                screen_y: 300,
+                            },
+                            delay: Duration::from_millis(self.rng.gen_range(300..600)),
+                            priority: 3,
+                            reason: "npc: closing dialog",
+                        });
+                    }
                 }
                 // Timeout: 5s
                 if self.sub_step_ticks > 125 {
                     tracing::warn!("NPC dialog timeout for '{}' — advancing", npc);
                     self.advance();
                     return Some(self.wait("npc: timeout"));
+                }
+                // No dialog yet — keep trying to click the NPC every ~1s
+                if self.sub_step_ticks % 25 == 12 {
+                    return Some(self.jittered_click(npc_pos.0, npc_pos.1, "npc: retry click"));
                 }
                 Some(self.wait("npc: waiting for dialog"))
             }

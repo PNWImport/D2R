@@ -1419,6 +1419,74 @@
     </div>
 
     <div class="section">
+      <div class="section-title">Session Scheduling</div>
+      <div class="setting-row">
+        <label>Max Daily Hours</label>
+        <input type="number" data-cfg="session.max_daily_hours" class="input-sm" value="8" min="1" max="24" step="0.5">
+      </div>
+      <div class="setting-row">
+        <label>Session Min (min)</label>
+        <input type="number" data-cfg="session.session_min_minutes" class="input-sm" value="60" min="5">
+      </div>
+      <div class="setting-row">
+        <label>Session Max (min)</label>
+        <input type="number" data-cfg="session.session_max_minutes" class="input-sm" value="180" min="10">
+      </div>
+      <div class="setting-row">
+        <label>Break Min (min)</label>
+        <input type="number" data-cfg="session.break_min_minutes" class="input-sm" value="30" min="1">
+      </div>
+      <div class="setting-row">
+        <label>Break Max (min)</label>
+        <input type="number" data-cfg="session.break_max_minutes" class="input-sm" value="120" min="1">
+      </div>
+      <div class="setting-row">
+        <label>Start Hour (0–23)</label>
+        <input type="number" data-cfg="session.allowed_start_hour" class="input-sm" value="9" min="0" max="23">
+      </div>
+      <div class="setting-row">
+        <label>End Hour (0–23)</label>
+        <input type="number" data-cfg="session.allowed_end_hour" class="input-sm" value="23" min="0" max="23">
+      </div>
+      <div class="setting-row">
+        <label>Day Off (0=Sun, 6=Sat)</label>
+        <input type="number" data-cfg="session.day_off" class="input-sm" value="" min="0" max="6" placeholder="none">
+      </div>
+      <div class="setting-row">
+        <label>Ladder Start Delay (h)</label>
+        <input type="number" data-cfg="session.ladder_start_delay_hours" class="input-sm" value="48" min="0">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Humanization</div>
+      <div class="setting-row">
+        <label>Reaction Mean (ms)</label>
+        <input type="number" data-cfg="humanization.reaction_mean_ms" class="input-sm" value="280" min="50" max="1000">
+      </div>
+      <div class="setting-row">
+        <label>Reaction StdDev (ms)</label>
+        <input type="number" data-cfg="humanization.reaction_stddev_ms" class="input-sm" value="90" min="10" max="400">
+      </div>
+      <div class="setting-row">
+        <label>Aim Variance (px)</label>
+        <input type="number" data-cfg="humanization.aim_variance_px" class="input-sm" value="15" min="0" max="50">
+      </div>
+      <div class="setting-row">
+        <label>Potion Forget Rate</label>
+        <input type="number" data-cfg="humanization.potion_forget_rate" class="input-sm" value="0.04" min="0" max="0.3" step="0.01">
+      </div>
+      <div class="setting-row">
+        <label>Skill Miss Rate</label>
+        <input type="number" data-cfg="humanization.skill_miss_rate" class="input-sm" value="0.06" min="0" max="0.3" step="0.01">
+      </div>
+      <div class="setting-row">
+        <label>Path Deviate Rate</label>
+        <input type="number" data-cfg="humanization.path_deviate_rate" class="input-sm" value="0.08" min="0" max="0.5" step="0.01">
+      </div>
+    </div>
+
+    <div class="section">
       <div class="section-title">Logging</div>
       <label class="check"><input type="checkbox" data-cfg="ItemInfo"><span>Log Item Info</span></label>
       <div class="textarea-label">Item Info Quality (quality levels)</div>

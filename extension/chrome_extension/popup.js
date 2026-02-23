@@ -311,25 +311,93 @@ if (btnCacheStats) {
   });
 }
 
+// ─── Kolbot → Rust Config Translation ────────────────────────
+// The popup uses kolbot-style flat keys; the Rust agent expects the
+// nested AgentConfig structure. Fields already using dot-notation
+// (e.g. "session.max_daily_hours") are passed through automatically.
+// Flat kolbot keys are translated via the map below.
+
+const KOLBOT_TO_RUST = {
+  // Survival thresholds
+  "UseHP":             "survival.hp_potion_pct",
+  "UseMP":             "survival.mana_potion_pct",
+  "UseRejuvHP":        "survival.hp_rejuv_pct",
+  "UseRejuvMP":        "survival.mana_rejuv_pct",
+  "UseMercRejuv":      "survival.merc_rejuv_pct",
+  "RejuvBuffer":       "survival.rejuv_buffer",
+  "LifeChicken":       "survival.chicken_hp_pct",
+  "ManaChicken":       "survival.mana_chicken_pct",
+  "MercChicken":       "survival.merc_chicken_pct",
+  "IronGolemChicken":  "survival.iron_golem_chicken_pct",
+
+  // Belt layout
+  "BeltColumn.0":      "survival.belt_columns.0.name",
+  "BeltColumn.1":      "survival.belt_columns.1.name",
+  "BeltColumn.2":      "survival.belt_columns.2.name",
+  "BeltColumn.3":      "survival.belt_columns.3.name",
+
+  // Farming timing
+  "MinGameTime":       "farming.min_game_time_secs",
+  "MaxGameTime":       "farming.max_game_time_mins",
+
+  // Merc
+  "UseMerc":           "merc.use_merc",
+  "MercWatch":         "merc.merc_watch",
+
+  // AutoSkill / AutoStat → leveling
+  "AutoSkill.Enabled": "leveling.enabled",
+  "AutoSkill.Save":    "leveling.save_skill_points",
+  "AutoStat.Enabled":  "leveling.autostat_enabled",
+  "AutoStat.BlockChance": "leveling.block_chance",
+  "AutoStat.UseBulk":  "leveling.autostat_use_bulk",
+};
+
+// Write a value at a dot-notation path on a plain object.
+function setNestedPath(obj, path, value) {
+  const parts = path.split(".");
+  let cur = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    if (typeof cur[parts[i]] !== "object" || cur[parts[i]] === null) {
+      cur[parts[i]] = {};
+    }
+    cur = cur[parts[i]];
+  }
+  cur[parts[parts.length - 1]] = value;
+}
+
 // ─── Bulk Config Push ────────────────────────────────────────
-// When settings change, push entire config object to agent
+// Collects all data-cfg values, translates to nested AgentConfig
+// structure, then sends to the agent via update_config command.
 function pushConfigToAgent() {
-  const settings = {};
+  const nested = {};
 
   document.querySelectorAll("[data-cfg]").forEach((el) => {
-    const key = el.dataset.cfg;
+    const rawKey = el.dataset.cfg;
+    let value;
     if (el.type === "checkbox") {
-      settings[key] = el.checked;
+      value = el.checked;
     } else if (el.type === "number" || el.type === "range") {
-      settings[key] = parseFloat(el.value) || 0;
+      const f = parseFloat(el.value);
+      if (isNaN(f)) return; // blank optional fields (e.g. day_off) — skip
+      value = f;
     } else if (el.tagName === "TEXTAREA") {
-      settings[key] = el.value;
+      value = el.value;
     } else {
-      settings[key] = el.value;
+      value = el.value;
+    }
+
+    // Resolve to a Rust config path:
+    //   1. Explicit mapping (UseHP → survival.hp_potion_pct)
+    //   2. Already dot-notation (session.max_daily_hours) — pass through
+    //   3. Flat kolbot key with no mapping — skip (script toggles, etc.)
+    const rustPath = KOLBOT_TO_RUST[rawKey]
+      || (rawKey.includes(".") && !rawKey.startsWith("Scripts.") && !rawKey.startsWith("BeltColumn.") ? rawKey : null);
+    if (rustPath) {
+      setNestedPath(nested, rustPath, value);
     }
   });
 
-  // Include inventory
+  // Inventory grid → inventory.grid
   if (invGrid) {
     const invArray = [];
     for (let row = 0; row < 4; row++) {
@@ -339,10 +407,10 @@ function pushConfigToAgent() {
         invArray[row][col] = cell && cell.classList.contains("free") ? 1 : 0;
       }
     }
-    settings["Inventory"] = invArray;
+    setNestedPath(nested, "inventory.grid", invArray);
   }
 
-  send("update_config", { data: settings });
+  send("update_config", { data: nested });
 }
 
 // Push on any data-cfg change (debounced)
