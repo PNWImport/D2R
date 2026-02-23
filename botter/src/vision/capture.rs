@@ -87,6 +87,118 @@ impl CapturePipeline {
         Arc::clone(&self.running)
     }
 
+    // ─── Public benchmark surface ─────────────────────────────────────────
+
+    /// Run one extraction pass on the given frame and return the state.
+    /// Advances the internal tick counter (affects tiered detection logic).
+    /// Exposed for `vision_bench` binary and integration tests.
+    pub fn bench_extract(&mut self, frame: &CapturedFrame) -> FrameState {
+        let state = self.extract_frame_state(frame);
+        self.tick += 1;
+        state
+    }
+
+    /// Build a synthetic 800×600 game-like frame that exercises all detection passes.
+    /// Works on every platform (no DXGI needed). Used by the benchmark binary.
+    pub fn synthetic_frame(
+        enemies: u8,    // 0–10: how many enemy health bars to paint
+        loot: u8,       // 0–4:  how many loot labels to paint
+        hp_fill: u8,    // 0–100: HP orb fill percentage
+        in_town: bool,  // paint town-like stone floor
+    ) -> CapturedFrame {
+        let width = 800u32;
+        let height = 600u32;
+        let stride = width * 4;
+        let mut pixels = vec![0u8; (stride * height) as usize];
+
+        // HP orb (red, left side)
+        let hp_px = Self::paint_orb(&mut pixels, width, height, stride, 65, 530, hp_fill, [200, 20, 20]);
+        let _ = hp_px;
+
+        // Mana orb (blue, right side) — always 80% full
+        Self::paint_orb(&mut pixels, width, height, stride, 735, 530, 80, [20, 20, 200]);
+
+        // Enemy health bars (red horizontal strips, vertical spacing)
+        let bar_positions = [
+            (200u32, 150u32), (400, 130), (550, 200),
+            (300, 250), (450, 170), (150, 300),
+            (600, 140), (350, 280), (500, 320), (250, 180),
+        ];
+        for i in 0..(enemies.min(10) as usize) {
+            let (bx, by) = bar_positions[i];
+            for x in bx..bx + 18 {
+                if x < width && by < height {
+                    let idx = (by * stride + x * 4) as usize;
+                    pixels[idx] = 10;      // B
+                    pixels[idx + 1] = 20;  // G
+                    pixels[idx + 2] = 220; // R (bright enemy-bar red)
+                }
+            }
+        }
+
+        // Loot labels (gold Unique text color)
+        let loot_positions = [(350u32, 380u32), (500, 420), (280, 360), (440, 400)];
+        for i in 0..(loot.min(4) as usize) {
+            let (lx, ly) = loot_positions[i];
+            for dx in 0..25u32 {
+                let x = lx + dx;
+                if x < width && ly < height {
+                    let idx = (ly * stride + x * 4) as usize;
+                    pixels[idx] = 99;      // B
+                    pixels[idx + 1] = 166; // G
+                    pixels[idx + 2] = 198; // R (gold unique text)
+                }
+            }
+        }
+
+        // Town stone floor (warm gray band)
+        if in_town {
+            for y in 320u32..345 {
+                for x in 250..550u32 {
+                    let idx = (y * stride + x * 4) as usize;
+                    pixels[idx] = 118;
+                    pixels[idx + 1] = 128;
+                    pixels[idx + 2] = 138;
+                }
+            }
+        }
+
+        CapturedFrame {
+            pixels,
+            width,
+            height,
+            stride,
+            timestamp: Instant::now(),
+        }
+    }
+
+    fn paint_orb(
+        pixels: &mut Vec<u8>,
+        width: u32, height: u32, stride: u32,
+        cx: u32, cy: u32, fill_pct: u8, color: [u8; 3],
+    ) -> u32 {
+        let r = 28u32;
+        let filled_rows = (r * 2 * fill_pct as u32) / 100;
+        let mut painted = 0u32;
+        for dy in 0..r * 2 {
+            let y = cy.saturating_sub(r) + dy;
+            if y >= height { continue; }
+            if dy >= (r * 2 - filled_rows) {
+                for dx_off in [0i32, -4, 4, -8, 8] {
+                    let x = (cx as i32 + dx_off).max(0) as u32;
+                    if x < width {
+                        let idx = (y * stride + x * 4) as usize;
+                        pixels[idx]     = color[2]; // B
+                        pixels[idx + 1] = color[1]; // G
+                        pixels[idx + 2] = color[0]; // R
+                        painted += 1;
+                    }
+                }
+            }
+        }
+        painted
+    }
+
     /// Run the capture loop. Blocks until running flag is set to false.
     pub fn run(&mut self) {
         self.running.store(true, Ordering::Release);
@@ -130,12 +242,6 @@ impl CapturePipeline {
         }
     }
 
-    /// Extract FrameState from raw pixel data.
-    ///
-    /// Performance tiers:
-    /// - **Every frame** (survival-critical): HP, mana, enemies, loot
-    /// - **Every 3rd frame** (state transitions): town, merc, belt, UI panels
-    /// - **Every 5th frame** (slow-changing): area banner, quest banner, XP bar
     fn extract_frame_state(&self, frame: &CapturedFrame) -> FrameState {
         let mut state = FrameState {
             tick: self.tick,
