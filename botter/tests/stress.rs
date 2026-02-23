@@ -34,7 +34,11 @@ fn stress_sustained_agent_loop_10s() {
             state.tick = tick;
             state.hp_pct = rng.gen_range(25..100);
             state.mana_pct = rng.gen_range(10..100);
-            state.enemy_count = if tick % 50 < 35 { rng.gen_range(1..10) } else { 0 };
+            state.enemy_count = if tick % 50 < 35 {
+                rng.gen_range(1..10)
+            } else {
+                0
+            };
             state.in_combat = state.enemy_count > 0;
             state.in_town = tick % 200 < 15;
             state.char_screen_x = 400;
@@ -138,9 +142,20 @@ fn stress_sustained_agent_loop_10s() {
     println!("  Decisions/sec:    {:.0}", decisions as f64 / 10.0);
     println!("  Buffer stats:     {:?}", buffer.stats());
 
-    assert!(frames_written >= 200, "should write 250 frames in 10s, got {}", frames_written);
-    assert!(decisions >= 50, "should decide many times, got {}", decisions);
-    assert!(attacks + potions + loots + moves > 20, "should have combat actions");
+    assert!(
+        frames_written >= 200,
+        "should write 250 frames in 10s, got {}",
+        frames_written
+    );
+    assert!(
+        decisions >= 50,
+        "should decide many times, got {}",
+        decisions
+    );
+    assert!(
+        attacks + potions + loots + moves > 20,
+        "should have combat actions"
+    );
 
     // SharedAgentStats should match
     let stat_decisions = stats.decisions_made.load(Ordering::Relaxed);
@@ -208,7 +223,9 @@ fn stress_buffer_8_readers_zero_corruption() {
     shutdown.store(true, Ordering::Release);
 
     let writes = writer.join().unwrap();
-    for r in readers { r.join().unwrap(); }
+    for r in readers {
+        r.join().unwrap();
+    }
 
     let corruptions = total_corruptions.load(Ordering::Relaxed);
     let reads = total_reads.load(Ordering::Relaxed);
@@ -231,7 +248,7 @@ fn stress_buffer_8_readers_zero_corruption() {
 fn stress_thread_input_10k_commands() {
     let pool = ThreadRotatedInput::new(ThreadPoolConfig {
         num_workers: 4,
-        timing_jitter_mean_us: 50.0,  // low jitter for speed
+        timing_jitter_mean_us: 50.0, // low jitter for speed
         timing_jitter_stddev_us: 20.0,
         strategy: RotationStrategy::RoundRobin,
         ..Default::default()
@@ -242,13 +259,21 @@ fn stress_thread_input_10k_commands() {
 
     for i in 0..count {
         let cmd = match i % 5 {
-            0 => InputCommand::KeyPress { key: (b'a' + (i % 26) as u8) as char, hold_ms: 5 },
-            1 => InputCommand::MouseMove { x: (i % 800) as i32, y: (i % 600) as i32 },
+            0 => InputCommand::KeyPress {
+                key: (b'a' + (i % 26) as u8) as char,
+                hold_ms: 5,
+            },
+            1 => InputCommand::MouseMove {
+                x: (i % 800) as i32,
+                y: (i % 600) as i32,
+            },
             2 => InputCommand::LeftClick { hold_ms: 5 },
             3 => InputCommand::RightClick { hold_ms: 5 },
             _ => InputCommand::ClickAt {
-                x: (i % 800) as i32, y: (i % 600) as i32,
-                button: MouseButton::Left, hold_ms: 5,
+                x: (i % 800) as i32,
+                y: (i % 600) as i32,
+                button: MouseButton::Left,
+                hold_ms: 5,
             },
         };
         pool.dispatch(cmd);
@@ -265,12 +290,18 @@ fn stress_thread_input_10k_commands() {
     println!("  Processed:  {}", total);
     println!("  Elapsed:    {:?}", elapsed);
     for ts in &stats.per_thread {
-        println!("    Thread {}: {} cmds, avg latency {}µs",
-            ts.thread_id, ts.commands_processed, ts.avg_latency_us);
+        println!(
+            "    Thread {}: {} cmds, avg latency {}µs",
+            ts.thread_id, ts.commands_processed, ts.avg_latency_us
+        );
     }
 
     // All 4 threads should be active
-    let active = stats.per_thread.iter().filter(|t| t.commands_processed > 0).count();
+    let active = stats
+        .per_thread
+        .iter()
+        .filter(|t| t.commands_processed > 0)
+        .count();
     assert_eq!(active, 4, "all threads should be active");
 
     // Distribution should be roughly even across threads
@@ -279,7 +310,10 @@ fn stress_thread_input_10k_commands() {
         let deviation = (ts.commands_processed as i64 - per_thread_expected as i64).unsigned_abs();
         assert!(
             deviation < per_thread_expected / 2,
-            "thread {} got {} (expected ~{})", ts.thread_id, ts.commands_processed, per_thread_expected
+            "thread {} got {} (expected ~{})",
+            ts.thread_id,
+            ts.commands_processed,
+            per_thread_expected
         );
     }
 
@@ -349,15 +383,19 @@ fn stress_decision_edge_cases() {
     println!("\n=== DECISION ENGINE EDGE CASES ===");
     for (i, state) in edge_cases.iter().enumerate() {
         // Reset cooldowns
-        
-        
-        
-        
 
         let d = engine.decide(state);
-        println!("  Case {}: hp={} mana={} enemies={} combat={} town={} → {:?} (delay {:?})",
-            i, state.hp_pct, state.mana_pct, state.enemy_count,
-            state.in_combat, state.in_town, d.action, d.delay);
+        println!(
+            "  Case {}: hp={} mana={} enemies={} combat={} town={} → {:?} (delay {:?})",
+            i,
+            state.hp_pct,
+            state.mana_pct,
+            state.enemy_count,
+            state.in_combat,
+            state.in_town,
+            d.action,
+            d.delay
+        );
     }
 
     // Random fuzz: 100K random states, none should panic
@@ -377,8 +415,11 @@ fn stress_decision_edge_cases() {
         let _ = engine.decide(&state);
     }
     let elapsed = start.elapsed();
-    println!("  100K random fuzzes: {:?} ({:.0} decisions/sec)",
-        elapsed, 100_000.0 / elapsed.as_secs_f64());
+    println!(
+        "  100K random fuzzes: {:?} ({:.0} decisions/sec)",
+        elapsed,
+        100_000.0 / elapsed.as_secs_f64()
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -413,10 +454,7 @@ fn stress_native_messaging_concurrent_stats() {
     }
 
     // Host reading stats simultaneously
-    let (host, _cmd_rx) = NativeMessagingHost::new(
-        Arc::clone(&stats),
-        Arc::clone(&buffer),
-    );
+    let (host, _cmd_rx) = NativeMessagingHost::new(Arc::clone(&stats), Arc::clone(&buffer));
 
     let host_shut = Arc::clone(&shutdown);
     let reader = std::thread::spawn(move || {
@@ -433,21 +471,31 @@ fn stress_native_messaging_concurrent_stats() {
     shutdown.store(true, Ordering::Release);
 
     let mut total_writes = 0u64;
-    for w in writers { total_writes += w.join().unwrap(); }
+    for w in writers {
+        total_writes += w.join().unwrap();
+    }
     let snapshots = reader.join().unwrap();
 
     let frames = stats.frames_processed.load(Ordering::Relaxed);
     let decisions = stats.decisions_made.load(Ordering::Relaxed);
 
     println!("\n=== NATIVE MESSAGING: CONCURRENT STATS (3s) ===");
-    println!("  Writer threads: 4 × {} = {} total ops per counter", total_writes / 4, total_writes);
+    println!(
+        "  Writer threads: 4 × {} = {} total ops per counter",
+        total_writes / 4,
+        total_writes
+    );
     println!("  Frames counter:  {}", frames);
     println!("  JSON snapshots:  {}", snapshots);
     println!("  Snapshots/sec:   {:.0}", snapshots as f64 / 3.0);
 
     assert_eq!(frames, total_writes, "frames counter mismatch");
     assert_eq!(decisions, total_writes, "decisions counter mismatch");
-    assert!(snapshots > 1000, "should have many snapshots: {}", snapshots);
+    assert!(
+        snapshots > 1000,
+        "should have many snapshots: {}",
+        snapshots
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -457,7 +505,6 @@ fn stress_native_messaging_concurrent_stats() {
 #[test]
 fn stress_cadence_sustained_decoys() {
     let mut cadence = SyscallCadence::new(CadenceConfig {
-        
         ..Default::default()
     });
 
@@ -486,15 +533,28 @@ fn stress_cadence_sustained_decoys() {
     println!("  Total calls:    {}", total_calls);
     println!("  Total decoys:   {}", report.total_decoys_executed);
     println!("  Elapsed:        {:?}", elapsed);
-    println!("  Calls/sec:      {:.0}", total_calls as f64 / elapsed.as_secs_f64());
-    println!("  Screen capture: calls={} avg_jitter={}µs",
-        report.screen_capture.call_count, report.screen_capture.avg_jitter_us);
-    println!("  Input dispatch: calls={} avg_jitter={}µs",
-        report.input_dispatch.call_count, report.input_dispatch.avg_jitter_us);
+    println!(
+        "  Calls/sec:      {:.0}",
+        total_calls as f64 / elapsed.as_secs_f64()
+    );
+    println!(
+        "  Screen capture: calls={} avg_jitter={}µs",
+        report.screen_capture.call_count, report.screen_capture.avg_jitter_us
+    );
+    println!(
+        "  Input dispatch: calls={} avg_jitter={}µs",
+        report.input_dispatch.call_count, report.input_dispatch.avg_jitter_us
+    );
 
-    assert!(report.total_decoys_executed > 1000, "should have many decoys: {}",
-        report.total_decoys_executed);
-    assert!(report.screen_capture.avg_jitter_us > 0, "should have non-zero jitter");
+    assert!(
+        report.total_decoys_executed > 1000,
+        "should have many decoys: {}",
+        report.total_decoys_executed
+    );
+    assert!(
+        report.screen_capture.avg_jitter_us > 0,
+        "should have non-zero jitter"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -525,14 +585,23 @@ fn stress_capture_vision_extraction() {
     println!("  Shards complete: {}", stats.shards_complete);
 
     // Should have ~75 frames (25Hz × 3s)
-    assert!(stats.total_frames_written >= 50,
-        "expected ~75 frames, got {}", stats.total_frames_written);
+    assert!(
+        stats.total_frames_written >= 50,
+        "expected ~75 frames, got {}",
+        stats.total_frames_written
+    );
 
     // Read and validate a frame
     if let Some(frame) = buffer.latest() {
-        println!("  Latest frame: tick={} hp={}% mana={}% enemies={} town={} merc={}",
-            frame.tick, frame.hp_pct, frame.mana_pct,
-            frame.enemy_count, frame.in_town, frame.merc_alive);
+        println!(
+            "  Latest frame: tick={} hp={}% mana={}% enemies={} town={} merc={}",
+            frame.tick,
+            frame.hp_pct,
+            frame.mana_pct,
+            frame.enemy_count,
+            frame.in_town,
+            frame.merc_alive
+        );
     }
 }
 
@@ -551,9 +620,7 @@ fn stress_full_pipeline_5s() {
     let cap_shut = Arc::clone(&shutdown);
     let capture = std::thread::spawn(move || {
         let config = kzb_vision_agent::vision::capture::CaptureConfig::default();
-        let mut pipeline = kzb_vision_agent::vision::capture::CapturePipeline::new(
-            config, cap_buf,
-        );
+        let mut pipeline = kzb_vision_agent::vision::capture::CapturePipeline::new(config, cap_buf);
         let running = pipeline.running_flag();
         let shut = cap_shut;
         std::thread::spawn(move || {
@@ -593,11 +660,17 @@ fn stress_full_pipeline_5s() {
 
                 // Dispatch through pool
                 match d.action {
-                    Action::CastSkill { key, screen_x, screen_y } => {
+                    Action::CastSkill {
+                        key,
+                        screen_x,
+                        screen_y,
+                    } => {
                         pool.dispatch(InputCommand::KeyPress { key, hold_ms: 10 });
                         pool.dispatch(InputCommand::ClickAt {
-                            x: screen_x, y: screen_y,
-                            button: MouseButton::Right, hold_ms: 10,
+                            x: screen_x,
+                            y: screen_y,
+                            button: MouseButton::Right,
+                            hold_ms: 10,
                         });
                     }
                     Action::DrinkPotion { belt_slot } => {
@@ -607,8 +680,10 @@ fn stress_full_pipeline_5s() {
                     }
                     Action::PickupLoot { screen_x, screen_y } => {
                         pool.dispatch(InputCommand::ClickAt {
-                            x: screen_x, y: screen_y,
-                            button: MouseButton::Left, hold_ms: 10,
+                            x: screen_x,
+                            y: screen_y,
+                            button: MouseButton::Left,
+                            hold_ms: 10,
                         });
                         dec_stats.loots_picked.fetch_add(1, Ordering::Relaxed);
                     }
@@ -625,10 +700,7 @@ fn stress_full_pipeline_5s() {
     });
 
     // Host querying stats
-    let (host, _rx) = NativeMessagingHost::new(
-        Arc::clone(&stats),
-        Arc::clone(&buffer),
-    );
+    let (host, _rx) = NativeMessagingHost::new(Arc::clone(&stats), Arc::clone(&buffer));
     let host_shut = Arc::clone(&shutdown);
     let host_thread = std::thread::spawn(move || {
         let mut queries = 0u64;
@@ -661,7 +733,10 @@ fn stress_full_pipeline_5s() {
     println!("  Loots picked:    {}", loots);
     println!("  Host queries:    {}", queries);
 
-    assert!(buf_stats.total_frames_written >= 50, "capture should produce frames");
+    assert!(
+        buf_stats.total_frames_written >= 50,
+        "capture should produce frames"
+    );
     assert!(decisions >= 20, "should have decisions: {}", decisions);
     assert!(queries >= 20, "host should query: {}", queries);
 }

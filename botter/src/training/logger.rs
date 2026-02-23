@@ -70,7 +70,7 @@ impl TrainingLogger {
 
             count += 1;
             // Flush every 100 entries
-            if count % 100 == 0 {
+            if count.is_multiple_of(100) {
                 file.flush().await.ok();
             }
         }

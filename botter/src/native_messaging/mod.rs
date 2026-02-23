@@ -107,6 +107,7 @@ pub enum ChromeCommand {
 }
 
 /// Commands the agent can send to Chrome (via stdout)
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize)]
 struct HostResponse {
     cmd: String,
@@ -166,8 +167,8 @@ impl NativeMessagingHost {
                         }
                     }
                 }
-                Ok(None) => break,    // EOF — Chrome closed the pipe
-                Err(_) => break,      // Read error — pipe broken
+                Ok(None) => break, // EOF — Chrome closed the pipe
+                Err(_) => break,   // Read error — pipe broken
             }
         }
 
@@ -413,9 +414,7 @@ mod tests {
         host.agent_stats.deaths.store(2, Ordering::Relaxed);
         host.agent_stats.potions_used.store(340, Ordering::Relaxed);
 
-        let resp = host
-            .handle_message(json!({"cmd": "get_stats"}))
-            .unwrap();
+        let resp = host.handle_message(json!({"cmd": "get_stats"})).unwrap();
 
         assert_eq!(resp["cmd"], "stats");
         assert_eq!(resp["data"]["frames"], 42000);
@@ -474,9 +473,7 @@ mod tests {
     fn test_shutdown_command() {
         let (host, mut rx) = make_host();
 
-        let resp = host
-            .handle_message(json!({"cmd": "shutdown"}))
-            .unwrap();
+        let resp = host.handle_message(json!({"cmd": "shutdown"})).unwrap();
         assert_eq!(resp["action"], "shutdown");
 
         let cmd = rx.try_recv().unwrap();
@@ -558,10 +555,7 @@ mod tests {
         handle.join().unwrap();
 
         assert!(monotonic, "frame counter should be monotonic");
-        assert_eq!(
-            stats.frames_processed.load(Ordering::Relaxed),
-            10000
-        );
+        assert_eq!(stats.frames_processed.load(Ordering::Relaxed), 10000);
     }
 
     #[test]

@@ -36,17 +36,15 @@ impl ChromeDisguise {
                 r#""{}" --type=gpu-process --gpu-preferences=UAAAAAAAAADgAAAYAAAAAAAAAAAAAAAAAABgAAAAAAAwAAAAAAAAAAAAAAAAAAAKAAAA --gpu-vendor-id=0x10de --gpu-device-id=0x2504"#,
                 chrome_path
             ),
-            Self::CrashpadHandler => format!(
-                r#""C:\Program Files\Google\Chrome\Application\122.0.6261.95\crashpad_handler.exe" --no-rate-limit --database=C:\Users\User\AppData\Local\Google\Chrome\User Data\Crashpad --annotation=plat=Win64 --annotation=prod=Chrome_ChromiumCore"#,
-            ),
+            Self::CrashpadHandler => r#""C:\Program Files\Google\Chrome\Application\122.0.6261.95\crashpad_handler.exe" --no-rate-limit --database=C:\Users\User\AppData\Local\Google\Chrome\User Data\Crashpad --annotation=plat=Win64 --annotation=prod=Chrome_ChromiumCore"#.to_string(),
         }
     }
 
     pub fn image_path(&self) -> PathBuf {
         match self {
-            Self::CrashpadHandler => {
-                PathBuf::from(r"C:\Program Files\Google\Chrome\Application\122.0.6261.95\crashpad_handler.exe")
-            }
+            Self::CrashpadHandler => PathBuf::from(
+                r"C:\Program Files\Google\Chrome\Application\122.0.6261.95\crashpad_handler.exe",
+            ),
             _ => PathBuf::from(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
         }
     }
@@ -107,10 +105,7 @@ impl ProcessIdentity {
         }
         #[cfg(not(windows))]
         {
-            tracing::debug!(
-                "PEB overwrite skipped (non-Windows): {:?}",
-                self.disguise
-            );
+            tracing::debug!("PEB overwrite skipped (non-Windows): {:?}", self.disguise);
         }
 
         self.applied = true;
@@ -124,7 +119,9 @@ impl ProcessIdentity {
         Ok(())
     }
 
-    pub fn is_applied(&self) -> bool { self.applied }
+    pub fn is_applied(&self) -> bool {
+        self.applied
+    }
 
     pub fn status(&self) -> ProcessIdentityStatus {
         ProcessIdentityStatus {
@@ -140,10 +137,10 @@ impl ProcessIdentity {
 
     #[cfg(windows)]
     fn apply_peb_overwrite(&self) -> Result<(), ProcessIdentityError> {
-        use windows::Win32::System::Threading::*;
-        use windows::Win32::System::Diagnostics::Debug::*;
-        use windows::Win32::Foundation::*;
         use std::mem;
+        use windows::Win32::Foundation::*;
+        use windows::Win32::System::Diagnostics::Debug::*;
+        use windows::Win32::System::Threading::*;
 
         unsafe {
             // 1. Get PEB address via NtQueryInformationProcess
@@ -157,9 +154,10 @@ impl ProcessIdentity {
                 std::ptr::null_mut(),
             );
             if status.is_err() {
-                return Err(ProcessIdentityError::PebWriteFailed(
-                    format!("NtQueryInformationProcess failed: {:?}", status)
-                ));
+                return Err(ProcessIdentityError::PebWriteFailed(format!(
+                    "NtQueryInformationProcess failed: {:?}",
+                    status
+                )));
             }
 
             let peb = pbi.PebBaseAddress;
@@ -169,43 +167,38 @@ impl ProcessIdentity {
 
             // 2. Read ProcessParameters pointer from PEB
             let params_offset = 0x20usize; // PEB.ProcessParameters on x64
-            let params_ptr: *mut u8 = std::ptr::read(
-                (peb as *const u8).add(params_offset) as *const *mut u8
-            );
+            let params_ptr: *mut u8 =
+                std::ptr::read((peb as *const u8).add(params_offset) as *const *mut u8);
 
             if params_ptr.is_null() {
-                return Err(ProcessIdentityError::PebWriteFailed("Null ProcessParameters".into()));
+                return Err(ProcessIdentityError::PebWriteFailed(
+                    "Null ProcessParameters".into(),
+                ));
             }
 
             // 3. Overwrite ImagePathName (offset 0x60) and CommandLine (offset 0x70)
             let image_path = self.disguise.image_path();
-            let image_utf16: Vec<u16> = image_path.to_str()
+            let image_utf16: Vec<u16> = image_path
+                .to_str()
                 .unwrap_or("")
                 .encode_utf16()
                 .chain(std::iter::once(0))
                 .collect();
 
             let cmd_line = self.disguise.command_line();
-            let cmd_utf16: Vec<u16> = cmd_line
-                .encode_utf16()
-                .chain(std::iter::once(0))
-                .collect();
+            let cmd_utf16: Vec<u16> = cmd_line.encode_utf16().chain(std::iter::once(0)).collect();
 
             // Write UNICODE_STRING for ImagePathName at offset 0x60
-            write_unicode_string(
-                params_ptr.add(0x60),
-                &image_utf16,
-            );
+            write_unicode_string(params_ptr.add(0x60), &image_utf16);
 
             // Write UNICODE_STRING for CommandLine at offset 0x70
-            write_unicode_string(
-                params_ptr.add(0x70),
-                &cmd_utf16,
-            );
+            write_unicode_string(params_ptr.add(0x70), &cmd_utf16);
 
-            tracing::info!("PEB overwritten: image={}, cmdline={}...",
+            tracing::info!(
+                "PEB overwritten: image={}, cmdline={}...",
                 image_path.display(),
-                &cmd_line[..80.min(cmd_line.len())]);
+                &cmd_line[..80.min(cmd_line.len())]
+            );
         }
 
         Ok(())
@@ -227,8 +220,8 @@ unsafe fn write_unicode_string(us_ptr: *mut u8, utf16: &[u16]) {
     let byte_len = (utf16.len() * 2) as u16;
     // UNICODE_STRING: Length (u16), MaximumLength (u16), padding (u32 on x64), Buffer (*mut u16)
     std::ptr::write(us_ptr as *mut u16, byte_len.saturating_sub(2)); // Length (excludes null)
-    std::ptr::write(us_ptr.add(2) as *mut u16, byte_len);           // MaximumLength
-    // Buffer pointer at offset 8 (x64 aligned)
+    std::ptr::write(us_ptr.add(2) as *mut u16, byte_len); // MaximumLength
+                                                          // Buffer pointer at offset 8 (x64 aligned)
     let buf_ptr = std::ptr::read(us_ptr.add(8) as *const *mut u16);
     if !buf_ptr.is_null() {
         std::ptr::copy_nonoverlapping(utf16.as_ptr(), buf_ptr, utf16.len());
@@ -238,8 +231,8 @@ unsafe fn write_unicode_string(us_ptr: *mut u8, utf16: &[u16]) {
 /// Find the Chrome browser process PID via process snapshot
 #[cfg(windows)]
 fn find_chrome_browser_pid() -> Option<u32> {
-    use windows::Win32::System::Diagnostics::ToolHelp::*;
     use windows::Win32::Foundation::*;
+    use windows::Win32::System::Diagnostics::ToolHelp::*;
 
     unsafe {
         let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).ok()?;
@@ -248,7 +241,9 @@ fn find_chrome_browser_pid() -> Option<u32> {
 
         if Process32FirstW(snapshot, &mut entry).is_ok() {
             loop {
-                let name: String = entry.szExeFile.iter()
+                let name: String = entry
+                    .szExeFile
+                    .iter()
                     .take_while(|&&c| c != 0)
                     .map(|&c| c as u8 as char)
                     .collect();

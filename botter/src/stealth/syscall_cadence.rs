@@ -162,7 +162,7 @@ pub struct SyscallCadence {
     rng: StdRng,
     distributions: CadenceDistributions,
     stats: CadenceStats,
-    last_decoy_time: Instant,
+    _last_decoy_time: Instant,
 }
 
 struct CadenceDistributions {
@@ -173,6 +173,7 @@ struct CadenceDistributions {
     memory: Normal<f64>,
 }
 
+#[derive(Default)]
 struct CadenceStats {
     screen_capture: CategoryStats,
     input_dispatch: CategoryStats,
@@ -180,19 +181,6 @@ struct CadenceStats {
     timer_wait: CategoryStats,
     memory: CategoryStats,
     total_decoys: AtomicU64,
-}
-
-impl Default for CadenceStats {
-    fn default() -> Self {
-        Self {
-            screen_capture: CategoryStats::default(),
-            input_dispatch: CategoryStats::default(),
-            file_io: CategoryStats::default(),
-            timer_wait: CategoryStats::default(),
-            memory: CategoryStats::default(),
-            total_decoys: AtomicU64::default(),
-        }
-    }
 }
 
 fn make_dist(cfg: &CategoryConfig) -> Normal<f64> {
@@ -215,7 +203,7 @@ impl SyscallCadence {
             rng: StdRng::from_entropy(),
             distributions,
             stats: CadenceStats::default(),
-            last_decoy_time: Instant::now(),
+            _last_decoy_time: Instant::now(),
         }
     }
 
@@ -259,11 +247,17 @@ impl SyscallCadence {
 
         // Sample jitter from the right distribution
         let raw_jitter = match category {
-            SyscallCategory::ScreenCapture => self.distributions.screen_capture.sample(&mut self.rng),
-            SyscallCategory::InputDispatch => self.distributions.input_dispatch.sample(&mut self.rng),
+            SyscallCategory::ScreenCapture => {
+                self.distributions.screen_capture.sample(&mut self.rng)
+            }
+            SyscallCategory::InputDispatch => {
+                self.distributions.input_dispatch.sample(&mut self.rng)
+            }
             SyscallCategory::FileIO => self.distributions.file_io.sample(&mut self.rng),
             SyscallCategory::TimerWait => self.distributions.timer_wait.sample(&mut self.rng),
-            SyscallCategory::Memory | SyscallCategory::Decoy => self.distributions.memory.sample(&mut self.rng),
+            SyscallCategory::Memory | SyscallCategory::Decoy => {
+                self.distributions.memory.sample(&mut self.rng)
+            }
         };
 
         let clamped = raw_jitter.clamp(jitter_floor as f64, jitter_ceil as f64);
@@ -278,7 +272,8 @@ impl SyscallCadence {
             SyscallCategory::Memory | SyscallCategory::Decoy => &self.stats.memory,
         };
         stat.call_count.fetch_add(1, Ordering::Relaxed);
-        stat.total_jitter_us.fetch_add(clamped as u64, Ordering::Relaxed);
+        stat.total_jitter_us
+            .fetch_add(clamped as u64, Ordering::Relaxed);
 
         // Decide on decoy injection
         let mut decoys = Vec::new();
@@ -325,14 +320,20 @@ impl SyscallCadence {
                     windows::Win32::System::Performance::QueryPerformanceCounter(&mut counter);
                 }
                 #[cfg(not(windows))]
-                { let _ = Instant::now(); }
+                {
+                    let _ = Instant::now();
+                }
             }
             DecoyType::GlobalMemoryStatus => {
                 #[cfg(windows)]
                 unsafe {
-                    let mut mem = windows::Win32::System::SystemInformation::MEMORYSTATUSEX::default();
-                    mem.dwLength = std::mem::size_of::<windows::Win32::System::SystemInformation::MEMORYSTATUSEX>() as u32;
-                    let _ = windows::Win32::System::SystemInformation::GlobalMemoryStatusEx(&mut mem);
+                    let mut mem =
+                        windows::Win32::System::SystemInformation::MEMORYSTATUSEX::default();
+                    mem.dwLength = std::mem::size_of::<
+                        windows::Win32::System::SystemInformation::MEMORYSTATUSEX,
+                    >() as u32;
+                    let _ =
+                        windows::Win32::System::SystemInformation::GlobalMemoryStatusEx(&mut mem);
                 }
                 #[cfg(not(windows))]
                 {
@@ -344,15 +345,24 @@ impl SyscallCadence {
                 #[cfg(windows)]
                 unsafe {
                     use windows::core::w;
-                    let _ = windows::Win32::Storage::FileSystem::GetFileAttributesW(
-                        w!("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe")
-                    );
+                    let _ = windows::Win32::Storage::FileSystem::GetFileAttributesW(w!(
+                        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+                    ));
                 }
                 #[cfg(not(windows))]
-                { let _ = std::fs::metadata("/tmp/.chrome_lock"); }
+                {
+                    let _ = std::fs::metadata("/tmp/.chrome_lock");
+                }
             }
             DecoyType::GetEnvironmentVariable => {
-                let vars = ["TEMP", "PATH", "USERPROFILE", "APPDATA", "LOCALAPPDATA", "CHROME_PATH"];
+                let vars = [
+                    "TEMP",
+                    "PATH",
+                    "USERPROFILE",
+                    "APPDATA",
+                    "LOCALAPPDATA",
+                    "CHROME_PATH",
+                ];
                 let var = vars[self.rng.gen_range(0..vars.len())];
                 let _ = std::env::var(var);
             }
@@ -365,11 +375,13 @@ impl SyscallCadence {
                     let mut kt = windows::Win32::Foundation::FILETIME::default();
                     let mut ut = windows::Win32::Foundation::FILETIME::default();
                     let _ = windows::Win32::System::Threading::GetThreadTimes(
-                        thread, &mut ct, &mut et, &mut kt, &mut ut
+                        thread, &mut ct, &mut et, &mut kt, &mut ut,
                     );
                 }
                 #[cfg(not(windows))]
-                { let _ = std::time::SystemTime::now(); }
+                {
+                    let _ = std::time::SystemTime::now();
+                }
             }
             DecoyType::RegistryQuery => {
                 #[cfg(windows)]
@@ -388,7 +400,9 @@ impl SyscallCadence {
                     }
                 }
                 #[cfg(not(windows))]
-                { let _ = std::fs::metadata("/etc/hostname"); }
+                {
+                    let _ = std::fs::metadata("/etc/hostname");
+                }
             }
         }
         self.stats.total_decoys.fetch_add(1, Ordering::Relaxed);
@@ -481,11 +495,8 @@ mod tests {
         }
 
         let mean = jitters.iter().sum::<f64>() / jitters.len() as f64;
-        let variance = jitters
-            .iter()
-            .map(|x| (x - mean).powi(2))
-            .sum::<f64>()
-            / jitters.len() as f64;
+        let variance =
+            jitters.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / jitters.len() as f64;
         let stddev = variance.sqrt();
 
         println!(
@@ -611,7 +622,10 @@ mod tests {
 
         for _ in 0..1000 {
             let prep = cadence.pre_syscall(SyscallCategory::ScreenCapture);
-            assert!(prep.decoys.is_empty(), "no decoys should be injected at 0% rate");
+            assert!(
+                prep.decoys.is_empty(),
+                "no decoys should be injected at 0% rate"
+            );
         }
     }
 }

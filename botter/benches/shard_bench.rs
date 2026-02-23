@@ -6,9 +6,7 @@ fn bench_push(c: &mut Criterion) {
     let buf = ShardedFrameBuffer::new();
     let state = FrameState::default();
 
-    c.bench_function("shard_push", |b| {
-        b.iter(|| buf.push(state.clone()))
-    });
+    c.bench_function("shard_push", |b| b.iter(|| buf.push(state.clone())));
 }
 
 fn bench_latest(c: &mut Criterion) {
@@ -20,9 +18,7 @@ fn bench_latest(c: &mut Criterion) {
         buf.push(s);
     }
 
-    c.bench_function("shard_latest", |b| {
-        b.iter(|| buf.latest())
-    });
+    c.bench_function("shard_latest", |b| b.iter(|| buf.latest()));
 }
 
 fn bench_recent(c: &mut Criterion) {
@@ -33,9 +29,7 @@ fn bench_recent(c: &mut Criterion) {
         buf.push(s);
     }
 
-    c.bench_function("shard_recent_8", |b| {
-        b.iter(|| buf.recent(8))
-    });
+    c.bench_function("shard_recent_8", |b| b.iter(|| buf.recent(8)));
 }
 
 criterion_group!(benches, bench_push, bench_latest, bench_recent);

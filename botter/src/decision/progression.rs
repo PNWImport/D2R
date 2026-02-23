@@ -181,12 +181,12 @@ pub struct QuestState {
     pub games_played: u32,
 
     // ─── Act 1 Quests ────────────────────────────────────────
-    pub den: bool,           // Den of Evil completed (skill point reward)
-    pub bloodraven: bool,    // Sisters' Burial Grounds completed
-    pub tristram: bool,      // The Search for Cain completed (Cain rescued)
-    pub countess: bool,      // Forgotten Tower cleared (implied, not a quest)
-    pub smith: bool,         // Tools of the Trade completed (Charsi imbue)
-    pub andariel: bool,      // Sisters to the Slaughter completed
+    pub den: bool,        // Den of Evil completed (skill point reward)
+    pub bloodraven: bool, // Sisters' Burial Grounds completed
+    pub tristram: bool,   // The Search for Cain completed (Cain rescued)
+    pub countess: bool,   // Forgotten Tower cleared (implied, not a quest)
+    pub smith: bool,      // Tools of the Trade completed (Charsi imbue)
+    pub andariel: bool,   // Sisters to the Slaughter completed
 
     // ─── Act 2 Quests ────────────────────────────────────────
     pub radament: bool,      // Radament's Lair completed (skill point)
@@ -198,25 +198,25 @@ pub struct QuestState {
     pub duriel: bool,        // Seven Tombs completed
 
     // ─── Act 3 Quests ────────────────────────────────────────
-    pub lamessen: bool,      // Lam Esen's Tome completed (skill points)
-    pub eye: bool,           // Have Khalim's Eye
-    pub heart: bool,         // Have Khalim's Heart
-    pub brain: bool,         // Have Khalim's Brain
-    pub khalimswill: bool,   // Have Khalim's Will (assembled flail)
-    pub travincal: bool,     // Khalim's Will / Travincal completed
-    pub mephisto: bool,      // The Guardian completed
+    pub lamessen: bool,    // Lam Esen's Tome completed (skill points)
+    pub eye: bool,         // Have Khalim's Eye
+    pub heart: bool,       // Have Khalim's Heart
+    pub brain: bool,       // Have Khalim's Brain
+    pub khalimswill: bool, // Have Khalim's Will (assembled flail)
+    pub travincal: bool,   // Khalim's Will / Travincal completed
+    pub mephisto: bool,    // The Guardian completed
 
     // ─── Act 4 Quests ────────────────────────────────────────
-    pub izual: bool,         // The Fallen Angel completed (skill points)
-    pub hellforge: bool,     // Hell's Forge completed
-    pub diablo: bool,        // Terror's End completed
+    pub izual: bool,     // The Fallen Angel completed (skill points)
+    pub hellforge: bool, // Hell's Forge completed
+    pub diablo: bool,    // Terror's End completed
 
     // ─── Act 5 Quests ────────────────────────────────────────
-    pub shenk: bool,         // Siege on Harrogath completed
-    pub savebarby: bool,     // Rescue on Mount Arreat completed
-    pub anya: bool,          // Prison of Ice completed
-    pub ancients: bool,      // Rite of Passage completed
-    pub baal: bool,          // Eve of Destruction completed
+    pub shenk: bool,     // Siege on Harrogath completed
+    pub savebarby: bool, // Rescue on Mount Arreat completed
+    pub anya: bool,      // Prison of Ice completed
+    pub ancients: bool,  // Rite of Passage completed
+    pub baal: bool,      // Eve of Destruction completed
 
     // ─── Waypoints obtained ──────────────────────────────────
     // Tracked as a bitfield per difficulty: bit index = waypoint index
@@ -264,8 +264,8 @@ pub struct QuestState {
     pub wp_worldstone_keep_2: bool,
 
     // ─── Misc tracking ───────────────────────────────────────
-    pub diff_completed: bool,  // Beat Baal on current difficulty
-    pub gold_low_streak: u8,   // consecutive games with low gold (kolbot Check.brokeAf())
+    pub diff_completed: bool, // Beat Baal on current difficulty
+    pub gold_low_streak: u8,  // consecutive games with low gold (kolbot Check.brokeAf())
 }
 
 impl Default for QuestState {
@@ -278,29 +278,68 @@ impl Default for QuestState {
             current_act: 1,
             games_played: 0,
             // All quests start incomplete
-            den: false, bloodraven: false, tristram: false, countess: false,
-            smith: false, andariel: false,
-            radament: false, cube: false, amulet: false, shaft: false,
-            horadricstaff: false, summoner: false, duriel: false,
-            lamessen: false, eye: false, heart: false, brain: false,
-            khalimswill: false, travincal: false, mephisto: false,
-            izual: false, hellforge: false, diablo: false,
-            shenk: false, savebarby: false, anya: false, ancients: false, baal: false,
+            den: false,
+            bloodraven: false,
+            tristram: false,
+            countess: false,
+            smith: false,
+            andariel: false,
+            radament: false,
+            cube: false,
+            amulet: false,
+            shaft: false,
+            horadricstaff: false,
+            summoner: false,
+            duriel: false,
+            lamessen: false,
+            eye: false,
+            heart: false,
+            brain: false,
+            khalimswill: false,
+            travincal: false,
+            mephisto: false,
+            izual: false,
+            hellforge: false,
+            diablo: false,
+            shenk: false,
+            savebarby: false,
+            anya: false,
+            ancients: false,
+            baal: false,
             // No waypoints
-            wp_cold_plains: false, wp_stony_field: false, wp_dark_wood: false,
-            wp_black_marsh: false, wp_outer_cloister: false, wp_jail_1: false,
-            wp_inner_cloister: false, wp_catacombs_2: false,
-            wp_sewers_2: false, wp_dry_hills: false, wp_halls_dead_2: false,
-            wp_far_oasis: false, wp_lost_city: false, wp_arcane_sanctuary: false,
+            wp_cold_plains: false,
+            wp_stony_field: false,
+            wp_dark_wood: false,
+            wp_black_marsh: false,
+            wp_outer_cloister: false,
+            wp_jail_1: false,
+            wp_inner_cloister: false,
+            wp_catacombs_2: false,
+            wp_sewers_2: false,
+            wp_dry_hills: false,
+            wp_halls_dead_2: false,
+            wp_far_oasis: false,
+            wp_lost_city: false,
+            wp_arcane_sanctuary: false,
             wp_canyon_of_magi: false,
-            wp_spider_forest: false, wp_great_marsh: false, wp_flayer_jungle: false,
-            wp_lower_kurast: false, wp_kurast_bazaar: false, wp_upper_kurast: false,
-            wp_travincal: false, wp_durance_2: false,
-            wp_city_of_damned: false, wp_river_of_flame: false,
-            wp_frigid_highlands: false, wp_arreat_plateau: false,
-            wp_crystalline_passage: false, wp_glacial_trail: false,
-            wp_halls_of_pain: false, wp_frozen_tundra: false,
-            wp_ancients_way: false, wp_worldstone_keep_2: false,
+            wp_spider_forest: false,
+            wp_great_marsh: false,
+            wp_flayer_jungle: false,
+            wp_lower_kurast: false,
+            wp_kurast_bazaar: false,
+            wp_upper_kurast: false,
+            wp_travincal: false,
+            wp_durance_2: false,
+            wp_city_of_damned: false,
+            wp_river_of_flame: false,
+            wp_frigid_highlands: false,
+            wp_arreat_plateau: false,
+            wp_crystalline_passage: false,
+            wp_glacial_trail: false,
+            wp_halls_of_pain: false,
+            wp_frozen_tundra: false,
+            wp_ancients_way: false,
+            wp_worldstone_keep_2: false,
             diff_completed: false,
             gold_low_streak: 0,
         }
@@ -318,8 +357,7 @@ impl QuestState {
 
     /// Save to a JSON file.
     pub fn save(&self, path: &Path) -> std::io::Result<()> {
-        let content = serde_json::to_string_pretty(self)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        let content = serde_json::to_string_pretty(self).map_err(std::io::Error::other)?;
         std::fs::write(path, content)
     }
 
@@ -440,23 +478,50 @@ impl Script {
     /// The act this script belongs to.
     pub fn act(self) -> u8 {
         match self {
-            Self::Den | Self::Bishibosh | Self::Cave | Self::BloodRaven
-            | Self::Tristram | Self::Treehead | Self::Countess | Self::Smith
-            | Self::Pits | Self::BoneAsh | Self::Andariel | Self::Cows => 1,
+            Self::Den
+            | Self::Bishibosh
+            | Self::Cave
+            | Self::BloodRaven
+            | Self::Tristram
+            | Self::Treehead
+            | Self::Countess
+            | Self::Smith
+            | Self::Pits
+            | Self::BoneAsh
+            | Self::Andariel
+            | Self::Cows => 1,
 
-            Self::Cube | Self::Radament | Self::CreepingFeature | Self::BeetleBurst
-            | Self::Amulet | Self::Staff | Self::Summoner | Self::FireEye
-            | Self::MaggotLair | Self::Tombs | Self::AncientTunnels | Self::Duriel => 2,
+            Self::Cube
+            | Self::Radament
+            | Self::CreepingFeature
+            | Self::BeetleBurst
+            | Self::Amulet
+            | Self::Staff
+            | Self::Summoner
+            | Self::FireEye
+            | Self::MaggotLair
+            | Self::Tombs
+            | Self::AncientTunnels
+            | Self::Duriel => 2,
 
-            Self::LamEssen | Self::TempleRuns | Self::LowerKurast
-            | Self::Eye | Self::Heart | Self::Brain
-            | Self::Travincal | Self::Mephisto => 3,
+            Self::LamEssen
+            | Self::TempleRuns
+            | Self::LowerKurast
+            | Self::Eye
+            | Self::Heart
+            | Self::Brain
+            | Self::Travincal
+            | Self::Mephisto => 3,
 
-            Self::Izual | Self::HellForge | Self::River
-            | Self::Hephasto | Self::Diablo => 4,
+            Self::Izual | Self::HellForge | Self::River | Self::Hephasto | Self::Diablo => 4,
 
-            Self::Shenk | Self::SaveBarby | Self::Anya | Self::Pindle
-            | Self::Nith | Self::Ancients | Self::Baal => 5,
+            Self::Shenk
+            | Self::SaveBarby
+            | Self::Anya
+            | Self::Pindle
+            | Self::Nith
+            | Self::Ancients
+            | Self::Baal => 5,
         }
     }
 
@@ -514,21 +579,53 @@ impl Script {
 /// This is the master order that the progression engine iterates through.
 pub const SCRIPT_SEQUENCE: &[Script] = &[
     // Act 1
-    Script::Den, Script::Bishibosh, Script::BloodRaven, Script::Tristram,
-    Script::Treehead, Script::Countess, Script::Smith, Script::Pits,
-    Script::BoneAsh, Script::Andariel, Script::Cows,
+    Script::Den,
+    Script::Bishibosh,
+    Script::BloodRaven,
+    Script::Tristram,
+    Script::Treehead,
+    Script::Countess,
+    Script::Smith,
+    Script::Pits,
+    Script::BoneAsh,
+    Script::Andariel,
+    Script::Cows,
     // Act 2
-    Script::Cube, Script::Radament, Script::CreepingFeature, Script::BeetleBurst,
-    Script::Amulet, Script::Summoner, Script::FireEye, Script::MaggotLair,
-    Script::Tombs, Script::AncientTunnels, Script::Staff, Script::Duriel,
+    Script::Cube,
+    Script::Radament,
+    Script::CreepingFeature,
+    Script::BeetleBurst,
+    Script::Amulet,
+    Script::Summoner,
+    Script::FireEye,
+    Script::MaggotLair,
+    Script::Tombs,
+    Script::AncientTunnels,
+    Script::Staff,
+    Script::Duriel,
     // Act 3
-    Script::LamEssen, Script::TempleRuns, Script::LowerKurast,
-    Script::Eye, Script::Heart, Script::Brain, Script::Travincal, Script::Mephisto,
+    Script::LamEssen,
+    Script::TempleRuns,
+    Script::LowerKurast,
+    Script::Eye,
+    Script::Heart,
+    Script::Brain,
+    Script::Travincal,
+    Script::Mephisto,
     // Act 4
-    Script::Izual, Script::HellForge, Script::River, Script::Hephasto, Script::Diablo,
+    Script::Izual,
+    Script::HellForge,
+    Script::River,
+    Script::Hephasto,
+    Script::Diablo,
     // Act 5
-    Script::Shenk, Script::SaveBarby, Script::Anya, Script::Pindle,
-    Script::Nith, Script::Ancients, Script::Baal,
+    Script::Shenk,
+    Script::SaveBarby,
+    Script::Anya,
+    Script::Pindle,
+    Script::Nith,
+    Script::Ancients,
+    Script::Baal,
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -541,24 +638,22 @@ pub const SCRIPT_SEQUENCE: &[Script] = &[
 ///
 /// `class` is the character class name (e.g. "Sorceress", "Barbarian").
 /// `can_teleport` indicates if the character has teleport available.
-pub fn should_run(
-    script: Script,
-    qs: &QuestState,
-    class: &str,
-    can_teleport: bool,
-) -> bool {
+pub fn should_run(script: Script, qs: &QuestState, class: &str, can_teleport: bool) -> bool {
     let lvl = qs.level;
     let diff = qs.difficulty;
     let broke = qs.broke_af();
 
     match script {
         // ─── Act 1 ───────────────────────────────────────────
-
         Script::Den => {
             // kolbot: skipIf: me.den || (charlvl > 8 && charlvl < (sorceress ? 18 : 12))
-            if qs.den { return false; }
+            if qs.den {
+                return false;
+            }
             let skip_range = if class == "Sorceress" { 18 } else { 12 };
-            if lvl > 8 && lvl < skip_range { return false; }
+            if lvl > 8 && lvl < skip_range {
+                return false;
+            }
             true
         }
 
@@ -566,8 +661,12 @@ pub fn should_run(
             // kolbot: preReq: charlvl > 10, skipIf: sorceress
             // For Sorceress, Bishibosh is called as a sub-script from Den
             // (handled internally by den execution). Standalone only for non-sorc lvl 10+.
-            if class == "Sorceress" { return false; }
-            if lvl <= 10 { return false; }
+            if class == "Sorceress" {
+                return false;
+            }
+            if lvl <= 10 {
+                return false;
+            }
             broke
         }
 
@@ -582,8 +681,8 @@ pub fn should_run(
             match diff {
                 Difficulty::Normal => {
                     !qs.bloodraven
-                    || (!qs.summoner && broke)
-                    || (!qs.tristram && class == "Barbarian")
+                        || (!qs.summoner && broke)
+                        || (!qs.tristram && class == "Barbarian")
                 }
                 Difficulty::Nightmare => !qs.bloodraven,
                 Difficulty::Hell => {
@@ -596,31 +695,33 @@ pub fn should_run(
 
         Script::Tristram => {
             // kolbot: complex shouldRun based on difficulty + level
-            if lvl < 6 { return false; } // game timer check not applicable here
+            if lvl < 6 {
+                return false;
+            } // game timer check not applicable here
             match diff {
-                Difficulty::Normal => {
-                    !qs.tristram || lvl < 12 || broke
-                }
-                Difficulty::Nightmare => {
-                    (!qs.tristram && lvl < 43) || broke
-                }
-                Difficulty::Hell => {
-                    !qs.tristram || (lvl <= 72)
-                }
+                Difficulty::Normal => !qs.tristram || lvl < 12 || broke,
+                Difficulty::Nightmare => (!qs.tristram && lvl < 43) || broke,
+                Difficulty::Hell => !qs.tristram || (lvl <= 72),
             }
         }
 
         Script::Treehead => {
             // kolbot: preReq: hell && !accessToAct(3), skipIf: !paladin
-            if diff != Difficulty::Hell { return false; }
-            if qs.access_to_act(3) { return false; }
+            if diff != Difficulty::Hell {
+                return false;
+            }
+            if qs.access_to_act(3) {
+                return false;
+            }
             class == "Paladin"
         }
 
         Script::Countess => {
             // kolbot: skip in hell for classic/sorc-not-final.
             // shouldRun: normal && (needRunes || brokeAf), or NM/Hell with tele
-            if diff == Difficulty::Hell && class == "Sorceress" { return false; }
+            if diff == Difficulty::Hell && class == "Sorceress" {
+                return false;
+            }
             match diff {
                 Difficulty::Normal => broke || lvl < 20, // rune check simplified to level
                 Difficulty::Nightmare | Difficulty::Hell => can_teleport || lvl < 60,
@@ -629,25 +730,33 @@ pub fn should_run(
 
         Script::Smith => {
             // kolbot: preReq: charlvl > 6, skipIf: quest done
-            if lvl <= 6 { return false; }
+            if lvl <= 6 {
+                return false;
+            }
             !qs.smith
         }
 
         Script::Pits => {
             // kolbot: preReq: hell, skipIf: class-specific level checks
-            if diff != Difficulty::Hell { return false; }
+            if diff != Difficulty::Hell {
+                return false;
+            }
             lvl >= 85
         }
 
         Script::BoneAsh => {
             // kolbot: skipIf: charlvl < 10, shouldRun: charlvl < 12 || brokeAf
-            if lvl < 10 { return false; }
+            if lvl < 10 {
+                return false;
+            }
             lvl < 12 || broke
         }
 
         Script::Andariel => {
             // kolbot: skipIf: charlvl < 11
-            if lvl < 11 { return false; }
+            if lvl < 11 {
+                return false;
+            }
             match diff {
                 Difficulty::Normal => !qs.andariel || broke,
                 Difficulty::Nightmare | Difficulty::Hell => {
@@ -658,89 +767,131 @@ pub fn should_run(
 
         Script::Cows => {
             // kolbot: preReq: !cows && diffCompleted
-            if !qs.diff_completed { return false; }
-            if diff == Difficulty::Normal && !broke { return false; }
+            if !qs.diff_completed {
+                return false;
+            }
+            if diff == Difficulty::Normal && !broke {
+                return false;
+            }
             true
         }
 
         // ─── Act 2 ───────────────────────────────────────────
-
         Script::Cube => {
-            if !qs.access_to_act(2) { return false; }
-            if qs.cube { return false; }
-            if class == "Sorceress" && lvl < 18 { return false; } // wait for tele
+            if !qs.access_to_act(2) {
+                return false;
+            }
+            if qs.cube {
+                return false;
+            }
+            if class == "Sorceress" && lvl < 18 {
+                return false;
+            } // wait for tele
             true
         }
 
         Script::Radament => {
-            if !qs.access_to_act(2) { return false; }
+            if !qs.access_to_act(2) {
+                return false;
+            }
             !qs.radament || (diff == Difficulty::Normal && broke)
         }
 
         Script::CreepingFeature => {
-            if !qs.access_to_act(2) { return false; }
-            lvl >= 12 && lvl <= 20
+            if !qs.access_to_act(2) {
+                return false;
+            }
+            (12..=20).contains(&lvl)
         }
 
         Script::BeetleBurst => {
-            if !qs.access_to_act(2) { return false; }
-            lvl >= 12 && lvl <= 20
+            if !qs.access_to_act(2) {
+                return false;
+            }
+            (12..=20).contains(&lvl)
         }
 
         Script::Amulet => {
-            if !qs.access_to_act(2) { return false; }
+            if !qs.access_to_act(2) {
+                return false;
+            }
             !(qs.horadricstaff || qs.amulet)
         }
 
         Script::Staff => {
-            if !qs.access_to_act(2) { return false; }
+            if !qs.access_to_act(2) {
+                return false;
+            }
             !(qs.horadricstaff || qs.shaft)
         }
 
         Script::Summoner => {
-            if !qs.access_to_act(2) { return false; }
+            if !qs.access_to_act(2) {
+                return false;
+            }
             !qs.summoner
         }
 
         Script::FireEye => {
-            if !qs.access_to_act(2) { return false; }
-            if qs.summoner { return false; }
-            lvl >= 16 && lvl <= 23
+            if !qs.access_to_act(2) {
+                return false;
+            }
+            if qs.summoner {
+                return false;
+            }
+            (16..=23).contains(&lvl)
         }
 
         Script::MaggotLair => {
-            if !qs.access_to_act(2) { return false; }
-            if !can_teleport { return false; }
+            if !qs.access_to_act(2) {
+                return false;
+            }
+            if !can_teleport {
+                return false;
+            }
             diff == Difficulty::Normal && lvl <= 21
         }
 
         Script::Tombs => {
-            if !qs.access_to_act(2) || !qs.summoner { return false; }
+            if !qs.access_to_act(2) || !qs.summoner {
+                return false;
+            }
             diff == Difficulty::Normal && lvl <= 22
         }
 
         Script::AncientTunnels => {
-            if diff != Difficulty::Hell { return false; }
-            if !qs.access_to_act(2) { return false; }
+            if diff != Difficulty::Hell {
+                return false;
+            }
+            if !qs.access_to_act(2) {
+                return false;
+            }
             true
         }
 
         Script::Duriel => {
-            if !qs.access_to_act(2) { return false; }
-            if qs.duriel { return false; }
+            if !qs.access_to_act(2) {
+                return false;
+            }
+            if qs.duriel {
+                return false;
+            }
             // Need assembled staff or both pieces
             qs.horadricstaff || (qs.amulet && qs.shaft)
         }
 
         // ─── Act 3 ───────────────────────────────────────────
-
         Script::LamEssen => {
-            if !qs.access_to_act(3) { return false; }
+            if !qs.access_to_act(3) {
+                return false;
+            }
             !qs.lamessen
         }
 
         Script::TempleRuns => {
-            if !qs.access_to_act(3) { return false; }
+            if !qs.access_to_act(3) {
+                return false;
+            }
             match diff {
                 Difficulty::Normal => lvl > 18 && lvl < 25,
                 Difficulty::Nightmare => lvl < 50,
@@ -749,7 +900,9 @@ pub fn should_run(
         }
 
         Script::LowerKurast => {
-            if !qs.access_to_act(3) { return false; }
+            if !qs.access_to_act(3) {
+                return false;
+            }
             match (class, diff) {
                 ("Sorceress", Difficulty::Hell) => lvl < 90,
                 ("Barbarian", Difficulty::Nightmare) => lvl >= 50,
@@ -758,27 +911,37 @@ pub fn should_run(
         }
 
         Script::Eye => {
-            if !qs.access_to_act(3) { return false; }
+            if !qs.access_to_act(3) {
+                return false;
+            }
             !(qs.eye || qs.khalimswill || qs.travincal)
         }
 
         Script::Heart => {
-            if !qs.access_to_act(3) { return false; }
+            if !qs.access_to_act(3) {
+                return false;
+            }
             !(qs.heart || qs.khalimswill || qs.travincal)
         }
 
         Script::Brain => {
-            if !qs.access_to_act(3) { return false; }
+            if !qs.access_to_act(3) {
+                return false;
+            }
             !(qs.brain || qs.khalimswill || qs.travincal)
         }
 
         Script::Travincal => {
-            if !qs.access_to_act(3) { return false; }
+            if !qs.access_to_act(3) {
+                return false;
+            }
             !qs.travincal || (lvl < 25) || broke
         }
 
         Script::Mephisto => {
-            if !qs.access_to_act(3) || !qs.travincal { return false; }
+            if !qs.access_to_act(3) || !qs.travincal {
+                return false;
+            }
             match diff {
                 Difficulty::Normal => !qs.mephisto || broke,
                 Difficulty::Nightmare => can_teleport || lvl <= 65,
@@ -787,20 +950,27 @@ pub fn should_run(
         }
 
         // ─── Act 4 ───────────────────────────────────────────
-
         Script::Izual => {
-            if !qs.access_to_act(4) { return false; }
+            if !qs.access_to_act(4) {
+                return false;
+            }
             !qs.izual || (diff == Difficulty::Normal && !qs.diablo)
         }
 
         Script::HellForge => {
-            if !qs.access_to_act(4) { return false; }
+            if !qs.access_to_act(4) {
+                return false;
+            }
             !qs.hellforge
         }
 
         Script::River => {
-            if !qs.access_to_act(4) { return false; }
-            if qs.diablo || diff == Difficulty::Normal { return false; }
+            if !qs.access_to_act(4) {
+                return false;
+            }
+            if qs.diablo || diff == Difficulty::Normal {
+                return false;
+            }
             let min_lvl = match diff {
                 Difficulty::Normal => 24,
                 Difficulty::Nightmare => 40,
@@ -810,20 +980,30 @@ pub fn should_run(
         }
 
         Script::Hephasto => {
-            if !qs.access_to_act(4) { return false; }
-            if class != "Barbarian" || diff == Difficulty::Normal || qs.diablo { return false; }
+            if !qs.access_to_act(4) {
+                return false;
+            }
+            if class != "Barbarian" || diff == Difficulty::Normal || qs.diablo {
+                return false;
+            }
             lvl <= 70
         }
 
         Script::Diablo => {
-            if !qs.access_to_act(4) { return false; }
+            if !qs.access_to_act(4) {
+                return false;
+            }
             let min_lvl = match diff {
                 Difficulty::Normal => 24,
                 Difficulty::Nightmare => 40,
                 Difficulty::Hell => 80,
             };
-            if lvl < min_lvl { return false; }
-            if !qs.diablo { return true; }
+            if lvl < min_lvl {
+                return false;
+            }
+            if !qs.diablo {
+                return true;
+            }
             match diff {
                 Difficulty::Normal => lvl < 30 || !qs.diff_completed,
                 Difficulty::Nightmare => can_teleport || lvl <= 65,
@@ -832,41 +1012,58 @@ pub fn should_run(
         }
 
         // ─── Act 5 ───────────────────────────────────────────
-
         Script::Shenk => {
-            if !qs.access_to_act(5) { return false; }
+            if !qs.access_to_act(5) {
+                return false;
+            }
             !qs.shenk || lvl <= 70
         }
 
         Script::SaveBarby => {
-            if !qs.access_to_act(5) { return false; }
+            if !qs.access_to_act(5) {
+                return false;
+            }
             !qs.savebarby
         }
 
         Script::Anya => {
-            if !qs.access_to_act(5) { return false; }
+            if !qs.access_to_act(5) {
+                return false;
+            }
             !qs.anya
         }
 
         Script::Pindle => {
-            if !qs.access_to_act(5) || !qs.anya { return false; }
+            if !qs.access_to_act(5) || !qs.anya {
+                return false;
+            }
             true
         }
 
         Script::Nith => {
-            if !qs.access_to_act(5) || !qs.anya { return false; }
-            if !can_teleport { return false; }
-            if diff == Difficulty::Normal && lvl < 30 { return false; }
+            if !qs.access_to_act(5) || !qs.anya {
+                return false;
+            }
+            if !can_teleport {
+                return false;
+            }
+            if diff == Difficulty::Normal && lvl < 30 {
+                return false;
+            }
             diff != Difficulty::Hell // for now only norm/nm
         }
 
         Script::Ancients => {
-            if !qs.access_to_act(5) { return false; }
+            if !qs.access_to_act(5) {
+                return false;
+            }
             !qs.ancients
         }
 
         Script::Baal => {
-            if !qs.access_to_act(5) { return false; }
+            if !qs.access_to_act(5) {
+                return false;
+            }
             qs.ancients // must beat ancients first
         }
     }
@@ -1171,17 +1368,25 @@ fn den_plan(qs: &QuestState) -> Vec<ScriptStep> {
     // Navigate to Blood Moor
     if !qs.wp_cold_plains {
         // First time: walk from town through Blood Moor to get Cold Plains WP
-        steps.push(ScriptStep::WalkToExit { target_area: areas::BLOOD_MOOR });
+        steps.push(ScriptStep::WalkToExit {
+            target_area: areas::BLOOD_MOOR,
+        });
         steps.push(ScriptStep::ClearArea); // kill along the way for XP
-        steps.push(ScriptStep::WalkToExit { target_area: areas::COLD_PLAINS });
+        steps.push(ScriptStep::WalkToExit {
+            target_area: areas::COLD_PLAINS,
+        });
         steps.push(ScriptStep::InteractObject { name: "waypoint" });
     } else {
         // Have Cold Plains WP: use it then walk back to Blood Moor
-        steps.push(ScriptStep::WalkToExit { target_area: areas::BLOOD_MOOR });
+        steps.push(ScriptStep::WalkToExit {
+            target_area: areas::BLOOD_MOOR,
+        });
     }
 
     // Enter Den of Evil
-    steps.push(ScriptStep::WalkToExit { target_area: areas::DEN_OF_EVIL });
+    steps.push(ScriptStep::WalkToExit {
+        target_area: areas::DEN_OF_EVIL,
+    });
     steps.push(ScriptStep::WaitForCue {
         cue: VisualCue::AreaTransition,
         timeout_secs: 30,
@@ -1199,7 +1404,10 @@ fn den_plan(qs: &QuestState) -> Vec<ScriptStep> {
 
     // Return to town and talk to Akara for skill reward
     steps.push(ScriptStep::TownPortal);
-    steps.push(ScriptStep::TalkToNpc { npc: "Akara", act: 1 });
+    steps.push(ScriptStep::TalkToNpc {
+        npc: "Akara",
+        act: 1,
+    });
 
     steps
 }
@@ -1207,13 +1415,19 @@ fn den_plan(qs: &QuestState) -> Vec<ScriptStep> {
 fn bloodraven_plan(_qs: &QuestState) -> Vec<ScriptStep> {
     vec![
         ScriptStep::TownChores,
-        ScriptStep::WalkToExit { target_area: areas::COLD_PLAINS },
-        ScriptStep::WalkToExit { target_area: areas::BURIAL_GROUNDS },
+        ScriptStep::WalkToExit {
+            target_area: areas::COLD_PLAINS,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::BURIAL_GROUNDS,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         },
-        ScriptStep::KillTarget { name: "Blood Raven" },
+        ScriptStep::KillTarget {
+            name: "Blood Raven",
+        },
         ScriptStep::LootArea,
         ScriptStep::WaitForCue {
             cue: VisualCue::QuestCompleteBanner,
@@ -1221,7 +1435,10 @@ fn bloodraven_plan(_qs: &QuestState) -> Vec<ScriptStep> {
         },
         ScriptStep::TownPortal,
         // Talk to Kashya for rogue merc reward
-        ScriptStep::TalkToNpc { npc: "Kashya", act: 1 },
+        ScriptStep::TalkToNpc {
+            npc: "Kashya",
+            act: 1,
+        },
     ]
 }
 
@@ -1234,38 +1451,61 @@ fn tristram_plan(qs: &QuestState) -> Vec<ScriptStep> {
 
         // 1. Get Scroll of Inifuss from Dark Wood
         if qs.wp_dark_wood {
-            steps.push(ScriptStep::UseWaypoint { destination: areas::DARK_WOOD });
+            steps.push(ScriptStep::UseWaypoint {
+                destination: areas::DARK_WOOD,
+            });
         } else if qs.wp_black_marsh {
-            steps.push(ScriptStep::UseWaypoint { destination: areas::BLACK_MARSH });
-            steps.push(ScriptStep::WalkToExit { target_area: areas::DARK_WOOD });
+            steps.push(ScriptStep::UseWaypoint {
+                destination: areas::BLACK_MARSH,
+            });
+            steps.push(ScriptStep::WalkToExit {
+                target_area: areas::DARK_WOOD,
+            });
         } else {
             // Walk from Stony Field through Underground Passage
-            steps.push(ScriptStep::UseWaypoint { destination: areas::STONY_FIELD });
-            steps.push(ScriptStep::WalkToExit { target_area: areas::UNDERGROUND_PASSAGE_1 });
-            steps.push(ScriptStep::WalkToExit { target_area: areas::DARK_WOOD });
+            steps.push(ScriptStep::UseWaypoint {
+                destination: areas::STONY_FIELD,
+            });
+            steps.push(ScriptStep::WalkToExit {
+                target_area: areas::UNDERGROUND_PASSAGE_1,
+            });
+            steps.push(ScriptStep::WalkToExit {
+                target_area: areas::DARK_WOOD,
+            });
         }
 
         // Find and click the Tree of Inifuss
-        steps.push(ScriptStep::InteractObject { name: "Tree of Inifuss" });
+        steps.push(ScriptStep::InteractObject {
+            name: "Tree of Inifuss",
+        });
         steps.push(ScriptStep::LootArea); // pick up scroll
 
         // Get Black Marsh WP if we don't have it
         if !qs.wp_black_marsh {
-            steps.push(ScriptStep::WalkToExit { target_area: areas::BLACK_MARSH });
+            steps.push(ScriptStep::WalkToExit {
+                target_area: areas::BLACK_MARSH,
+            });
             steps.push(ScriptStep::InteractObject { name: "waypoint" });
         }
 
         // 2. Return to town, talk to Akara to decode scroll
         steps.push(ScriptStep::TownPortal);
-        steps.push(ScriptStep::TalkToNpc { npc: "Akara", act: 1 });
+        steps.push(ScriptStep::TalkToNpc {
+            npc: "Akara",
+            act: 1,
+        });
 
         // 3. Go to Stony Field, find Cairn Stones
-        steps.push(ScriptStep::UseWaypoint { destination: areas::STONY_FIELD });
+        steps.push(ScriptStep::UseWaypoint {
+            destination: areas::STONY_FIELD,
+        });
         // Kill Rakanishu near the stones
         steps.push(ScriptStep::KillTarget { name: "Rakanishu" });
         // Activate the 5 Cairn Stones
         for _ in 1..=5 {
-            steps.push(ScriptStep::InteractObject { name: "Cairn Stone" });
+            steps.push(ScriptStep::InteractObject {
+                name: "Cairn Stone",
+            });
         }
 
         // 4. Enter Tristram portal
@@ -1275,11 +1515,15 @@ fn tristram_plan(qs: &QuestState) -> Vec<ScriptStep> {
         });
     } else {
         // Already rescued Cain — just go to Tristram for farming
-        steps.push(ScriptStep::UseWaypoint { destination: areas::STONY_FIELD });
+        steps.push(ScriptStep::UseWaypoint {
+            destination: areas::STONY_FIELD,
+        });
         steps.push(ScriptStep::KillTarget { name: "Rakanishu" });
         // Cairn Stones should auto-activate if quest is done
         for _ in 1..=5 {
-            steps.push(ScriptStep::InteractObject { name: "Cairn Stone" });
+            steps.push(ScriptStep::InteractObject {
+                name: "Cairn Stone",
+            });
         }
         steps.push(ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
@@ -1290,7 +1534,9 @@ fn tristram_plan(qs: &QuestState) -> Vec<ScriptStep> {
     // In Tristram: clear everything + rescue Cain if needed
     if !qs.tristram {
         steps.push(ScriptStep::ClearArea);
-        steps.push(ScriptStep::InteractObject { name: "Cain's Gibbet" });
+        steps.push(ScriptStep::InteractObject {
+            name: "Cain's Gibbet",
+        });
         steps.push(ScriptStep::WaitForCue {
             cue: VisualCue::QuestCompleteBanner,
             timeout_secs: 10,
@@ -1303,7 +1549,10 @@ fn tristram_plan(qs: &QuestState) -> Vec<ScriptStep> {
 
     // Talk to Akara in town (Cain should now be in camp)
     if !qs.tristram {
-        steps.push(ScriptStep::TalkToNpc { npc: "Akara", act: 1 });
+        steps.push(ScriptStep::TalkToNpc {
+            npc: "Akara",
+            act: 1,
+        });
     }
 
     steps
@@ -1312,15 +1561,23 @@ fn tristram_plan(qs: &QuestState) -> Vec<ScriptStep> {
 fn countess_plan(_qs: &QuestState) -> Vec<ScriptStep> {
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::BLACK_MARSH },
-        ScriptStep::WalkToExit { target_area: areas::FORGOTTEN_TOWER },
+        ScriptStep::UseWaypoint {
+            destination: areas::BLACK_MARSH,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::FORGOTTEN_TOWER,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         },
         // Navigate down through Tower Cellar levels 1-5
-        ScriptStep::WalkToExit { target_area: areas::TOWER_CELLAR_5 },
-        ScriptStep::KillTarget { name: "The Countess" },
+        ScriptStep::WalkToExit {
+            target_area: areas::TOWER_CELLAR_5,
+        },
+        ScriptStep::KillTarget {
+            name: "The Countess",
+        },
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
     ]
@@ -1329,14 +1586,21 @@ fn countess_plan(_qs: &QuestState) -> Vec<ScriptStep> {
 fn smith_plan(_qs: &QuestState) -> Vec<ScriptStep> {
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::BARRACKS },
+        ScriptStep::UseWaypoint {
+            destination: areas::BARRACKS,
+        },
         ScriptStep::KillTarget { name: "The Smith" },
         ScriptStep::LootArea,
         // Pick up Horadric Malus
-        ScriptStep::InteractObject { name: "Horadric Malus" },
+        ScriptStep::InteractObject {
+            name: "Horadric Malus",
+        },
         ScriptStep::TownPortal,
         // Talk to Charsi for imbue reward
-        ScriptStep::TalkToNpc { npc: "Charsi", act: 1 },
+        ScriptStep::TalkToNpc {
+            npc: "Charsi",
+            act: 1,
+        },
     ]
 }
 
@@ -1344,8 +1608,12 @@ fn bishibosh_plan() -> Vec<ScriptStep> {
     // Sub-script for early XP: walk to Cold Plains, kill Bishibosh
     vec![
         ScriptStep::TownChores,
-        ScriptStep::WalkToExit { target_area: areas::BLOOD_MOOR },
-        ScriptStep::WalkToExit { target_area: areas::COLD_PLAINS },
+        ScriptStep::WalkToExit {
+            target_area: areas::BLOOD_MOOR,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::COLD_PLAINS,
+        },
         ScriptStep::KillTarget { name: "Bishibosh" },
         ScriptStep::ClearArea,
         ScriptStep::LootArea,
@@ -1357,14 +1625,20 @@ fn cave_plan() -> Vec<ScriptStep> {
     // Sub-script for early XP: clear Cave levels under Blood Moor
     vec![
         ScriptStep::TownChores,
-        ScriptStep::WalkToExit { target_area: areas::BLOOD_MOOR },
-        ScriptStep::WalkToExit { target_area: areas::CAVE_LEVEL_1 },
+        ScriptStep::WalkToExit {
+            target_area: areas::BLOOD_MOOR,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::CAVE_LEVEL_1,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         },
         ScriptStep::ClearArea,
-        ScriptStep::WalkToExit { target_area: areas::CAVE_LEVEL_2 },
+        ScriptStep::WalkToExit {
+            target_area: areas::CAVE_LEVEL_2,
+        },
         ScriptStep::ClearArea,
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
@@ -1375,8 +1649,12 @@ fn treehead_plan() -> Vec<ScriptStep> {
     // Hell-only Paladin script: kill Treehead Woodfist in Dark Wood
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::DARK_WOOD },
-        ScriptStep::KillTarget { name: "Treehead Woodfist" },
+        ScriptStep::UseWaypoint {
+            destination: areas::DARK_WOOD,
+        },
+        ScriptStep::KillTarget {
+            name: "Treehead Woodfist",
+        },
         ScriptStep::ClearArea,
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
@@ -1387,16 +1665,24 @@ fn pits_plan() -> Vec<ScriptStep> {
     // Hell MF run: clear Pit Levels 1-2 (alvl 85 zone)
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::BLACK_MARSH },
-        ScriptStep::WalkToExit { target_area: areas::TAMOE_HIGHLAND },
-        ScriptStep::WalkToExit { target_area: areas::PIT_LEVEL_1 },
+        ScriptStep::UseWaypoint {
+            destination: areas::BLACK_MARSH,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::TAMOE_HIGHLAND,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::PIT_LEVEL_1,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         },
         ScriptStep::ClearArea,
         ScriptStep::LootArea,
-        ScriptStep::WalkToExit { target_area: areas::PIT_LEVEL_2 },
+        ScriptStep::WalkToExit {
+            target_area: areas::PIT_LEVEL_2,
+        },
         ScriptStep::ClearArea,
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
@@ -1407,8 +1693,12 @@ fn boneash_plan() -> Vec<ScriptStep> {
     // Early leveling: clear through Cathedral to kill Bone Ash
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::INNER_CLOISTER },
-        ScriptStep::WalkToExit { target_area: areas::CATHEDRAL },
+        ScriptStep::UseWaypoint {
+            destination: areas::INNER_CLOISTER,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::CATHEDRAL,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
@@ -1427,22 +1717,30 @@ fn cows_plan(qs: &QuestState) -> Vec<ScriptStep> {
 
     // Get Wirt's Leg if we need it
     if qs.diff_completed {
-        steps.push(ScriptStep::UseWaypoint { destination: areas::STONY_FIELD });
+        steps.push(ScriptStep::UseWaypoint {
+            destination: areas::STONY_FIELD,
+        });
         // Activate Cairn Stones to open Tristram portal
         for _ in 1..=5 {
-            steps.push(ScriptStep::InteractObject { name: "Cairn Stone" });
+            steps.push(ScriptStep::InteractObject {
+                name: "Cairn Stone",
+            });
         }
         steps.push(ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         });
         // Pick up Wirt's Leg
-        steps.push(ScriptStep::InteractObject { name: "Wirt's Body" });
+        steps.push(ScriptStep::InteractObject {
+            name: "Wirt's Body",
+        });
         steps.push(ScriptStep::LootArea);
         steps.push(ScriptStep::TownPortal);
 
         // Cube Wirt's Leg + TP Tome → opens Cow Level portal
-        steps.push(ScriptStep::InteractObject { name: "Horadric Cube" });
+        steps.push(ScriptStep::InteractObject {
+            name: "Horadric Cube",
+        });
         steps.push(ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 15,
@@ -1460,9 +1758,15 @@ fn cows_plan(qs: &QuestState) -> Vec<ScriptStep> {
 fn andariel_plan(_qs: &QuestState) -> Vec<ScriptStep> {
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::CATACOMBS_LEVEL_2 },
-        ScriptStep::WalkToExit { target_area: areas::CATACOMBS_LEVEL_3 },
-        ScriptStep::WalkToExit { target_area: areas::CATACOMBS_LEVEL_4 },
+        ScriptStep::UseWaypoint {
+            destination: areas::CATACOMBS_LEVEL_2,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::CATACOMBS_LEVEL_3,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::CATACOMBS_LEVEL_4,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
@@ -1476,7 +1780,10 @@ fn andariel_plan(_qs: &QuestState) -> Vec<ScriptStep> {
         },
         ScriptStep::TownPortal,
         // Talk to Warriv to travel to Act 2
-        ScriptStep::TalkToNpc { npc: "Warriv", act: 1 },
+        ScriptStep::TalkToNpc {
+            npc: "Warriv",
+            act: 1,
+        },
     ]
 }
 
@@ -1486,14 +1793,20 @@ fn cube_plan() -> Vec<ScriptStep> {
     // Fetch Horadric Cube from Halls of the Dead Level 3
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::HALLS_OF_THE_DEAD_2 },
-        ScriptStep::WalkToExit { target_area: areas::HALLS_OF_THE_DEAD_3 },
+        ScriptStep::UseWaypoint {
+            destination: areas::HALLS_OF_THE_DEAD_2,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::HALLS_OF_THE_DEAD_3,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         },
         ScriptStep::ClearArea,
-        ScriptStep::InteractObject { name: "Horadric Cube Chest" },
+        ScriptStep::InteractObject {
+            name: "Horadric Cube Chest",
+        },
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
     ]
@@ -1504,15 +1817,23 @@ fn radament_plan(qs: &QuestState) -> Vec<ScriptStep> {
     steps.push(ScriptStep::TownChores);
 
     if qs.wp_sewers_2 {
-        steps.push(ScriptStep::UseWaypoint { destination: areas::SEWERS_LEVEL_2 });
+        steps.push(ScriptStep::UseWaypoint {
+            destination: areas::SEWERS_LEVEL_2,
+        });
     } else {
         // Walk through Sewers Level 1 to get Level 2 WP
-        steps.push(ScriptStep::WalkToExit { target_area: areas::SEWERS_LEVEL_1 });
-        steps.push(ScriptStep::WalkToExit { target_area: areas::SEWERS_LEVEL_2 });
+        steps.push(ScriptStep::WalkToExit {
+            target_area: areas::SEWERS_LEVEL_1,
+        });
+        steps.push(ScriptStep::WalkToExit {
+            target_area: areas::SEWERS_LEVEL_2,
+        });
         steps.push(ScriptStep::InteractObject { name: "waypoint" });
     }
 
-    steps.push(ScriptStep::WalkToExit { target_area: areas::SEWERS_LEVEL_3 });
+    steps.push(ScriptStep::WalkToExit {
+        target_area: areas::SEWERS_LEVEL_3,
+    });
     steps.push(ScriptStep::WaitForCue {
         cue: VisualCue::AreaTransition,
         timeout_secs: 30,
@@ -1526,7 +1847,10 @@ fn radament_plan(qs: &QuestState) -> Vec<ScriptStep> {
     steps.push(ScriptStep::TownPortal);
     // Talk to Atma for quest completion
     if !qs.radament {
-        steps.push(ScriptStep::TalkToNpc { npc: "Atma", act: 2 });
+        steps.push(ScriptStep::TalkToNpc {
+            npc: "Atma",
+            act: 2,
+        });
     }
 
     steps
@@ -1536,13 +1860,19 @@ fn creepingfeature_plan() -> Vec<ScriptStep> {
     // Early Act 2 XP: kill Creeping Feature in Stony Tomb
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::DRY_HILLS },
-        ScriptStep::WalkToExit { target_area: areas::STONY_TOMB_LEVEL_1 },
+        ScriptStep::UseWaypoint {
+            destination: areas::DRY_HILLS,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::STONY_TOMB_LEVEL_1,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         },
-        ScriptStep::KillTarget { name: "Creeping Feature" },
+        ScriptStep::KillTarget {
+            name: "Creeping Feature",
+        },
         ScriptStep::ClearArea,
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
@@ -1553,8 +1883,12 @@ fn beetleburst_plan() -> Vec<ScriptStep> {
     // Early Act 2 XP: kill Beetle Burst in Far Oasis
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::FAR_OASIS },
-        ScriptStep::KillTarget { name: "Beetle Burst" },
+        ScriptStep::UseWaypoint {
+            destination: areas::FAR_OASIS,
+        },
+        ScriptStep::KillTarget {
+            name: "Beetle Burst",
+        },
         ScriptStep::ClearArea,
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
@@ -1565,16 +1899,26 @@ fn amulet_plan() -> Vec<ScriptStep> {
     // Fetch Viper Amulet from Claw Viper Temple Level 2
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::LOST_CITY },
-        ScriptStep::WalkToExit { target_area: areas::VALLEY_OF_SNAKES },
-        ScriptStep::WalkToExit { target_area: areas::CLAW_VIPER_TEMPLE_1 },
+        ScriptStep::UseWaypoint {
+            destination: areas::LOST_CITY,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::VALLEY_OF_SNAKES,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::CLAW_VIPER_TEMPLE_1,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         },
-        ScriptStep::WalkToExit { target_area: areas::CLAW_VIPER_TEMPLE_2 },
+        ScriptStep::WalkToExit {
+            target_area: areas::CLAW_VIPER_TEMPLE_2,
+        },
         ScriptStep::ClearArea,
-        ScriptStep::InteractObject { name: "Tainted Sun Altar" },
+        ScriptStep::InteractObject {
+            name: "Tainted Sun Altar",
+        },
         ScriptStep::LootArea, // Amulet of the Viper
         ScriptStep::TownPortal,
     ]
@@ -1584,37 +1928,52 @@ fn staff_plan() -> Vec<ScriptStep> {
     // Fetch Staff of Kings from Maggot Lair Level 3
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::FAR_OASIS },
-        ScriptStep::WalkToExit { target_area: areas::MAGGOT_LAIR_1 },
+        ScriptStep::UseWaypoint {
+            destination: areas::FAR_OASIS,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::MAGGOT_LAIR_1,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         },
         ScriptStep::ClearArea,
-        ScriptStep::WalkToExit { target_area: areas::MAGGOT_LAIR_2 },
+        ScriptStep::WalkToExit {
+            target_area: areas::MAGGOT_LAIR_2,
+        },
         ScriptStep::ClearArea,
-        ScriptStep::WalkToExit { target_area: areas::MAGGOT_LAIR_3 },
+        ScriptStep::WalkToExit {
+            target_area: areas::MAGGOT_LAIR_3,
+        },
         ScriptStep::ClearArea,
-        ScriptStep::InteractObject { name: "Staff of Kings Chest" },
+        ScriptStep::InteractObject {
+            name: "Staff of Kings Chest",
+        },
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
     ]
 }
 
 fn summoner_plan(qs: &QuestState) -> Vec<ScriptStep> {
-    let mut steps = Vec::new();
-    steps.push(ScriptStep::TownChores);
-    steps.push(ScriptStep::UseWaypoint { destination: areas::ARCANE_SANCTUARY });
-    // Navigate Arcane Sanctuary (complex layout — follow platforms)
-    steps.push(ScriptStep::ClearArea);
-    steps.push(ScriptStep::KillTarget { name: "The Summoner" });
-    steps.push(ScriptStep::LootArea);
-    // Open journal to create Canyon of Magi portal
-    steps.push(ScriptStep::InteractObject { name: "Journal" });
-    steps.push(ScriptStep::WaitForCue {
-        cue: VisualCue::AreaTransition,
-        timeout_secs: 15,
-    });
+    let mut steps = vec![
+        ScriptStep::TownChores,
+        ScriptStep::UseWaypoint {
+            destination: areas::ARCANE_SANCTUARY,
+        },
+        // Navigate Arcane Sanctuary (complex layout — follow platforms)
+        ScriptStep::ClearArea,
+        ScriptStep::KillTarget {
+            name: "The Summoner",
+        },
+        ScriptStep::LootArea,
+        // Open journal to create Canyon of Magi portal
+        ScriptStep::InteractObject { name: "Journal" },
+        ScriptStep::WaitForCue {
+            cue: VisualCue::AreaTransition,
+            timeout_secs: 15,
+        },
+    ];
     // Get Canyon of Magi waypoint
     if !qs.wp_canyon_of_magi {
         steps.push(ScriptStep::InteractObject { name: "waypoint" });
@@ -1622,7 +1981,10 @@ fn summoner_plan(qs: &QuestState) -> Vec<ScriptStep> {
     steps.push(ScriptStep::TownPortal);
     // Talk to Drognan for quest completion
     if !qs.summoner {
-        steps.push(ScriptStep::TalkToNpc { npc: "Drognan", act: 2 });
+        steps.push(ScriptStep::TalkToNpc {
+            npc: "Drognan",
+            act: 2,
+        });
     }
 
     steps
@@ -1632,7 +1994,9 @@ fn fireeye_plan() -> Vec<ScriptStep> {
     // Mid-level farming: kill Fire Eye super unique
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::FAR_OASIS },
+        ScriptStep::UseWaypoint {
+            destination: areas::FAR_OASIS,
+        },
         ScriptStep::KillTarget { name: "Fire Eye" },
         ScriptStep::ClearArea,
         ScriptStep::LootArea,
@@ -1644,14 +2008,20 @@ fn maggotlair_plan() -> Vec<ScriptStep> {
     // Early leveling: clear Maggot Lair (only with teleport)
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::FAR_OASIS },
-        ScriptStep::WalkToExit { target_area: areas::MAGGOT_LAIR_1 },
+        ScriptStep::UseWaypoint {
+            destination: areas::FAR_OASIS,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::MAGGOT_LAIR_1,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         },
         ScriptStep::ClearArea,
-        ScriptStep::WalkToExit { target_area: areas::MAGGOT_LAIR_2 },
+        ScriptStep::WalkToExit {
+            target_area: areas::MAGGOT_LAIR_2,
+        },
         ScriptStep::ClearArea,
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
@@ -1662,9 +2032,13 @@ fn tombs_plan() -> Vec<ScriptStep> {
     // Tal Rasha's Tombs: clear for XP in Normal (post-Summoner)
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::CANYON_OF_THE_MAGI },
+        ScriptStep::UseWaypoint {
+            destination: areas::CANYON_OF_THE_MAGI,
+        },
         // Enter the first available tomb
-        ScriptStep::WalkToExit { target_area: areas::TALS_TOMBS_PREFIX },
+        ScriptStep::WalkToExit {
+            target_area: areas::TALS_TOMBS_PREFIX,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
@@ -1679,8 +2053,12 @@ fn ancienttunnels_plan() -> Vec<ScriptStep> {
     // Hell MF run: Ancient Tunnels (alvl 85 zone, no cold immunes)
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::LOST_CITY },
-        ScriptStep::WalkToExit { target_area: areas::ANCIENT_TUNNELS },
+        ScriptStep::UseWaypoint {
+            destination: areas::LOST_CITY,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::ANCIENT_TUNNELS,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
@@ -1697,18 +2075,26 @@ fn duriel_plan(qs: &QuestState) -> Vec<ScriptStep> {
 
     // Cube the Horadric Staff if we have both pieces
     if qs.amulet && qs.shaft && !qs.horadricstaff {
-        steps.push(ScriptStep::InteractObject { name: "Horadric Cube" });
+        steps.push(ScriptStep::InteractObject {
+            name: "Horadric Cube",
+        });
     }
 
-    steps.push(ScriptStep::UseWaypoint { destination: areas::CANYON_OF_THE_MAGI });
+    steps.push(ScriptStep::UseWaypoint {
+        destination: areas::CANYON_OF_THE_MAGI,
+    });
     // Find the correct tomb (the one with the Orifice)
-    steps.push(ScriptStep::WalkToExit { target_area: areas::TALS_TOMBS_PREFIX });
+    steps.push(ScriptStep::WalkToExit {
+        target_area: areas::TALS_TOMBS_PREFIX,
+    });
     steps.push(ScriptStep::WaitForCue {
         cue: VisualCue::AreaTransition,
         timeout_secs: 30,
     });
     // Place staff in orifice
-    steps.push(ScriptStep::InteractObject { name: "Horadric Staff Orifice" });
+    steps.push(ScriptStep::InteractObject {
+        name: "Horadric Staff Orifice",
+    });
     steps.push(ScriptStep::WaitForCue {
         cue: VisualCue::AreaTransition,
         timeout_secs: 15,
@@ -1722,7 +2108,10 @@ fn duriel_plan(qs: &QuestState) -> Vec<ScriptStep> {
     });
     // Talk to Tyrael in tomb
     if !qs.duriel {
-        steps.push(ScriptStep::TalkToNpc { npc: "Tyrael", act: 2 });
+        steps.push(ScriptStep::TalkToNpc {
+            npc: "Tyrael",
+            act: 2,
+        });
     }
     steps.push(ScriptStep::TownPortal);
 
@@ -1732,20 +2121,30 @@ fn duriel_plan(qs: &QuestState) -> Vec<ScriptStep> {
 // ─── Act 3 Script Plans ──────────────────────────────────────
 
 fn lamessen_plan(qs: &QuestState) -> Vec<ScriptStep> {
-    let mut steps = Vec::new();
-    steps.push(ScriptStep::TownChores);
-    steps.push(ScriptStep::UseWaypoint { destination: areas::KURAST_BAZAAR });
-    steps.push(ScriptStep::WalkToExit { target_area: areas::RUINED_TEMPLE });
-    steps.push(ScriptStep::WaitForCue {
-        cue: VisualCue::AreaTransition,
-        timeout_secs: 30,
-    });
-    steps.push(ScriptStep::ClearArea);
-    // Pick up Lam Esen's Tome
-    steps.push(ScriptStep::InteractObject { name: "Lam Esen's Tome" });
-    steps.push(ScriptStep::TownPortal);
+    let mut steps = vec![
+        ScriptStep::TownChores,
+        ScriptStep::UseWaypoint {
+            destination: areas::KURAST_BAZAAR,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::RUINED_TEMPLE,
+        },
+        ScriptStep::WaitForCue {
+            cue: VisualCue::AreaTransition,
+            timeout_secs: 30,
+        },
+        ScriptStep::ClearArea,
+        // Pick up Lam Esen's Tome
+        ScriptStep::InteractObject {
+            name: "Lam Esen's Tome",
+        },
+        ScriptStep::TownPortal,
+    ];
     if !qs.lamessen {
-        steps.push(ScriptStep::TalkToNpc { npc: "Alkor", act: 3 });
+        steps.push(ScriptStep::TalkToNpc {
+            npc: "Alkor",
+            act: 3,
+        });
     }
 
     steps
@@ -1755,8 +2154,12 @@ fn templeruns_plan() -> Vec<ScriptStep> {
     // XP farming: clear Kurast temples
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::KURAST_BAZAAR },
-        ScriptStep::WalkToExit { target_area: areas::RUINED_TEMPLE },
+        ScriptStep::UseWaypoint {
+            destination: areas::KURAST_BAZAAR,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::RUINED_TEMPLE,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
@@ -1765,8 +2168,12 @@ fn templeruns_plan() -> Vec<ScriptStep> {
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
         // Second temple
-        ScriptStep::UseWaypoint { destination: areas::UPPER_KURAST },
-        ScriptStep::WalkToExit { target_area: areas::FORGOTTEN_TEMPLE },
+        ScriptStep::UseWaypoint {
+            destination: areas::UPPER_KURAST,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::FORGOTTEN_TEMPLE,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
@@ -1781,11 +2188,17 @@ fn lowerkurast_plan() -> Vec<ScriptStep> {
     // Lower Kurast super chest farming (primarily for runes)
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::LOWER_KURAST },
+        ScriptStep::UseWaypoint {
+            destination: areas::LOWER_KURAST,
+        },
         // Open super chests (campfire huts)
-        ScriptStep::InteractObject { name: "Super Chest" },
+        ScriptStep::InteractObject {
+            name: "Super Chest",
+        },
         ScriptStep::LootArea,
-        ScriptStep::InteractObject { name: "Super Chest" },
+        ScriptStep::InteractObject {
+            name: "Super Chest",
+        },
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
     ]
@@ -1795,14 +2208,20 @@ fn eye_plan() -> Vec<ScriptStep> {
     // Fetch Khalim's Eye from Spider Cavern
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::SPIDER_FOREST },
-        ScriptStep::WalkToExit { target_area: areas::SPIDER_CAVERN },
+        ScriptStep::UseWaypoint {
+            destination: areas::SPIDER_FOREST,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::SPIDER_CAVERN,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         },
         ScriptStep::ClearArea,
-        ScriptStep::InteractObject { name: "Khalim's Eye Chest" },
+        ScriptStep::InteractObject {
+            name: "Khalim's Eye Chest",
+        },
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
     ]
@@ -1812,14 +2231,20 @@ fn heart_plan() -> Vec<ScriptStep> {
     // Fetch Khalim's Heart from Kurast Sewers Level 2
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::KURAST_BAZAAR },
-        ScriptStep::WalkToExit { target_area: areas::KURAST_SEWERS_1 },
+        ScriptStep::UseWaypoint {
+            destination: areas::KURAST_BAZAAR,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::KURAST_SEWERS_1,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         },
         ScriptStep::ClearArea,
-        ScriptStep::InteractObject { name: "Khalim's Heart Chest" },
+        ScriptStep::InteractObject {
+            name: "Khalim's Heart Chest",
+        },
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
     ]
@@ -1829,50 +2254,74 @@ fn brain_plan() -> Vec<ScriptStep> {
     // Fetch Khalim's Brain from Flayer Dungeon Level 3
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::FLAYER_JUNGLE },
-        ScriptStep::WalkToExit { target_area: areas::FLAYER_DUNGEON_1 },
+        ScriptStep::UseWaypoint {
+            destination: areas::FLAYER_JUNGLE,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::FLAYER_DUNGEON_1,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         },
         ScriptStep::ClearArea,
-        ScriptStep::WalkToExit { target_area: areas::FLAYER_DUNGEON_2 },
+        ScriptStep::WalkToExit {
+            target_area: areas::FLAYER_DUNGEON_2,
+        },
         ScriptStep::ClearArea,
-        ScriptStep::WalkToExit { target_area: areas::FLAYER_DUNGEON_3 },
-        ScriptStep::KillTarget { name: "Witch Doctor Endugu" },
+        ScriptStep::WalkToExit {
+            target_area: areas::FLAYER_DUNGEON_3,
+        },
+        ScriptStep::KillTarget {
+            name: "Witch Doctor Endugu",
+        },
         ScriptStep::ClearArea,
-        ScriptStep::InteractObject { name: "Khalim's Brain Chest" },
+        ScriptStep::InteractObject {
+            name: "Khalim's Brain Chest",
+        },
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
     ]
 }
 
 fn travincal_plan(qs: &QuestState) -> Vec<ScriptStep> {
-    let mut steps = Vec::new();
-    steps.push(ScriptStep::TownChores);
-    steps.push(ScriptStep::UseWaypoint { destination: areas::TRAVINCAL });
-
-    // Kill Council members
-    steps.push(ScriptStep::KillTarget { name: "Ismail Vilehand" });
-    steps.push(ScriptStep::ClearArea);
-    steps.push(ScriptStep::LootArea);
+    let mut steps = vec![
+        ScriptStep::TownChores,
+        ScriptStep::UseWaypoint {
+            destination: areas::TRAVINCAL,
+        },
+        // Kill Council members
+        ScriptStep::KillTarget {
+            name: "Ismail Vilehand",
+        },
+        ScriptStep::ClearArea,
+        ScriptStep::LootArea,
+    ];
 
     if !qs.travincal {
         // Pick up Khalim's Flail
         steps.push(ScriptStep::LootArea);
         // Cube: Eye + Heart + Brain + Flail → Khalim's Will
         steps.push(ScriptStep::TownPortal);
-        steps.push(ScriptStep::InteractObject { name: "Horadric Cube" });
+        steps.push(ScriptStep::InteractObject {
+            name: "Horadric Cube",
+        });
         // Return and smash Compelling Orb
-        steps.push(ScriptStep::InteractObject { name: "Compelling Orb" });
+        steps.push(ScriptStep::InteractObject {
+            name: "Compelling Orb",
+        });
         steps.push(ScriptStep::WaitForCue {
             cue: VisualCue::QuestCompleteBanner,
             timeout_secs: 15,
         });
 
         // Navigate to Durance Level 2 WP
-        steps.push(ScriptStep::WalkToExit { target_area: areas::DURANCE_OF_HATE_1 });
-        steps.push(ScriptStep::WalkToExit { target_area: areas::DURANCE_OF_HATE_2 });
+        steps.push(ScriptStep::WalkToExit {
+            target_area: areas::DURANCE_OF_HATE_1,
+        });
+        steps.push(ScriptStep::WalkToExit {
+            target_area: areas::DURANCE_OF_HATE_2,
+        });
         if !qs.wp_durance_2 {
             steps.push(ScriptStep::InteractObject { name: "waypoint" });
         }
@@ -1887,15 +2336,25 @@ fn mephisto_plan(qs: &QuestState) -> Vec<ScriptStep> {
     steps.push(ScriptStep::TownChores);
 
     if qs.wp_durance_2 {
-        steps.push(ScriptStep::UseWaypoint { destination: areas::DURANCE_OF_HATE_2 });
+        steps.push(ScriptStep::UseWaypoint {
+            destination: areas::DURANCE_OF_HATE_2,
+        });
     } else {
         // Need to walk from Travincal
-        steps.push(ScriptStep::UseWaypoint { destination: areas::TRAVINCAL });
-        steps.push(ScriptStep::WalkToExit { target_area: areas::DURANCE_OF_HATE_1 });
-        steps.push(ScriptStep::WalkToExit { target_area: areas::DURANCE_OF_HATE_2 });
+        steps.push(ScriptStep::UseWaypoint {
+            destination: areas::TRAVINCAL,
+        });
+        steps.push(ScriptStep::WalkToExit {
+            target_area: areas::DURANCE_OF_HATE_1,
+        });
+        steps.push(ScriptStep::WalkToExit {
+            target_area: areas::DURANCE_OF_HATE_2,
+        });
     }
 
-    steps.push(ScriptStep::WalkToExit { target_area: areas::DURANCE_OF_HATE_3 });
+    steps.push(ScriptStep::WalkToExit {
+        target_area: areas::DURANCE_OF_HATE_3,
+    });
     steps.push(ScriptStep::WaitForCue {
         cue: VisualCue::AreaTransition,
         timeout_secs: 30,
@@ -1925,36 +2384,49 @@ fn mephisto_plan(qs: &QuestState) -> Vec<ScriptStep> {
 // ─── Act 4 Script Plans ──────────────────────────────────────
 
 fn izual_plan(qs: &QuestState) -> Vec<ScriptStep> {
-    let mut steps = Vec::new();
-    steps.push(ScriptStep::TownChores);
-    steps.push(ScriptStep::UseWaypoint { destination: areas::CITY_OF_THE_DAMNED });
-    steps.push(ScriptStep::WalkToExit { target_area: areas::PLAINS_OF_DESPAIR });
-    steps.push(ScriptStep::WaitForCue {
-        cue: VisualCue::AreaTransition,
-        timeout_secs: 30,
-    });
-    steps.push(ScriptStep::KillTarget { name: "Izual" });
-    steps.push(ScriptStep::LootArea);
-    steps.push(ScriptStep::WaitForCue {
-        cue: VisualCue::QuestCompleteBanner,
-        timeout_secs: 15,
-    });
-    steps.push(ScriptStep::TownPortal);
+    let mut steps = vec![
+        ScriptStep::TownChores,
+        ScriptStep::UseWaypoint {
+            destination: areas::CITY_OF_THE_DAMNED,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::PLAINS_OF_DESPAIR,
+        },
+        ScriptStep::WaitForCue {
+            cue: VisualCue::AreaTransition,
+            timeout_secs: 30,
+        },
+        ScriptStep::KillTarget { name: "Izual" },
+        ScriptStep::LootArea,
+        ScriptStep::WaitForCue {
+            cue: VisualCue::QuestCompleteBanner,
+            timeout_secs: 15,
+        },
+        ScriptStep::TownPortal,
+    ];
     if !qs.izual {
-        steps.push(ScriptStep::TalkToNpc { npc: "Tyrael", act: 4 });
+        steps.push(ScriptStep::TalkToNpc {
+            npc: "Tyrael",
+            act: 4,
+        });
     }
 
     steps
 }
 
 fn hellforge_plan(qs: &QuestState) -> Vec<ScriptStep> {
-    let mut steps = Vec::new();
-    steps.push(ScriptStep::TownChores);
-    steps.push(ScriptStep::UseWaypoint { destination: areas::RIVER_OF_FLAME });
-    // Kill Hephasto the Armorer (guards the forge)
-    steps.push(ScriptStep::KillTarget { name: "Hephasto the Armorer" });
-    steps.push(ScriptStep::LootArea); // Hellforge Hammer drops
-    steps.push(ScriptStep::ClearArea);
+    let mut steps = vec![
+        ScriptStep::TownChores,
+        ScriptStep::UseWaypoint {
+            destination: areas::RIVER_OF_FLAME,
+        },
+        // Kill Hephasto the Armorer (guards the forge)
+        ScriptStep::KillTarget {
+            name: "Hephasto the Armorer",
+        },
+        ScriptStep::LootArea, // Hellforge Hammer drops
+        ScriptStep::ClearArea,
+    ];
 
     if !qs.hellforge {
         // Equip Hellforge Hammer and smash the forge
@@ -1968,7 +2440,10 @@ fn hellforge_plan(qs: &QuestState) -> Vec<ScriptStep> {
 
     steps.push(ScriptStep::TownPortal);
     if !qs.hellforge {
-        steps.push(ScriptStep::TalkToNpc { npc: "Cain", act: 4 });
+        steps.push(ScriptStep::TalkToNpc {
+            npc: "Cain",
+            act: 4,
+        });
     }
 
     steps
@@ -1978,14 +2453,20 @@ fn river_plan() -> Vec<ScriptStep> {
     // River of Flame farming: clear to Hephasto, get WP
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::CITY_OF_THE_DAMNED },
-        ScriptStep::WalkToExit { target_area: areas::RIVER_OF_FLAME },
+        ScriptStep::UseWaypoint {
+            destination: areas::CITY_OF_THE_DAMNED,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::RIVER_OF_FLAME,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         },
         ScriptStep::ClearArea,
-        ScriptStep::KillTarget { name: "Hephasto the Armorer" },
+        ScriptStep::KillTarget {
+            name: "Hephasto the Armorer",
+        },
         ScriptStep::LootArea,
         ScriptStep::InteractObject { name: "waypoint" },
         ScriptStep::TownPortal,
@@ -1996,46 +2477,61 @@ fn hephasto_plan() -> Vec<ScriptStep> {
     // Quick Hephasto kill (Barbarian NM/Hell)
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::RIVER_OF_FLAME },
-        ScriptStep::KillTarget { name: "Hephasto the Armorer" },
+        ScriptStep::UseWaypoint {
+            destination: areas::RIVER_OF_FLAME,
+        },
+        ScriptStep::KillTarget {
+            name: "Hephasto the Armorer",
+        },
         ScriptStep::LootArea,
         ScriptStep::TownPortal,
     ]
 }
 
 fn diablo_plan(qs: &QuestState) -> Vec<ScriptStep> {
-    let mut steps = Vec::new();
-    steps.push(ScriptStep::TownChores);
-    steps.push(ScriptStep::UseWaypoint { destination: areas::RIVER_OF_FLAME });
-    steps.push(ScriptStep::WalkToExit { target_area: areas::CHAOS_SANCTUARY });
-    steps.push(ScriptStep::WaitForCue {
-        cue: VisualCue::AreaTransition,
-        timeout_secs: 30,
-    });
-
-    // Open the 3 seal groups — each spawns a seal boss
-    // Seal 1: Vizier
-    steps.push(ScriptStep::InteractObject { name: "Vizier Seal" });
-    steps.push(ScriptStep::KillTarget { name: "Grand Vizier of Chaos" });
-    steps.push(ScriptStep::ClearArea);
-
-    // Seal 2: De Seis
-    steps.push(ScriptStep::InteractObject { name: "Seis Seal" });
-    steps.push(ScriptStep::KillTarget { name: "Lord De Seis" });
-    steps.push(ScriptStep::ClearArea);
-
-    // Seal 3: Infector
-    steps.push(ScriptStep::InteractObject { name: "Infector Seal" });
-    steps.push(ScriptStep::KillTarget { name: "Infector of Souls" });
-    steps.push(ScriptStep::ClearArea);
-
-    // Diablo spawns after all seals opened
-    steps.push(ScriptStep::WaitForCue {
-        cue: VisualCue::QuestCompleteBanner,
-        timeout_secs: 20,
-    });
-    steps.push(ScriptStep::KillTarget { name: "Diablo" });
-    steps.push(ScriptStep::LootArea);
+    let mut steps = vec![
+        ScriptStep::TownChores,
+        ScriptStep::UseWaypoint {
+            destination: areas::RIVER_OF_FLAME,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::CHAOS_SANCTUARY,
+        },
+        ScriptStep::WaitForCue {
+            cue: VisualCue::AreaTransition,
+            timeout_secs: 30,
+        },
+        // Open the 3 seal groups — each spawns a seal boss
+        // Seal 1: Vizier
+        ScriptStep::InteractObject {
+            name: "Vizier Seal",
+        },
+        ScriptStep::KillTarget {
+            name: "Grand Vizier of Chaos",
+        },
+        ScriptStep::ClearArea,
+        // Seal 2: De Seis
+        ScriptStep::InteractObject { name: "Seis Seal" },
+        ScriptStep::KillTarget {
+            name: "Lord De Seis",
+        },
+        ScriptStep::ClearArea,
+        // Seal 3: Infector
+        ScriptStep::InteractObject {
+            name: "Infector Seal",
+        },
+        ScriptStep::KillTarget {
+            name: "Infector of Souls",
+        },
+        ScriptStep::ClearArea,
+        // Diablo spawns after all seals opened
+        ScriptStep::WaitForCue {
+            cue: VisualCue::QuestCompleteBanner,
+            timeout_secs: 20,
+        },
+        ScriptStep::KillTarget { name: "Diablo" },
+        ScriptStep::LootArea,
+    ];
 
     if !qs.diablo {
         steps.push(ScriptStep::WaitForCue {
@@ -2046,7 +2542,10 @@ fn diablo_plan(qs: &QuestState) -> Vec<ScriptStep> {
     steps.push(ScriptStep::TownPortal);
     // Talk to Tyrael to travel to Act 5
     if !qs.diablo {
-        steps.push(ScriptStep::TalkToNpc { npc: "Tyrael", act: 4 });
+        steps.push(ScriptStep::TalkToNpc {
+            npc: "Tyrael",
+            act: 4,
+        });
     }
 
     steps
@@ -2058,13 +2557,21 @@ fn shenk_plan() -> Vec<ScriptStep> {
     // Kill Eldritch + Shenk from Frigid Highlands WP
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::FRIGID_HIGHLANDS },
+        ScriptStep::UseWaypoint {
+            destination: areas::FRIGID_HIGHLANDS,
+        },
         // Eldritch is right next to the WP
-        ScriptStep::KillTarget { name: "Eldritch the Rectifier" },
+        ScriptStep::KillTarget {
+            name: "Eldritch the Rectifier",
+        },
         ScriptStep::LootArea,
         // Walk down to Bloody Foothills for Shenk
-        ScriptStep::WalkToExit { target_area: areas::BLOODY_FOOTHILLS },
-        ScriptStep::KillTarget { name: "Shenk the Overseer" },
+        ScriptStep::WalkToExit {
+            target_area: areas::BLOODY_FOOTHILLS,
+        },
+        ScriptStep::KillTarget {
+            name: "Shenk the Overseer",
+        },
         ScriptStep::LootArea,
         ScriptStep::WaitForCue {
             cue: VisualCue::QuestCompleteBanner,
@@ -2078,18 +2585,29 @@ fn savebarby_plan() -> Vec<ScriptStep> {
     // Rescue Barbarians from cages in Frigid Highlands
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::FRIGID_HIGHLANDS },
+        ScriptStep::UseWaypoint {
+            destination: areas::FRIGID_HIGHLANDS,
+        },
         // Find and destroy prison doors to free barbarians
-        ScriptStep::InteractObject { name: "Prison Door" },
-        ScriptStep::InteractObject { name: "Prison Door" },
-        ScriptStep::InteractObject { name: "Prison Door" },
+        ScriptStep::InteractObject {
+            name: "Prison Door",
+        },
+        ScriptStep::InteractObject {
+            name: "Prison Door",
+        },
+        ScriptStep::InteractObject {
+            name: "Prison Door",
+        },
         ScriptStep::ClearArea,
         ScriptStep::WaitForCue {
             cue: VisualCue::QuestCompleteBanner,
             timeout_secs: 10,
         },
         ScriptStep::TownPortal,
-        ScriptStep::TalkToNpc { npc: "Qual-Kehk", act: 5 },
+        ScriptStep::TalkToNpc {
+            npc: "Qual-Kehk",
+            act: 5,
+        },
     ]
 }
 
@@ -2099,24 +2617,37 @@ fn anya_plan(qs: &QuestState) -> Vec<ScriptStep> {
 
     if !qs.anya {
         // Step 1: Find Frozen Anya in Frozen River
-        steps.push(ScriptStep::UseWaypoint { destination: areas::CRYSTALLINE_PASSAGE });
-        steps.push(ScriptStep::WalkToExit { target_area: areas::FROZEN_RIVER });
+        steps.push(ScriptStep::UseWaypoint {
+            destination: areas::CRYSTALLINE_PASSAGE,
+        });
+        steps.push(ScriptStep::WalkToExit {
+            target_area: areas::FROZEN_RIVER,
+        });
         steps.push(ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         });
         // Kill Frozenstein near Anya
-        steps.push(ScriptStep::KillTarget { name: "Frozenstein" });
+        steps.push(ScriptStep::KillTarget {
+            name: "Frozenstein",
+        });
         steps.push(ScriptStep::ClearArea);
         // Interact with Frozen Anya
-        steps.push(ScriptStep::InteractObject { name: "Frozen Anya" });
+        steps.push(ScriptStep::InteractObject {
+            name: "Frozen Anya",
+        });
         steps.push(ScriptStep::TownPortal);
 
         // Step 2: Talk to Malah for potion
-        steps.push(ScriptStep::TalkToNpc { npc: "Malah", act: 5 });
+        steps.push(ScriptStep::TalkToNpc {
+            npc: "Malah",
+            act: 5,
+        });
 
         // Step 3: Return to Anya and use potion
-        steps.push(ScriptStep::InteractObject { name: "Frozen Anya" });
+        steps.push(ScriptStep::InteractObject {
+            name: "Frozen Anya",
+        });
         steps.push(ScriptStep::WaitForCue {
             cue: VisualCue::QuestCompleteBanner,
             timeout_secs: 15,
@@ -2124,8 +2655,14 @@ fn anya_plan(qs: &QuestState) -> Vec<ScriptStep> {
         steps.push(ScriptStep::TownPortal);
 
         // Step 4: Talk to Malah for scroll, then Anya for personalization
-        steps.push(ScriptStep::TalkToNpc { npc: "Malah", act: 5 });
-        steps.push(ScriptStep::TalkToNpc { npc: "Anya", act: 5 });
+        steps.push(ScriptStep::TalkToNpc {
+            npc: "Malah",
+            act: 5,
+        });
+        steps.push(ScriptStep::TalkToNpc {
+            npc: "Anya",
+            act: 5,
+        });
     }
 
     steps
@@ -2136,8 +2673,13 @@ fn pindle_plan() -> Vec<ScriptStep> {
     // This is the simplest farming script — matches kolbot's pindle.js exactly
     vec![
         ScriptStep::TownChores,
-        ScriptStep::TalkToNpc { npc: "Anya", act: 5 },        // walk near Anya's portal
-        ScriptStep::InteractObject { name: "Anya Portal" },    // use red portal
+        ScriptStep::TalkToNpc {
+            npc: "Anya",
+            act: 5,
+        }, // walk near Anya's portal
+        ScriptStep::InteractObject {
+            name: "Anya Portal",
+        }, // use red portal
         ScriptStep::WaitForCue {
             cue: VisualCue::LoadingScreenEnd,
             timeout_secs: 15,
@@ -2152,8 +2694,12 @@ fn nith_plan() -> Vec<ScriptStep> {
     // Kill Nihlathak for Destruction Key
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::HALLS_OF_PAIN },
-        ScriptStep::WalkToExit { target_area: areas::HALLS_OF_VAUGHT },
+        ScriptStep::UseWaypoint {
+            destination: areas::HALLS_OF_PAIN,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::HALLS_OF_VAUGHT,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
@@ -2169,14 +2715,20 @@ fn ancients_plan() -> Vec<ScriptStep> {
     // Rite of Passage: fight the 3 Ancients on Arreat Summit
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::ANCIENTS_WAY },
-        ScriptStep::WalkToExit { target_area: areas::ARREAT_SUMMIT },
+        ScriptStep::UseWaypoint {
+            destination: areas::ANCIENTS_WAY,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::ARREAT_SUMMIT,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
         },
         // Touch altar to trigger the fight
-        ScriptStep::InteractObject { name: "Altar of the Heavens" },
+        ScriptStep::InteractObject {
+            name: "Altar of the Heavens",
+        },
         // Kill all 3 Ancients
         ScriptStep::KillTarget { name: "Talic" },
         ScriptStep::KillTarget { name: "Madawc" },
@@ -2186,8 +2738,12 @@ fn ancients_plan() -> Vec<ScriptStep> {
             timeout_secs: 30,
         },
         // After Ancients, navigate to Worldstone Keep and get WP
-        ScriptStep::WalkToExit { target_area: areas::WORLDSTONE_KEEP_1 },
-        ScriptStep::WalkToExit { target_area: areas::WORLDSTONE_KEEP_2 },
+        ScriptStep::WalkToExit {
+            target_area: areas::WORLDSTONE_KEEP_1,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::WORLDSTONE_KEEP_2,
+        },
         ScriptStep::InteractObject { name: "waypoint" },
         ScriptStep::TownPortal,
     ]
@@ -2197,9 +2753,15 @@ fn baal_plan() -> Vec<ScriptStep> {
     // Baal run: clear Throne of Destruction waves then kill Baal
     vec![
         ScriptStep::TownChores,
-        ScriptStep::UseWaypoint { destination: areas::WORLDSTONE_KEEP_2 },
-        ScriptStep::WalkToExit { target_area: areas::WORLDSTONE_KEEP_3 },
-        ScriptStep::WalkToExit { target_area: areas::THRONE_OF_DESTRUCTION },
+        ScriptStep::UseWaypoint {
+            destination: areas::WORLDSTONE_KEEP_2,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::WORLDSTONE_KEEP_3,
+        },
+        ScriptStep::WalkToExit {
+            target_area: areas::THRONE_OF_DESTRUCTION,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
@@ -2209,11 +2771,15 @@ fn baal_plan() -> Vec<ScriptStep> {
         ScriptStep::ClearArea, // Wave 2: Unravelers / Achmel
         ScriptStep::ClearArea, // Wave 3: Council Members
         ScriptStep::ClearArea, // Wave 4: Venom Lords
-        ScriptStep::KillTarget { name: "Lister the Tormentor" }, // Wave 5
+        ScriptStep::KillTarget {
+            name: "Lister the Tormentor",
+        }, // Wave 5
         ScriptStep::ClearArea,
         ScriptStep::LootArea,
         // Enter Worldstone Chamber
-        ScriptStep::WalkToExit { target_area: areas::WORLDSTONE_CHAMBER },
+        ScriptStep::WalkToExit {
+            target_area: areas::WORLDSTONE_CHAMBER,
+        },
         ScriptStep::WaitForCue {
             cue: VisualCue::AreaTransition,
             timeout_secs: 30,
@@ -2394,8 +2960,13 @@ mod tests {
         let qs = QuestState::default();
         let plan = script_plan(Script::Tristram, &qs);
         // Should include interacting with Tree of Inifuss
-        let has_tree = plan.iter().any(|s| matches!(s, ScriptStep::InteractObject { name } if *name == "Tree of Inifuss"));
-        assert!(has_tree, "Tristram plan should include Tree of Inifuss interaction");
+        let has_tree = plan.iter().any(
+            |s| matches!(s, ScriptStep::InteractObject { name } if *name == "Tree of Inifuss"),
+        );
+        assert!(
+            has_tree,
+            "Tristram plan should include Tree of Inifuss interaction"
+        );
     }
 
     #[test]
@@ -2404,7 +2975,9 @@ mod tests {
         let plan = script_plan(Script::Pindle, &qs);
         // Pindle: TownChores → talk Anya → portal → load → kill → loot → TP
         assert!(matches!(plan[0], ScriptStep::TownChores));
-        let has_kill = plan.iter().any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Pindleskin"));
+        let has_kill = plan
+            .iter()
+            .any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Pindleskin"));
         assert!(has_kill, "Pindle plan must kill Pindleskin");
     }
 
@@ -2415,7 +2988,9 @@ mod tests {
         let plan = script_plan(Script::Mephisto, &qs);
         let uses_durance = plan.iter().any(|s| matches!(s, ScriptStep::UseWaypoint { destination } if *destination == areas::DURANCE_OF_HATE_2));
         assert!(uses_durance, "Mephisto plan should use Durance 2 WP");
-        let has_kill = plan.iter().any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Mephisto"));
+        let has_kill = plan
+            .iter()
+            .any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Mephisto"));
         assert!(has_kill, "Mephisto plan must kill Mephisto");
     }
 
@@ -2423,8 +2998,12 @@ mod tests {
     fn test_baal_plan_has_waves_and_boss() {
         let qs = QuestState::default();
         let plan = script_plan(Script::Baal, &qs);
-        let has_lister = plan.iter().any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Lister the Tormentor"));
-        let has_baal = plan.iter().any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Baal"));
+        let has_lister = plan.iter().any(
+            |s| matches!(s, ScriptStep::KillTarget { name } if *name == "Lister the Tormentor"),
+        );
+        let has_baal = plan
+            .iter()
+            .any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Baal"));
         assert!(has_lister, "Baal plan must kill Lister");
         assert!(has_baal, "Baal plan must kill Baal");
     }
@@ -2433,9 +3012,17 @@ mod tests {
     fn test_diablo_plan_has_seals_and_boss() {
         let qs = QuestState::default();
         let plan = script_plan(Script::Diablo, &qs);
-        let seal_count = plan.iter().filter(|s| matches!(s, ScriptStep::InteractObject { .. })).count();
-        assert!(seal_count >= 3, "Diablo plan needs at least 3 seal interactions");
-        let has_diablo = plan.iter().any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Diablo"));
+        let seal_count = plan
+            .iter()
+            .filter(|s| matches!(s, ScriptStep::InteractObject { .. }))
+            .count();
+        assert!(
+            seal_count >= 3,
+            "Diablo plan needs at least 3 seal interactions"
+        );
+        let has_diablo = plan
+            .iter()
+            .any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Diablo"));
         assert!(has_diablo, "Diablo plan must kill Diablo");
     }
 
@@ -2443,10 +3030,19 @@ mod tests {
     fn test_ancients_plan_has_all_three() {
         let qs = QuestState::default();
         let plan = script_plan(Script::Ancients, &qs);
-        let has_talic = plan.iter().any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Talic"));
-        let has_madawc = plan.iter().any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Madawc"));
-        let has_korlic = plan.iter().any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Korlic"));
-        assert!(has_talic && has_madawc && has_korlic, "Ancients plan must fight all 3");
+        let has_talic = plan
+            .iter()
+            .any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Talic"));
+        let has_madawc = plan
+            .iter()
+            .any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Madawc"));
+        let has_korlic = plan
+            .iter()
+            .any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Korlic"));
+        assert!(
+            has_talic && has_madawc && has_korlic,
+            "Ancients plan must fight all 3"
+        );
     }
 
     #[test]
@@ -2463,8 +3059,12 @@ mod tests {
     fn test_shenk_plan_kills_both_bosses() {
         let qs = QuestState::default();
         let plan = script_plan(Script::Shenk, &qs);
-        let has_eldritch = plan.iter().any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Eldritch the Rectifier"));
-        let has_shenk = plan.iter().any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Shenk the Overseer"));
+        let has_eldritch = plan.iter().any(
+            |s| matches!(s, ScriptStep::KillTarget { name } if *name == "Eldritch the Rectifier"),
+        );
+        let has_shenk = plan
+            .iter()
+            .any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Shenk the Overseer"));
         assert!(has_eldritch, "Shenk plan must kill Eldritch");
         assert!(has_shenk, "Shenk plan must kill Shenk");
     }
@@ -2473,8 +3073,12 @@ mod tests {
     fn test_anya_plan_has_rescue_flow() {
         let qs = QuestState::default();
         let plan = script_plan(Script::Anya, &qs);
-        let has_frozenstein = plan.iter().any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Frozenstein"));
-        let has_malah = plan.iter().any(|s| matches!(s, ScriptStep::TalkToNpc { npc, .. } if *npc == "Malah"));
+        let has_frozenstein = plan
+            .iter()
+            .any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Frozenstein"));
+        let has_malah = plan
+            .iter()
+            .any(|s| matches!(s, ScriptStep::TalkToNpc { npc, .. } if *npc == "Malah"));
         assert!(has_frozenstein, "Anya plan must kill Frozenstein");
         assert!(has_malah, "Anya plan must talk to Malah");
     }
@@ -2488,9 +3092,13 @@ mod tests {
         qs.level = 20;
         let plan = script_plan(Script::Duriel, &qs);
         // Should cube the staff before entering tomb
-        let has_cube = plan.iter().any(|s| matches!(s, ScriptStep::InteractObject { name } if *name == "Horadric Cube"));
+        let has_cube = plan
+            .iter()
+            .any(|s| matches!(s, ScriptStep::InteractObject { name } if *name == "Horadric Cube"));
         assert!(has_cube, "Duriel plan should cube staff pieces");
-        let has_kill = plan.iter().any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Duriel"));
+        let has_kill = plan
+            .iter()
+            .any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Duriel"));
         assert!(has_kill, "Duriel plan must kill Duriel");
     }
 
@@ -2498,8 +3106,12 @@ mod tests {
     fn test_hellforge_plan_smashes_forge() {
         let qs = QuestState::default();
         let plan = script_plan(Script::HellForge, &qs);
-        let has_hephasto = plan.iter().any(|s| matches!(s, ScriptStep::KillTarget { name } if *name == "Hephasto the Armorer"));
-        let has_forge = plan.iter().any(|s| matches!(s, ScriptStep::InteractObject { name } if *name == "Hellforge"));
+        let has_hephasto = plan.iter().any(
+            |s| matches!(s, ScriptStep::KillTarget { name } if *name == "Hephasto the Armorer"),
+        );
+        let has_forge = plan
+            .iter()
+            .any(|s| matches!(s, ScriptStep::InteractObject { name } if *name == "Hellforge"));
         assert!(has_hephasto, "Hellforge plan must kill Hephasto");
         assert!(has_forge, "Hellforge plan must interact with Hellforge");
     }

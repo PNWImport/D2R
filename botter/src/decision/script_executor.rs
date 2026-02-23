@@ -11,9 +11,9 @@
 //!   - Survival (potions, chicken) is handled by DecisionEngine, which runs
 //!     BEFORE the executor each frame — executor only controls navigation/interaction
 
-use crate::vision::FrameState;
 use super::engine::{Action, Decision, DecisionEngine};
 use super::progression::{ScriptStep, VisualCue};
+use crate::vision::FrameState;
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
@@ -27,11 +27,11 @@ use std::time::{Duration, Instant};
 
 /// Waypoint panel act tab positions (top of WP panel)
 const WP_ACT_TABS: [(i32, i32); 5] = [
-    (263, 80),  // Act 1
-    (323, 80),  // Act 2
-    (383, 80),  // Act 3
-    (443, 80),  // Act 4
-    (503, 80),  // Act 5
+    (263, 80), // Act 1
+    (323, 80), // Act 2
+    (383, 80), // Act 3
+    (443, 80), // Act 4
+    (503, 80), // Act 5
 ];
 
 /// Waypoint area list — Y positions for each entry within an act tab.
@@ -46,31 +46,57 @@ const WP_LIST_Y_STEP: i32 = 21;
 fn wp_panel_location(destination: &str) -> Option<(usize, usize)> {
     // Act 1 waypoints (in WP menu order)
     const ACT1: &[&str] = &[
-        "Rogue Encampment", "Cold Plains", "Stony Field",
-        "Dark Wood", "Black Marsh", "Outer Cloister",
-        "Jail Level 1", "Inner Cloister", "Catacombs Level 2",
+        "Rogue Encampment",
+        "Cold Plains",
+        "Stony Field",
+        "Dark Wood",
+        "Black Marsh",
+        "Outer Cloister",
+        "Jail Level 1",
+        "Inner Cloister",
+        "Catacombs Level 2",
     ];
     // Act 2 waypoints
     const ACT2: &[&str] = &[
-        "Lut Gholein", "Sewers Level 2", "Dry Hills",
-        "Halls of the Dead Level 2", "Far Oasis", "Lost City",
-        "Palace Cellar Level 1", "Arcane Sanctuary", "Canyon of the Magi",
+        "Lut Gholein",
+        "Sewers Level 2",
+        "Dry Hills",
+        "Halls of the Dead Level 2",
+        "Far Oasis",
+        "Lost City",
+        "Palace Cellar Level 1",
+        "Arcane Sanctuary",
+        "Canyon of the Magi",
     ];
     // Act 3 waypoints
     const ACT3: &[&str] = &[
-        "Kurast Docks", "Spider Forest", "Great Marsh",
-        "Flayer Jungle", "Lower Kurast", "Kurast Bazaar",
-        "Upper Kurast", "Travincal", "Durance of Hate Level 2",
+        "Kurast Docks",
+        "Spider Forest",
+        "Great Marsh",
+        "Flayer Jungle",
+        "Lower Kurast",
+        "Kurast Bazaar",
+        "Upper Kurast",
+        "Travincal",
+        "Durance of Hate Level 2",
     ];
     // Act 4 waypoints
     const ACT4: &[&str] = &[
-        "The Pandemonium Fortress", "City of the Damned", "River of Flame",
+        "The Pandemonium Fortress",
+        "City of the Damned",
+        "River of Flame",
     ];
     // Act 5 waypoints
     const ACT5: &[&str] = &[
-        "Harrogath", "Frigid Highlands", "Arreat Plateau",
-        "Crystalline Passage", "Frozen Tundra", "Glacial Trail",
-        "Halls of Pain", "The Ancients' Way", "Worldstone Keep Level 2",
+        "Harrogath",
+        "Frigid Highlands",
+        "Arreat Plateau",
+        "Crystalline Passage",
+        "Frozen Tundra",
+        "Glacial Trail",
+        "Halls of Pain",
+        "The Ancients' Way",
+        "Worldstone Keep Level 2",
     ];
 
     let acts: &[&[&str]] = &[ACT1, ACT2, ACT3, ACT4, ACT5];
@@ -86,18 +112,21 @@ fn wp_panel_location(destination: &str) -> Option<(usize, usize)> {
 
 /// Screen coordinates for a WP entry given act tab + entry index.
 fn wp_entry_coords(_act_idx: usize, entry_idx: usize) -> (i32, i32) {
-    (WP_LIST_X, WP_LIST_Y_START + entry_idx as i32 * WP_LIST_Y_STEP)
+    (
+        WP_LIST_X,
+        WP_LIST_Y_START + entry_idx as i32 * WP_LIST_Y_STEP,
+    )
 }
 
 /// Where the waypoint object sits in each act's town (screen coords at 800x600).
 /// Used by execute_waypoint to walk to the WP before trying to open it.
 fn town_wp_object_position(act: u8) -> (i32, i32) {
     match act {
-        1 => (120, 280),  // Rogue Encampment — WP near camp exit
-        2 => (264, 288),  // Lut Gholein — WP south of town
-        3 => (229, 306),  // Kurast Docks — WP south of docks
-        4 => (158, 277),  // Pandemonium Fortress — WP inside fortress
-        _ => (210, 172),  // Harrogath — WP near Malah
+        1 => (120, 280), // Rogue Encampment — WP near camp exit
+        2 => (264, 288), // Lut Gholein — WP south of town
+        3 => (229, 306), // Kurast Docks — WP south of docks
+        4 => (158, 277), // Pandemonium Fortress — WP inside fortress
+        _ => (210, 172), // Harrogath — WP near Malah
     }
 }
 
@@ -225,6 +254,12 @@ pub struct ScriptExecutor {
     walk_attempts: u32,
 }
 
+impl Default for ScriptExecutor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ScriptExecutor {
     pub fn new() -> Self {
         Self {
@@ -295,11 +330,7 @@ impl ScriptExecutor {
     /// or None if the plan is done / needs external handling (TownChores).
     ///
     /// `engine` is borrowed for combat delegation during ClearArea/KillTarget.
-    pub fn tick(
-        &mut self,
-        state: &FrameState,
-        engine: &mut DecisionEngine,
-    ) -> Option<Decision> {
+    pub fn tick(&mut self, state: &FrameState, engine: &mut DecisionEngine) -> Option<Decision> {
         if self.is_done() {
             return None;
         }
@@ -307,12 +338,10 @@ impl ScriptExecutor {
         self.sub_step_ticks += 1;
 
         // Detect area changes
-        if state.area_name_len > 0 && state.area_name_len != self.last_area_len {
-            self.last_area = state.area_name;
-            self.last_area_len = state.area_name_len;
-        } else if state.area_name_len > 0
-            && state.area_name[..state.area_name_len as usize]
-                != self.last_area[..self.last_area_len as usize]
+        if state.area_name_len > 0
+            && (state.area_name_len != self.last_area_len
+                || state.area_name[..state.area_name_len as usize]
+                    != self.last_area[..self.last_area_len as usize])
         {
             self.last_area = state.area_name;
             self.last_area_len = state.area_name_len;
@@ -341,30 +370,14 @@ impl ScriptExecutor {
                 // Signal to GameManager to push retry.
                 None
             }
-            ScriptStep::UseWaypoint { destination } => {
-                self.execute_waypoint(state, destination)
-            }
-            ScriptStep::WalkToExit { target_area } => {
-                self.execute_walk_to_exit(state, target_area)
-            }
-            ScriptStep::ClearArea => {
-                self.execute_clear_area(state, engine)
-            }
-            ScriptStep::KillTarget { name } => {
-                self.execute_kill_target(state, engine, name)
-            }
-            ScriptStep::LootArea => {
-                self.execute_loot_area(state)
-            }
-            ScriptStep::TownPortal => {
-                self.execute_town_portal(state)
-            }
-            ScriptStep::TalkToNpc { npc, act } => {
-                self.execute_talk_to_npc(state, npc, act)
-            }
-            ScriptStep::InteractObject { name } => {
-                self.execute_interact_object(state, name)
-            }
+            ScriptStep::UseWaypoint { destination } => self.execute_waypoint(state, destination),
+            ScriptStep::WalkToExit { target_area } => self.execute_walk_to_exit(state, target_area),
+            ScriptStep::ClearArea => self.execute_clear_area(state, engine),
+            ScriptStep::KillTarget { name } => self.execute_kill_target(state, engine, name),
+            ScriptStep::LootArea => self.execute_loot_area(state),
+            ScriptStep::TownPortal => self.execute_town_portal(state),
+            ScriptStep::TalkToNpc { npc, act } => self.execute_talk_to_npc(state, npc, act),
+            ScriptStep::InteractObject { name } => self.execute_interact_object(state, name),
             ScriptStep::WaitForCue { cue, timeout_secs } => {
                 self.execute_wait_for_cue(state, cue, timeout_secs)
             }
@@ -380,11 +393,7 @@ impl ScriptExecutor {
     /// Phase 2: Click act tab (if needed — already on correct act, may be a no-op)
     /// Phase 3: Click destination entry
     /// Phase 4: Wait for loading screen + area transition
-    fn execute_waypoint(
-        &mut self,
-        state: &FrameState,
-        destination: &str,
-    ) -> Option<Decision> {
+    fn execute_waypoint(&mut self, state: &FrameState, destination: &str) -> Option<Decision> {
         // Resolve WP panel coordinates on first entry (phase 0, tick 1)
         if self.wp_phase == 0 && self.sub_step_ticks == 1 {
             if let Some((act_idx, entry_idx)) = wp_panel_location(destination) {
@@ -498,11 +507,7 @@ impl ScriptExecutor {
     /// WalkToExit: move toward screen edges until area name changes to target.
     /// Uses a semi-random exploration pattern (like kolbot's Pather.moveTo
     /// but vision-only — no map hack).
-    fn execute_walk_to_exit(
-        &mut self,
-        state: &FrameState,
-        target_area: &str,
-    ) -> Option<Decision> {
+    fn execute_walk_to_exit(&mut self, state: &FrameState, target_area: &str) -> Option<Decision> {
         let current_area = state.area_name_str();
 
         // Check if we've arrived
@@ -523,7 +528,7 @@ impl ScriptExecutor {
         self.walk_attempts += 1;
 
         // Anti-stuck: rotate exploration angle every ~80 ticks (3.2s)
-        if self.walk_attempts % 80 == 0 {
+        if self.walk_attempts.is_multiple_of(80) {
             self.walk_angle += std::f32::consts::FRAC_PI_3; // rotate 60°
             if self.walk_angle > std::f32::consts::TAU {
                 self.walk_angle -= std::f32::consts::TAU;
@@ -651,7 +656,9 @@ impl ScriptExecutor {
         _name: &str,
     ) -> Option<Decision> {
         // If boss/champion is present, engage
-        if state.boss_present || state.champion_present || (state.in_combat && state.enemy_count > 0)
+        if state.boss_present
+            || state.champion_present
+            || (state.in_combat && state.enemy_count > 0)
         {
             self.kill_idle_ticks = 0;
             return Some(engine.decide(state));
@@ -699,27 +706,22 @@ impl ScriptExecutor {
     }
 
     /// LootArea: pick up all visible loot labels, then advance.
-    fn execute_loot_area(
-        &mut self,
-        state: &FrameState,
-    ) -> Option<Decision> {
+    fn execute_loot_area(&mut self, state: &FrameState) -> Option<Decision> {
         if state.loot_label_count > 0 {
             // Pick the highest priority item (same logic as DecisionEngine)
             use crate::vision::ItemQuality;
             let labels = &state.loot_labels[..state.loot_label_count as usize];
-            let best = labels
-                .iter()
-                .min_by_key(|l| {
-                    let priority: i32 = match l.quality {
-                        ItemQuality::Rune | ItemQuality::Unique => -10000,
-                        ItemQuality::Set => -5000,
-                        ItemQuality::Rare => -1000,
-                        _ => 0,
-                    };
-                    let dx = l.x as i32 - state.char_screen_x as i32;
-                    let dy = l.y as i32 - state.char_screen_y as i32;
-                    priority + dx * dx + dy * dy
-                });
+            let best = labels.iter().min_by_key(|l| {
+                let priority: i32 = match l.quality {
+                    ItemQuality::Rune | ItemQuality::Unique => -10000,
+                    ItemQuality::Set => -5000,
+                    ItemQuality::Rare => -1000,
+                    _ => 0,
+                };
+                let dx = l.x as i32 - state.char_screen_x as i32;
+                let dy = l.y as i32 - state.char_screen_y as i32;
+                priority + dx * dx + dy * dy
+            });
 
             if let Some(label) = best {
                 self.sub_step_ticks = 0;
@@ -747,10 +749,7 @@ impl ScriptExecutor {
     }
 
     /// TownPortal: cast TP, wait for town arrival.
-    fn execute_town_portal(
-        &mut self,
-        state: &FrameState,
-    ) -> Option<Decision> {
+    fn execute_town_portal(&mut self, state: &FrameState) -> Option<Decision> {
         match self.sub_step {
             SubStep::Approaching => {
                 // Cast TP
@@ -808,12 +807,7 @@ impl ScriptExecutor {
     /// For "travel" NPCs (Warriv, Meshif, Jerhyn) the dialog has a travel button
     /// that must be clicked — pressing Esc just dismisses without traveling.
     /// For regular NPCs (quest reward, Cain ID, etc.) Esc is fine.
-    fn execute_talk_to_npc(
-        &mut self,
-        state: &FrameState,
-        npc: &str,
-        act: u8,
-    ) -> Option<Decision> {
+    fn execute_talk_to_npc(&mut self, state: &FrameState, npc: &str, act: u8) -> Option<Decision> {
         let npc_pos = npc_position(npc, act);
         let travel = is_travel_npc(npc);
 
@@ -894,11 +888,7 @@ impl ScriptExecutor {
     /// InteractObject: click the named object on screen.
     /// For objects like waypoints, chests, altars — we click near the expected
     /// position and wait for a response (UI opens, loot drops, etc.)
-    fn execute_interact_object(
-        &mut self,
-        state: &FrameState,
-        name: &str,
-    ) -> Option<Decision> {
+    fn execute_interact_object(&mut self, state: &FrameState, name: &str) -> Option<Decision> {
         match self.sub_step {
             SubStep::Approaching => {
                 // For most objects, click near center of screen where character
@@ -974,7 +964,7 @@ impl ScriptExecutor {
             VisualCue::AreaTransition => {
                 // Area changed since step started
                 let current = state.area_name_str();
-                current.len() > 0
+                !current.is_empty()
                     && (self.last_area_len == 0
                         || current.as_bytes() != &self.last_area[..self.last_area_len as usize])
             }
@@ -990,7 +980,11 @@ impl ScriptExecutor {
 
         let timeout_ticks = timeout_secs as u32 * 25;
         if self.sub_step_ticks > timeout_ticks {
-            tracing::warn!("WaitForCue timeout ({:?}, {}s) — advancing", cue, timeout_secs);
+            tracing::warn!(
+                "WaitForCue timeout ({:?}, {}s) — advancing",
+                cue,
+                timeout_secs
+            );
             self.advance();
             return Some(self.wait("cue: timeout"));
         }
@@ -1065,10 +1059,12 @@ fn object_click_position(name: &str, state: &FrameState) -> (i32, i32) {
         "Cain's Gibbet" => (cx, cy - 40),
 
         // Chest objects: click near center
-        "Horadric Cube Chest" | "Khalim's Eye Chest" | "Khalim's Heart Chest"
-        | "Khalim's Brain Chest" | "Staff of Kings Chest" | "Super Chest" => {
-            (cx + 20, cy - 25)
-        }
+        "Horadric Cube Chest"
+        | "Khalim's Eye Chest"
+        | "Khalim's Heart Chest"
+        | "Khalim's Brain Chest"
+        | "Staff of Kings Chest"
+        | "Super Chest" => (cx + 20, cy - 25),
 
         // Quest objects
         "Horadric Malus" => (cx + 15, cy - 30),
@@ -1158,7 +1154,10 @@ mod tests {
 
         let state = town_state();
         let result = exec.tick(&state, &mut engine);
-        assert!(result.is_none(), "TownChores should return None for external handling");
+        assert!(
+            result.is_none(),
+            "TownChores should return None for external handling"
+        );
     }
 
     #[test]
@@ -1204,7 +1203,10 @@ mod tests {
         let result = exec.tick(&state, &mut engine);
         assert!(result.is_some());
         let d = result.unwrap();
-        assert!(matches!(d.action, Action::TownPortal), "First tick should cast TP");
+        assert!(
+            matches!(d.action, Action::TownPortal),
+            "First tick should cast TP"
+        );
     }
 
     #[test]
@@ -1245,7 +1247,10 @@ mod tests {
             let _ = exec.tick(&state, &mut engine);
         }
 
-        assert!(exec.is_done(), "ClearArea should complete after idle period");
+        assert!(
+            exec.is_done(),
+            "ClearArea should complete after idle period"
+        );
     }
 
     #[test]
@@ -1284,7 +1289,10 @@ mod tests {
             let _ = exec.tick(&state, &mut engine);
         }
 
-        assert!(exec.is_done(), "KillTarget should complete when target absent");
+        assert!(
+            exec.is_done(),
+            "KillTarget should complete when target absent"
+        );
     }
 
     #[test]
@@ -1319,7 +1327,10 @@ mod tests {
             let _ = exec.tick(&state, &mut engine);
         }
 
-        assert!(exec.is_done(), "LootArea should complete when no loot visible");
+        assert!(
+            exec.is_done(),
+            "LootArea should complete when no loot visible"
+        );
     }
 
     #[test]
@@ -1373,13 +1384,29 @@ mod tests {
     #[test]
     fn test_npc_positions_reasonable() {
         let npcs = [
-            ("Akara", 1), ("Charsi", 1), ("Fara", 2),
-            ("Ormus", 3), ("Tyrael", 4), ("Malah", 5),
+            ("Akara", 1),
+            ("Charsi", 1),
+            ("Fara", 2),
+            ("Ormus", 3),
+            ("Tyrael", 4),
+            ("Malah", 5),
         ];
         for (name, act) in npcs {
             let (x, y) = npc_position(name, act);
-            assert!(x > 0 && x < 800, "NPC {} act {} x={} out of bounds", name, act, x);
-            assert!(y > 0 && y < 600, "NPC {} act {} y={} out of bounds", name, act, y);
+            assert!(
+                x > 0 && x < 800,
+                "NPC {} act {} x={} out of bounds",
+                name,
+                act,
+                x
+            );
+            assert!(
+                y > 0 && y < 600,
+                "NPC {} act {} y={} out of bounds",
+                name,
+                act,
+                y
+            );
         }
     }
 
@@ -1391,8 +1418,13 @@ mod tests {
 
         let plan = vec![
             ScriptStep::TownChores,
-            ScriptStep::TalkToNpc { npc: "Anya", act: 5 },
-            ScriptStep::InteractObject { name: "Anya Portal" },
+            ScriptStep::TalkToNpc {
+                npc: "Anya",
+                act: 5,
+            },
+            ScriptStep::InteractObject {
+                name: "Anya Portal",
+            },
             ScriptStep::WaitForCue {
                 cue: VisualCue::LoadingScreenEnd,
                 timeout_secs: 15,

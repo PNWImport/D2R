@@ -13,9 +13,15 @@ use std::time::Duration;
 
 pub struct InputSimulator {
     rng: StdRng,
-    key_hold_dist: Normal<f64>,   // Key hold duration ms
+    key_hold_dist: Normal<f64>, // Key hold duration ms
     cursor_x: i32,
     cursor_y: i32,
+}
+
+impl Default for InputSimulator {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl InputSimulator {
@@ -47,7 +53,7 @@ impl InputSimulator {
             sy + 2 * (target_y - sy) / 3 + self.rng.gen_range(-25..25),
         );
 
-        let steps = (dist / 15.0).max(6.0).min(35.0) as u32;
+        let steps = (dist / 15.0).clamp(6.0, 35.0) as u32;
 
         for i in 0..=steps {
             let t = i as f64 / steps as f64;
@@ -131,8 +137,8 @@ impl InputSimulator {
     fn get_cursor_pos(&self) -> (i32, i32) {
         #[cfg(windows)]
         {
-            use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
             use windows::Win32::Foundation::POINT;
+            use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
             unsafe {
                 let mut pt = POINT::default();
                 let _ = GetCursorPos(&mut pt);
@@ -158,7 +164,7 @@ impl InputSimulator {
         }
     }
 
-    fn mouse_down(&self, left: bool) {
+    fn mouse_down(&self, _left: bool) {
         #[cfg(windows)]
         {
             use windows::Win32::UI::Input::KeyboardAndMouse::*;
@@ -176,7 +182,7 @@ impl InputSimulator {
         }
     }
 
-    fn mouse_up(&self, left: bool) {
+    fn mouse_up(&self, _left: bool) {
         #[cfg(windows)]
         {
             use windows::Win32::UI::Input::KeyboardAndMouse::*;
@@ -194,7 +200,7 @@ impl InputSimulator {
         }
     }
 
-    fn key_down(&self, key: char) {
+    fn key_down(&self, _key: char) {
         #[cfg(windows)]
         {
             use windows::Win32::UI::Input::KeyboardAndMouse::*;
@@ -207,7 +213,7 @@ impl InputSimulator {
         }
     }
 
-    fn key_up(&self, key: char) {
+    fn key_up(&self, _key: char) {
         #[cfg(windows)]
         {
             use windows::Win32::UI::Input::KeyboardAndMouse::*;
@@ -222,6 +228,7 @@ impl InputSimulator {
     }
 }
 
+#[allow(dead_code)]
 fn char_to_vk(c: char) -> u16 {
     match c {
         '0'..='9' => 0x30 + (c as u16 - '0' as u16),

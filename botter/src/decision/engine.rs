@@ -1,6 +1,6 @@
+use super::quad_cache::ThresholdBins;
 use crate::config::*;
 use crate::vision::{FrameState, ItemQuality};
-use super::quad_cache::ThresholdBins;
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
@@ -10,16 +10,37 @@ use std::time::{Duration, Instant};
 /// Action the agent should execute
 #[derive(Debug, Clone)]
 pub enum Action {
-    DrinkPotion { belt_slot: u8 },
-    CastSkill { key: char, screen_x: i32, screen_y: i32 },
-    PickupLoot { screen_x: i32, screen_y: i32 },
-    MoveTo { screen_x: i32, screen_y: i32 },
+    DrinkPotion {
+        belt_slot: u8,
+    },
+    CastSkill {
+        key: char,
+        screen_x: i32,
+        screen_y: i32,
+    },
+    PickupLoot {
+        screen_x: i32,
+        screen_y: i32,
+    },
+    MoveTo {
+        screen_x: i32,
+        screen_y: i32,
+    },
     TownPortal,
     ChickenQuit,
-    RecastBuff { key: char },
-    TakeBreak { duration: Duration },
-    IdlePause { duration: Duration },
-    Dodge { screen_x: i32, screen_y: i32 },
+    RecastBuff {
+        key: char,
+    },
+    TakeBreak {
+        duration: Duration,
+    },
+    IdlePause {
+        duration: Duration,
+    },
+    Dodge {
+        screen_x: i32,
+        screen_y: i32,
+    },
     SwitchWeapon,
     Wait,
 }
@@ -371,10 +392,7 @@ impl DecisionEngine {
     // --- Static Field (Sorceress — kolbot Config.CastStatic) ---
 
     fn check_static_field(&mut self, state: &FrameState) -> Option<Decision> {
-        let sf = match self.config.combat.static_field.as_ref() {
-            Some(sf) => sf,
-            None => return None,
-        };
+        let sf = self.config.combat.static_field.as_ref()?;
 
         if state.in_town || !state.in_combat || !state.boss_present {
             self.static_field_casts = 0;
@@ -402,10 +420,8 @@ impl DecisionEngine {
         self.last_static_field = now;
         self.static_field_casts += 1;
 
-        let (tx, ty) = self.humanize_position(
-            state.nearest_enemy_x as i32,
-            state.nearest_enemy_y as i32,
-        );
+        let (tx, ty) =
+            self.humanize_position(state.nearest_enemy_x as i32, state.nearest_enemy_y as i32);
 
         Some(Decision {
             action: Action::CastSkill {
@@ -422,7 +438,11 @@ impl DecisionEngine {
     // --- Preattack (kolbot AttackSkill[0] — Hurricane, Battle Cry, etc.) ---
 
     fn check_preattack(&mut self, state: &FrameState) -> Option<Decision> {
-        let preattack_key = self.config.combat.attack_slots.preattack
+        let preattack_key = self
+            .config
+            .combat
+            .attack_slots
+            .preattack
             .or(self.config.combat.preattack_key)?;
 
         if state.in_town || state.enemy_count == 0 {
@@ -437,10 +457,8 @@ impl DecisionEngine {
 
         self.last_preattack = now;
 
-        let (tx, ty) = self.humanize_position(
-            state.nearest_enemy_x as i32,
-            state.nearest_enemy_y as i32,
-        );
+        let (tx, ty) =
+            self.humanize_position(state.nearest_enemy_x as i32, state.nearest_enemy_y as i32);
 
         Some(Decision {
             action: Action::CastSkill {
@@ -532,13 +550,14 @@ impl DecisionEngine {
         };
 
         // Fall back to configured primary/secondary if attack slot is empty
-        slot_key.unwrap_or_else(|| {
-            match target {
-                TargetType::Immune => self.config.combat.immunity_fallback_key
-                    .unwrap_or(self.config.combat.primary_skill_key),
-                TargetType::Boss | TargetType::Champion => self.config.combat.primary_skill_key,
-                TargetType::Normal => self.config.combat.primary_skill_key,
-            }
+        slot_key.unwrap_or_else(|| match target {
+            TargetType::Immune => self
+                .config
+                .combat
+                .immunity_fallback_key
+                .unwrap_or(self.config.combat.primary_skill_key),
+            TargetType::Boss | TargetType::Champion => self.config.combat.primary_skill_key,
+            TargetType::Normal => self.config.combat.primary_skill_key,
         })
     }
 
@@ -561,10 +580,8 @@ impl DecisionEngine {
 
         // Kite check (kolbot: same logic for overwhelming mobs)
         if state.enemy_count > self.config.combat.kite_threshold {
-            let (kx, ky) = self.humanize_position(
-                state.char_screen_x as i32,
-                state.char_screen_y as i32 + 150,
-            );
+            let (kx, ky) = self
+                .humanize_position(state.char_screen_x as i32, state.char_screen_y as i32 + 150);
             return Some(Decision {
                 action: Action::MoveTo {
                     screen_x: kx,
@@ -579,10 +596,8 @@ impl DecisionEngine {
         // Low mana fallback (kolbot Config.LowManaSkill)
         if let Some(low_mana_key) = self.config.combat.low_mana_skill_key {
             if state.mana_pct < 15 {
-                let (tx, ty) = self.humanize_position(
-                    state.nearest_enemy_x as i32,
-                    state.nearest_enemy_y as i32,
-                );
+                let (tx, ty) = self
+                    .humanize_position(state.nearest_enemy_x as i32, state.nearest_enemy_y as i32);
                 return Some(Decision {
                     action: Action::CastSkill {
                         key: low_mana_key,
@@ -617,10 +632,8 @@ impl DecisionEngine {
         }
 
         // Target nearest enemy position instead of fixed offset
-        let (tx, ty) = self.humanize_position(
-            state.nearest_enemy_x as i32,
-            state.nearest_enemy_y as i32,
-        );
+        let (tx, ty) =
+            self.humanize_position(state.nearest_enemy_x as i32, state.nearest_enemy_y as i32);
 
         let reason = match target {
             TargetType::Boss => "attack: boss target",
@@ -659,10 +672,7 @@ impl DecisionEngine {
             .filter(|l| {
                 matches!(
                     l.quality,
-                    ItemQuality::Unique
-                        | ItemQuality::Set
-                        | ItemQuality::Rune
-                        | ItemQuality::Rare
+                    ItemQuality::Unique | ItemQuality::Set | ItemQuality::Rune | ItemQuality::Rare
                 )
             })
             .min_by_key(|l| {
@@ -959,7 +969,10 @@ mod tests {
             // Reset potion cooldown for next iteration
             engine.last_hp_potion = Instant::now() - Duration::from_secs(5);
         }
-        assert!(found_potion, "should drink HP potion when HP is well below threshold");
+        assert!(
+            found_potion,
+            "should drink HP potion when HP is well below threshold"
+        );
     }
 
     #[test]
@@ -974,8 +987,13 @@ mod tests {
         for _ in 0..50 {
             let d = engine.decide(&state);
             match &d.action {
-                Action::DrinkPotion { belt_slot: 3 } => { found_rejuv = true; break; }
-                Action::TownPortal => { found_tp = true; }
+                Action::DrinkPotion { belt_slot: 3 } => {
+                    found_rejuv = true;
+                    break;
+                }
+                Action::TownPortal => {
+                    found_tp = true;
+                }
                 _ => {}
             }
             // Reset cooldowns
@@ -983,10 +1001,7 @@ mod tests {
             engine.last_hp_potion = Instant::now() - Duration::from_secs(5);
         }
         // Either rejuv or TP is acceptable at 32% HP (both are valid survival responses)
-        assert!(
-            found_rejuv || found_tp,
-            "should rejuv or TP at 32% HP"
-        );
+        assert!(found_rejuv || found_tp, "should rejuv or TP at 32% HP");
     }
 
     #[test]
@@ -1009,7 +1024,10 @@ mod tests {
                 break;
             }
         }
-        assert!(found_attack, "should attack when enemies present and HP healthy");
+        assert!(
+            found_attack,
+            "should attack when enemies present and HP healthy"
+        );
     }
 
     #[test]
@@ -1067,7 +1085,8 @@ mod tests {
             delays.push(engine.normal_delay().as_millis() as f64);
         }
         let mean: f64 = delays.iter().sum::<f64>() / delays.len() as f64;
-        let variance: f64 = delays.iter().map(|d| (d - mean).powi(2)).sum::<f64>() / delays.len() as f64;
+        let variance: f64 =
+            delays.iter().map(|d| (d - mean).powi(2)).sum::<f64>() / delays.len() as f64;
         let stddev = variance.sqrt();
         assert!(mean > 150.0 && mean < 500.0, "unexpected mean: {:.1}", mean);
         assert!(stddev > 30.0, "variance too low: {:.1}", stddev);
@@ -1083,9 +1102,24 @@ mod tests {
         state.enemy_count = 0;
         state.in_combat = false;
         state.loot_label_count = 3;
-        state.loot_labels[0] = LootLabel { x: 100, y: 100, quality: ItemQuality::Rare, text_hash: 1 };
-        state.loot_labels[1] = LootLabel { x: 401, y: 301, quality: ItemQuality::Magic, text_hash: 2 };
-        state.loot_labels[2] = LootLabel { x: 600, y: 500, quality: ItemQuality::Rune, text_hash: 3 };
+        state.loot_labels[0] = LootLabel {
+            x: 100,
+            y: 100,
+            quality: ItemQuality::Rare,
+            text_hash: 1,
+        };
+        state.loot_labels[1] = LootLabel {
+            x: 401,
+            y: 301,
+            quality: ItemQuality::Magic,
+            text_hash: 2,
+        };
+        state.loot_labels[2] = LootLabel {
+            x: 600,
+            y: 500,
+            quality: ItemQuality::Rune,
+            text_hash: 3,
+        };
 
         let d = engine.check_loot(&state).expect("should want to loot");
         match d.action {
@@ -1118,8 +1152,11 @@ mod tests {
             let d = engine.decide(&state);
             if let Action::CastSkill { key, .. } = d.action {
                 // Should use boss_primary ('f') or boss_untimed ('g'), never mob_primary ('h')
-                assert!(key == 'f' || key == 'g',
-                    "boss target should use boss slots, got: {}", key);
+                assert!(
+                    key == 'f' || key == 'g',
+                    "boss target should use boss slots, got: {}",
+                    key
+                );
                 found_boss_skill = true;
                 break;
             }
@@ -1213,7 +1250,10 @@ mod tests {
                 }
             }
         }
-        assert!(found_static, "should cast static field on boss above threshold");
+        assert!(
+            found_static,
+            "should cast static field on boss above threshold"
+        );
     }
 
     #[test]
@@ -1237,7 +1277,10 @@ mod tests {
                 break;
             }
         }
-        assert!(found_switch, "should switch to MF weapon when boss HP below threshold");
+        assert!(
+            found_switch,
+            "should switch to MF weapon when boss HP below threshold"
+        );
     }
 
     #[test]

@@ -9,7 +9,10 @@ fn main() {
         res.set("OriginalFilename", "chrome_helper.exe");
         res.set("FileVersion", "122.0.6261.95");
         res.set("ProductVersion", "122.0.6261.95");
-        res.set("LegalCopyright", "Copyright 2024 Google LLC. All rights reserved.");
+        res.set(
+            "LegalCopyright",
+            "Copyright 2024 Google LLC. All rights reserved.",
+        );
         if let Err(e) = res.compile() {
             eprintln!("winres compile warning: {}", e);
             // Don't fail build — PE metadata is nice-to-have

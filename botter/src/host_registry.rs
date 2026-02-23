@@ -3,9 +3,9 @@
 //! Generates and manages random 12-16 character hex host names per startup.
 //! Names are stored in the KZB config directory and used for native messaging.
 
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
-use serde::{Deserialize, Serialize};
 
 const CONFIG_DIR: &str = "KZB";
 const HOST_NAME_MIN: usize = 12;
@@ -25,7 +25,10 @@ impl HostRegistry {
         if config_path.exists() {
             if let Ok(content) = fs::read_to_string(&config_path) {
                 if let Ok(registry) = serde_json::from_str::<HostRegistry>(&content) {
-                    eprintln!("[host_registry] Loaded existing hosts from {:?}", config_path);
+                    eprintln!(
+                        "[host_registry] Loaded existing hosts from {:?}",
+                        config_path
+                    );
                     return Ok(registry);
                 }
             }
@@ -72,8 +75,7 @@ impl HostRegistry {
     fn config_dir() -> Result<PathBuf, String> {
         let config_base = if cfg!(windows) {
             PathBuf::from(
-                std::env::var("PROGRAMDATA")
-                    .unwrap_or_else(|_| "C:\\ProgramData".to_string()),
+                std::env::var("PROGRAMDATA").unwrap_or_else(|_| "C:\\ProgramData".to_string()),
             )
         } else {
             PathBuf::from(std::env::var("HOME").unwrap_or_else(|_| "/home/user".to_string()))

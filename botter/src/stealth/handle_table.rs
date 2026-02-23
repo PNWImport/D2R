@@ -141,7 +141,7 @@ impl HandleManager {
     }
 
     pub fn is_active(&self, idx: usize) -> bool {
-        self.handles.get(idx).map_or(false, |h| h.is_active())
+        self.handles.get(idx).is_some_and(|h| h.is_active())
     }
 
     /// Check all handles and force-release any held too long

@@ -10,11 +10,11 @@ pub mod vision;
 use config::AgentConfig;
 use decision::GameManager;
 use native_messaging::{AgentCommand, NativeMessagingHost, SharedAgentStats};
-use stealth::*;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+use stealth::*;
 use vision::{CaptureConfig, CapturePipeline, ShardedFrameBuffer};
 
 // ═══════════════════════════════════════════════════════════════
@@ -28,7 +28,7 @@ async fn main() {
     let log_dir = data_dir().join("logs");
     let _ = std::fs::create_dir_all(&log_dir);
 
-    let file_appender = tracing_subscriber::fmt()
+    tracing_subscriber::fmt()
         .with_env_filter("kzb_vision_agent=debug")
         .with_writer(move || {
             let path = log_dir.join("agent.log");
@@ -60,8 +60,12 @@ async fn main() {
     let config = if config_path.exists() {
         match AgentConfig::load(&config_path) {
             Ok(c) => {
-                tracing::info!("Loaded config: {} (class={}, build={})",
-                    config_path.display(), c.character_class, c.build);
+                tracing::info!(
+                    "Loaded config: {} (class={}, build={})",
+                    config_path.display(),
+                    c.character_class,
+                    c.build
+                );
                 c
             }
             Err(e) => {
@@ -70,7 +74,10 @@ async fn main() {
             }
         }
     } else {
-        tracing::warn!("Config not found at {}, writing defaults", config_path.display());
+        tracing::warn!(
+            "Config not found at {}, writing defaults",
+            config_path.display()
+        );
         let default = AgentConfig::default();
         if let Err(e) = default.save(&config_path) {
             tracing::warn!("Could not write default config: {}", e);
@@ -111,25 +118,22 @@ async fn main() {
     };
 
     // Syscall cadence controller
-    let cadence = Arc::new(std::sync::Mutex::new(
-        SyscallCadence::new(CadenceConfig::default()),
-    ));
+    let cadence = Arc::new(std::sync::Mutex::new(SyscallCadence::new(
+        CadenceConfig::default(),
+    )));
 
     // Handle lifecycle manager
-    let handle_mgr = Arc::new(std::sync::Mutex::new(HandleManager::new(2000)));
+    let _handle_mgr = Arc::new(std::sync::Mutex::new(HandleManager::new(2000)));
 
     // ─── Native Messaging Host ─────────────────────────────────
-    let (host, mut cmd_rx) = NativeMessagingHost::new(
-        Arc::clone(&stats),
-        Arc::clone(&buffer),
-    );
+    let (host, mut cmd_rx) = NativeMessagingHost::new(Arc::clone(&stats), Arc::clone(&buffer));
 
     // ─── Capture Thread ────────────────────────────────────────
     let capture_buffer = Arc::clone(&buffer);
-    let capture_stats = Arc::clone(&stats);
+    let _capture_stats = Arc::clone(&stats);
     let capture_shutdown = Arc::clone(&shutdown);
 
-    let capture_handle = std::thread::Builder::new()
+    let _capture_handle = std::thread::Builder::new()
         .name("capture".into())
         .spawn(move || {
             let cap_config = CaptureConfig::default();
@@ -159,7 +163,7 @@ async fn main() {
 
     let agent_loop = tokio::task::spawn_blocking(move || {
         let mut game_mgr = GameManager::new(loop_config.clone());
-        let mut capture_timing = CaptureTiming::new(capture_timing_config);
+        let _capture_timing = CaptureTiming::new(capture_timing_config);
         let logger = training::TrainingLogger::new(data_dir().join("training_logs"));
 
         // Thread-rotated input pool for stealth
@@ -239,7 +243,11 @@ async fn main() {
 
             // Dispatch through thread-rotated pool
             match &decision.action {
-                decision::Action::CastSkill { key, screen_x, screen_y } => {
+                decision::Action::CastSkill {
+                    key,
+                    screen_x,
+                    screen_y,
+                } => {
                     input_pool.dispatch(InputCommand::KeyPress {
                         key: *key,
                         hold_ms: 40,
@@ -253,7 +261,11 @@ async fn main() {
                 }
                 decision::Action::DrinkPotion { belt_slot } => {
                     let key = match belt_slot {
-                        0 => '1', 1 => '2', 2 => '3', 3 => '4', _ => '1',
+                        0 => '1',
+                        1 => '2',
+                        2 => '3',
+                        3 => '4',
+                        _ => '1',
                     };
                     input_pool.dispatch(InputCommand::KeyPress { key, hold_ms: 35 });
                     loop_stats.potions_used.fetch_add(1, Ordering::Relaxed);
@@ -279,16 +291,28 @@ async fn main() {
                     tracing::warn!("CHICKEN — exiting game");
                     loop_stats.chickens.fetch_add(1, Ordering::Relaxed);
                     // Press Esc → Save & Exit (blocking sleep is fine here)
-                    input_pool.dispatch(InputCommand::KeyPress { key: '\x1b', hold_ms: 40 });
+                    input_pool.dispatch(InputCommand::KeyPress {
+                        key: '\x1b',
+                        hold_ms: 40,
+                    });
                     std::thread::sleep(Duration::from_millis(200));
-                    input_pool.dispatch(InputCommand::KeyPress { key: '\r', hold_ms: 40 });
+                    input_pool.dispatch(InputCommand::KeyPress {
+                        key: '\r',
+                        hold_ms: 40,
+                    });
                     std::thread::sleep(Duration::from_millis(3000));
                 }
                 decision::Action::TownPortal => {
-                    input_pool.dispatch(InputCommand::KeyPress { key: 't', hold_ms: 40 });
+                    input_pool.dispatch(InputCommand::KeyPress {
+                        key: 't',
+                        hold_ms: 40,
+                    });
                 }
                 decision::Action::RecastBuff { key } => {
-                    input_pool.dispatch(InputCommand::KeyPress { key: *key, hold_ms: 35 });
+                    input_pool.dispatch(InputCommand::KeyPress {
+                        key: *key,
+                        hold_ms: 35,
+                    });
                 }
                 decision::Action::TakeBreak { duration } => {
                     tracing::info!("Taking break: {:?}", duration);
@@ -308,7 +332,10 @@ async fn main() {
                 }
                 decision::Action::SwitchWeapon => {
                     // W key = weapon swap in D2R
-                    input_pool.dispatch(InputCommand::KeyPress { key: 'w', hold_ms: 35 });
+                    input_pool.dispatch(InputCommand::KeyPress {
+                        key: 'w',
+                        hold_ms: 35,
+                    });
                 }
                 decision::Action::Wait => {}
             }
@@ -440,7 +467,9 @@ fn resolve_config_path() -> PathBuf {
             return in_configs;
         }
         // Try adding .yaml extension
-        let with_ext = data_dir().join("configs").join(format!("{}.yaml", &args[1]));
+        let with_ext = data_dir()
+            .join("configs")
+            .join(format!("{}.yaml", &args[1]));
         if with_ext.exists() {
             return with_ext;
         }
@@ -491,9 +520,21 @@ mod tests {
             let mut state = vision::FrameState::default();
             state.tick = i;
             state.in_combat = i % 30 < 20;
-            state.enemy_count = if state.in_combat { rand::thread_rng().gen_range(1..8) } else { 0 };
-            state.hp_pct = if state.in_combat { rand::thread_rng().gen_range(40..100) } else { 100 };
-            state.mana_pct = if state.in_combat { rand::thread_rng().gen_range(20..90) } else { 100 };
+            state.enemy_count = if state.in_combat {
+                rand::thread_rng().gen_range(1..8)
+            } else {
+                0
+            };
+            state.hp_pct = if state.in_combat {
+                rand::thread_rng().gen_range(40..100)
+            } else {
+                100
+            };
+            state.mana_pct = if state.in_combat {
+                rand::thread_rng().gen_range(20..90)
+            } else {
+                100
+            };
             state.char_screen_x = 400;
             state.char_screen_y = 300;
             buffer.push(state);
@@ -515,7 +556,11 @@ mod tests {
             }
         }
 
-        assert!(combat_actions > 100, "should have many combat actions: {}", combat_actions);
+        assert!(
+            combat_actions > 100,
+            "should have many combat actions: {}",
+            combat_actions
+        );
     }
 
     #[test]
@@ -629,7 +674,10 @@ mod tests {
         });
 
         for i in 0..100u32 {
-            pool.dispatch(InputCommand::KeyPress { key: 'f', hold_ms: 5 });
+            pool.dispatch(InputCommand::KeyPress {
+                key: 'f',
+                hold_ms: 5,
+            });
         }
 
         std::thread::sleep(Duration::from_millis(2000));
@@ -655,17 +703,18 @@ mod tests {
         let buffer = Arc::new(ShardedFrameBuffer::new());
         stats.frames_processed.store(5000, Ordering::Relaxed);
 
-        let (host, mut cmd_rx) = NativeMessagingHost::new(
-            Arc::clone(&stats),
-            Arc::clone(&buffer),
-        );
+        let (host, mut cmd_rx) = NativeMessagingHost::new(Arc::clone(&stats), Arc::clone(&buffer));
 
         // Handshake
-        let resp = host.handle_message(serde_json::json!({"cmd": "handshake", "version": "1.0"})).unwrap();
+        let resp = host
+            .handle_message(serde_json::json!({"cmd": "handshake", "version": "1.0"}))
+            .unwrap();
         assert_eq!(resp["cmd"], "handshake_ack");
 
         // Stats
-        let resp = host.handle_message(serde_json::json!({"cmd": "get_stats"})).unwrap();
+        let resp = host
+            .handle_message(serde_json::json!({"cmd": "get_stats"}))
+            .unwrap();
         assert_eq!(resp["data"]["frames"], 5000);
 
         // Pause/Resume
@@ -690,7 +739,9 @@ mod tests {
             }));
         }
 
-        for h in handles { h.join().unwrap(); }
+        for h in handles {
+            h.join().unwrap();
+        }
 
         assert_eq!(stats.frames_processed.load(Ordering::Relaxed), 80000);
         assert_eq!(stats.decisions_made.load(Ordering::Relaxed), 80000);
@@ -702,10 +753,7 @@ mod tests {
         let buffer = Arc::new(ShardedFrameBuffer::new());
         let mut engine = DecisionEngine::new(AgentConfig::default());
 
-        let (host, _cmd_rx) = NativeMessagingHost::new(
-            Arc::clone(&stats),
-            Arc::clone(&buffer),
-        );
+        let (host, _cmd_rx) = NativeMessagingHost::new(Arc::clone(&stats), Arc::clone(&buffer));
 
         for tick in 0..500u64 {
             let mut state = vision::FrameState::default();
@@ -722,7 +770,9 @@ mod tests {
             }
         }
 
-        let resp = host.handle_message(serde_json::json!({"cmd": "get_stats"})).unwrap();
+        let resp = host
+            .handle_message(serde_json::json!({"cmd": "get_stats"}))
+            .unwrap();
         assert_eq!(resp["data"]["frames"], 500);
         assert_eq!(resp["data"]["decisions"], 500);
     }

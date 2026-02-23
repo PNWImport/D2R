@@ -36,8 +36,8 @@ impl Default for CaptureConfig {
             target_fps: 25,
             window_title: "Diablo II".to_string(),
             region: None,
-            hp_orb_center: (95, 525),     // Left orb
-            mana_orb_center: (705, 525),   // Right orb
+            hp_orb_center: (95, 525),    // Left orb
+            mana_orb_center: (705, 525), // Right orb
             orb_sample_radius: 30,
             char_center: (400, 300),
         }
@@ -61,7 +61,7 @@ pub struct CapturedFrame {
     pub pixels: Vec<u8>, // BGRA format, row-major
     pub width: u32,
     pub height: u32,
-    pub stride: u32,      // bytes per row (may include padding)
+    pub stride: u32, // bytes per row (may include padding)
     pub timestamp: Instant,
 }
 
@@ -132,25 +132,15 @@ impl CapturePipeline {
 
     /// Extract FrameState from raw pixel data
     fn extract_frame_state(&self, frame: &CapturedFrame) -> FrameState {
-        let mut state = FrameState::default();
-        state.tick = self.tick;
-        state.capture_time_ns = frame.timestamp.elapsed().as_nanos() as u64;
-        state.char_screen_x = self.config.char_center.0 as u16;
-        state.char_screen_y = self.config.char_center.1 as u16;
-
-        // Read HP orb
-        state.hp_pct = self.read_orb_pct(
-            frame,
-            self.config.hp_orb_center,
-            OrbType::Health,
-        );
-
-        // Read Mana orb
-        state.mana_pct = self.read_orb_pct(
-            frame,
-            self.config.mana_orb_center,
-            OrbType::Mana,
-        );
+        let mut state = FrameState {
+            tick: self.tick,
+            capture_time_ns: frame.timestamp.elapsed().as_nanos() as u64,
+            char_screen_x: self.config.char_center.0,
+            char_screen_y: self.config.char_center.1,
+            hp_pct: self.read_orb_pct(frame, self.config.hp_orb_center, OrbType::Health),
+            mana_pct: self.read_orb_pct(frame, self.config.mana_orb_center, OrbType::Mana),
+            ..Default::default()
+        };
 
         // Detect enemies — returns count + nearest enemy position + boss info
         let enemy_info = self.detect_enemies(frame);
@@ -218,7 +208,7 @@ impl CapturePipeline {
 
         let (target_r, target_g, target_b, threshold) = match orb_type {
             OrbType::Health => (180, 20, 20, 60), // Red orb
-            OrbType::Mana => (30, 30, 180, 60),    // Blue orb
+            OrbType::Mana => (30, 30, 180, 60),   // Blue orb
         };
 
         for dy in 0..r * 2 {
@@ -275,7 +265,7 @@ impl CapturePipeline {
         for y in (scan_y_start..scan_y_end).step_by(step) {
             let mut red_run = 0u32;
             let mut red_start_x = 0u32;
-            let mut dark_count = 0u32;  // damaged portion of bar
+            let mut dark_count = 0u32; // damaged portion of bar
 
             for x in (50..frame.width.saturating_sub(50)).step_by(2) {
                 let idx = (y * frame.stride + x * 4) as usize;
@@ -289,7 +279,9 @@ impl CapturePipeline {
 
                 // Enemy health bar: bright red, low green/blue
                 if r > 180 && g < 60 && b < 60 {
-                    if red_run == 0 { red_start_x = x; }
+                    if red_run == 0 {
+                        red_start_x = x;
+                    }
                     red_run += 1;
                 } else if r > 60 && r < 120 && g < 30 && b < 30 && red_run > 0 {
                     // Dark red = damaged portion of health bar
@@ -328,7 +320,7 @@ impl CapturePipeline {
                             info.boss_present = true;
                         }
                         // Champion detection: slightly wider than normal (25-39)
-                        if total_bar >= 25 && total_bar < 40 {
+                        if (25..40).contains(&total_bar) {
                             info.champion_present = true;
                         }
                     }
@@ -359,7 +351,9 @@ impl CapturePipeline {
             let mut cyan_run = 0u32;
             for x in (50..frame.width.saturating_sub(50)).step_by(3) {
                 let idx = (y * frame.stride + x * 4) as usize;
-                if idx + 2 >= frame.pixels.len() { continue; }
+                if idx + 2 >= frame.pixels.len() {
+                    continue;
+                }
 
                 let b = frame.pixels[idx];
                 let g = frame.pixels[idx + 1];
@@ -389,7 +383,9 @@ impl CapturePipeline {
 
         for x in bar_x_start..bar_x_end {
             let idx = (bar_y * frame.stride + x * 4) as usize;
-            if idx + 2 >= frame.pixels.len() { continue; }
+            if idx + 2 >= frame.pixels.len() {
+                continue;
+            }
             let g = frame.pixels[idx + 1];
             let r = frame.pixels[idx + 2];
             let b = frame.pixels[idx];
@@ -398,7 +394,9 @@ impl CapturePipeline {
             }
         }
 
-        if total == 0 { return 100; }
+        if total == 0 {
+            return 100;
+        }
         ((green_count as f32 / total as f32) * 100.0).min(100.0) as u8
     }
 
@@ -411,10 +409,12 @@ impl CapturePipeline {
         let col_width = (frame.width as f32 * 0.055) as u32;
         let mut columns = [0u8; 4];
 
-        for col in 0..4 {
+        for (col, column) in columns.iter_mut().enumerate() {
             let cx = belt_x_start + col as u32 * col_width + col_width / 2;
             let idx = (belt_y * frame.stride + cx * 4) as usize;
-            if idx + 2 >= frame.pixels.len() { continue; }
+            if idx + 2 >= frame.pixels.len() {
+                continue;
+            }
 
             let b = frame.pixels[idx];
             let g = frame.pixels[idx + 1];
@@ -422,7 +422,7 @@ impl CapturePipeline {
 
             // Non-empty slot has colored potion pixels (not dark/black)
             let brightness = (r as u32 + g as u32 + b as u32) / 3;
-            columns[col] = if brightness > 40 { 4 } else { 0 };
+            *column = if brightness > 40 { 4 } else { 0 };
         }
 
         columns
@@ -437,12 +437,12 @@ impl CapturePipeline {
 
         // Quality color definitions (BGRA order in memory)
         let quality_colors: [(u8, u8, u8, ItemQuality, u32); 6] = [
-            (99, 166, 198, ItemQuality::Unique, 35),   // Gold text
-            (0, 255, 0, ItemQuality::Set, 30),           // Green text
-            (119, 255, 255, ItemQuality::Rare, 25),      // Yellow text
-            (255, 104, 104, ItemQuality::Magic, 25),     // Blue text (BGR)
-            (80, 169, 255, ItemQuality::Rune, 30),       // Orange text
-            (255, 255, 255, ItemQuality::Normal, 20),    // White text
+            (99, 166, 198, ItemQuality::Unique, 35),  // Gold text
+            (0, 255, 0, ItemQuality::Set, 30),        // Green text
+            (119, 255, 255, ItemQuality::Rare, 25),   // Yellow text
+            (255, 104, 104, ItemQuality::Magic, 25),  // Blue text (BGR)
+            (80, 169, 255, ItemQuality::Rune, 30),    // Orange text
+            (255, 255, 255, ItemQuality::Normal, 20), // White text
         ];
 
         // Scan playfield area for colored text clusters
@@ -479,8 +479,8 @@ impl CapturePipeline {
                                 labels.push(LootLabel {
                                     x: x as u16,
                                     y: y as u16,
-                                    quality: quality.clone(),
-                                    text_hash: (x * 31 + y * 17) as u32,
+                                    quality: *quality,
+                                    text_hash: (x * 31 + y * 17),
                                 });
                             }
                         }
@@ -494,11 +494,15 @@ impl CapturePipeline {
         labels
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn check_text_cluster(
         &self,
         frame: &CapturedFrame,
-        cx: u32, cy: u32,
-        tr: u8, tg: u8, tb: u8,
+        cx: u32,
+        cy: u32,
+        tr: u8,
+        tg: u8,
+        tb: u8,
         threshold: u32,
     ) -> u32 {
         let mut count = 0u32;
@@ -515,7 +519,8 @@ impl CapturePipeline {
                 }
                 let dist = ((frame.pixels[idx + 2] as i32 - tr as i32).pow(2)
                     + (frame.pixels[idx + 1] as i32 - tg as i32).pow(2)
-                    + (frame.pixels[idx] as i32 - tb as i32).pow(2)) as f32;
+                    + (frame.pixels[idx] as i32 - tb as i32).pow(2))
+                    as f32;
                 if dist.sqrt() < threshold as f32 {
                     count += 1;
                 }
@@ -608,7 +613,9 @@ impl CapturePipeline {
         for y in (banner_y_start..banner_y_end).step_by(2) {
             for x in (banner_x_start..banner_x_end).step_by(3) {
                 let idx = (y * frame.stride + x * 4) as usize;
-                if idx + 2 >= frame.pixels.len() { continue; }
+                if idx + 2 >= frame.pixels.len() {
+                    continue;
+                }
 
                 let b = frame.pixels[idx] as i32;
                 let g = frame.pixels[idx + 1] as i32;
@@ -653,7 +660,9 @@ impl CapturePipeline {
         for y in (banner_y_start..banner_y_end).step_by(4) {
             for x in (banner_x_start..banner_x_end).step_by(4) {
                 let idx = (y * frame.stride + x * 4) as usize;
-                if idx + 2 >= frame.pixels.len() { continue; }
+                if idx + 2 >= frame.pixels.len() {
+                    continue;
+                }
 
                 let b = frame.pixels[idx] as i32;
                 let g = frame.pixels[idx + 1] as i32;
@@ -687,7 +696,9 @@ impl CapturePipeline {
             for dy in 0..30u32 {
                 let y = panel_y + dy;
                 let idx = (y * frame.stride + x * 4) as usize;
-                if idx + 2 >= frame.pixels.len() { continue; }
+                if idx + 2 >= frame.pixels.len() {
+                    continue;
+                }
 
                 let b = frame.pixels[idx];
                 let g = frame.pixels[idx + 1];
@@ -722,7 +733,9 @@ impl CapturePipeline {
 
         for x in (panel_x..panel_x_end).step_by(8) {
             let idx = (panel_y * frame.stride + x * 4) as usize;
-            if idx + 2 >= frame.pixels.len() { continue; }
+            if idx + 2 >= frame.pixels.len() {
+                continue;
+            }
 
             let b = frame.pixels[idx];
             let g = frame.pixels[idx + 1];
@@ -749,13 +762,17 @@ impl CapturePipeline {
         let bar_x_end = (frame.width as f32 * 0.88) as u32;
         let total_width = bar_x_end - bar_x_start;
 
-        if total_width == 0 { return 0; }
+        if total_width == 0 {
+            return 0;
+        }
 
         let mut filled = 0u32;
 
         for x in bar_x_start..bar_x_end {
             let idx = (bar_y * frame.stride + x * 4) as usize;
-            if idx + 2 >= frame.pixels.len() { continue; }
+            if idx + 2 >= frame.pixels.len() {
+                continue;
+            }
 
             let b = frame.pixels[idx];
             let g = frame.pixels[idx + 1];
@@ -789,8 +806,9 @@ impl CapturePipeline {
                 let y = hy.saturating_sub(30) + dy;
                 if x < width && y < height {
                     let idx = (y * stride + x * 4) as usize;
-                    if dy < 45 { // 75% filled
-                        pixels[idx] = 20;     // B
+                    if dy < 45 {
+                        // 75% filled
+                        pixels[idx] = 20; // B
                         pixels[idx + 1] = 20; // G
                         pixels[idx + 2] = 200; // R
                     }
@@ -806,8 +824,9 @@ impl CapturePipeline {
                 let y = my.saturating_sub(30) + dy;
                 if x < width && y < height {
                     let idx = (y * stride + x * 4) as usize;
-                    if dy < 40 { // 67% filled
-                        pixels[idx] = 200;    // B
+                    if dy < 40 {
+                        // 67% filled
+                        pixels[idx] = 200; // B
                         pixels[idx + 1] = 30; // G
                         pixels[idx + 2] = 30; // R
                     }
@@ -922,20 +941,13 @@ impl DxgiCapturer {
 
             // Map and read pixels
             let mut mapped = D3D11_MAPPED_SUBRESOURCE::default();
-            self.context.Map(
-                &staging,
-                0,
-                D3D11_MAP_READ,
-                0,
-                Some(&mut mapped),
-            )?;
+            self.context
+                .Map(&staging, 0, D3D11_MAP_READ, 0, Some(&mut mapped))?;
 
             let stride = mapped.RowPitch;
             let total_bytes = (stride * self.height) as usize;
-            let pixels = std::slice::from_raw_parts(
-                mapped.pData as *const u8,
-                total_bytes,
-            ).to_vec();
+            let pixels =
+                std::slice::from_raw_parts(mapped.pData as *const u8, total_bytes).to_vec();
 
             self.context.Unmap(&staging, 0);
             self.duplication.ReleaseFrame()?;

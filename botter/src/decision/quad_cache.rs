@@ -31,7 +31,7 @@
 //! - Lane 3: 12 u8/u64 fields       ≈  80 bytes
 //! - Lane 4: ~100 hot keys × 16 B   ≈   2 KB
 //! - Lane 1: (absent)
-//! Total: ~22 KB — no Warden surface, all in agent-private heap.
+//!   Total: ~22 KB — no Warden surface, all in agent-private heap.
 //!
 //! ## LLM Wrapper integration (openclaw)
 //!
@@ -108,35 +108,35 @@ fn is_boss_run(name: &str) -> bool {
 /// on the hot path.
 #[derive(Debug, Clone, Copy)]
 pub struct ThresholdBins {
-    pub chicken_hp:             u8,
-    pub chicken_mana:           u8,
-    pub chicken_merc:           u8,
-    pub rejuv_hp:               u8,
-    pub rejuv_mana:             u8,
-    pub hp_potion:              u8,
-    pub mp_potion:              u8,
-    pub tp_retreat:             u8,
-    pub merc_hp:                u8,
-    pub hp_potion_cooldown_ms:  u64,
-    pub mp_potion_cooldown_ms:  u64,
-    pub rejuv_cooldown_ms:      u64,
+    pub chicken_hp: u8,
+    pub chicken_mana: u8,
+    pub chicken_merc: u8,
+    pub rejuv_hp: u8,
+    pub rejuv_mana: u8,
+    pub hp_potion: u8,
+    pub mp_potion: u8,
+    pub tp_retreat: u8,
+    pub merc_hp: u8,
+    pub hp_potion_cooldown_ms: u64,
+    pub mp_potion_cooldown_ms: u64,
+    pub rejuv_cooldown_ms: u64,
 }
 
 impl ThresholdBins {
     pub fn from_config(config: &AgentConfig) -> Self {
         Self {
-            chicken_hp:            config.survival.chicken_hp_pct,
-            chicken_mana:          config.survival.mana_chicken_pct,
-            chicken_merc:          config.survival.merc_chicken_pct,
-            rejuv_hp:              config.survival.hp_rejuv_pct,
-            rejuv_mana:            config.survival.mana_rejuv_pct,
-            hp_potion:             config.survival.hp_potion_pct,
-            mp_potion:             config.survival.mana_potion_pct,
-            tp_retreat:            config.survival.tp_retreat_pct,
-            merc_hp:               config.survival.merc_hp_pct,
+            chicken_hp: config.survival.chicken_hp_pct,
+            chicken_mana: config.survival.mana_chicken_pct,
+            chicken_merc: config.survival.merc_chicken_pct,
+            rejuv_hp: config.survival.hp_rejuv_pct,
+            rejuv_mana: config.survival.mana_rejuv_pct,
+            hp_potion: config.survival.hp_potion_pct,
+            mp_potion: config.survival.mana_potion_pct,
+            tp_retreat: config.survival.tp_retreat_pct,
+            merc_hp: config.survival.merc_hp_pct,
             hp_potion_cooldown_ms: config.survival.hp_potion_cooldown_ms,
             mp_potion_cooldown_ms: config.survival.mana_potion_cooldown_ms,
-            rejuv_cooldown_ms:     config.survival.rejuv_cooldown_ms,
+            rejuv_cooldown_ms: config.survival.rejuv_cooldown_ms,
         }
     }
 }
@@ -179,9 +179,9 @@ impl HpBin {
 /// in production farming sessions. Fits in a single u8 register.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct HotKey {
-    pub hp_bin:    HpBin,
+    pub hp_bin: HpBin,
     pub in_combat: bool,
-    pub has_loot:  bool,
+    pub has_loot: bool,
 }
 
 impl HotKey {
@@ -189,9 +189,9 @@ impl HotKey {
     /// Follows the QuadCache Span format: self-describing, citable, no re-query needed.
     pub fn to_span_features(&self, hit_count: u64) -> SpanFeatures {
         SpanFeatures {
-            hp_bin:     self.hp_bin,
-            in_combat:  self.in_combat,
-            has_loot:   self.has_loot,
+            hp_bin: self.hp_bin,
+            in_combat: self.in_combat,
+            has_loot: self.has_loot,
             hit_count,
         }
     }
@@ -201,9 +201,9 @@ impl HotKey {
 /// The LLM sees this instead of raw game memory — deterministic, citable.
 #[derive(Debug, Clone, Copy)]
 pub struct SpanFeatures {
-    pub hp_bin:    HpBin,
+    pub hp_bin: HpBin,
     pub in_combat: bool,
-    pub has_loot:  bool,
+    pub has_loot: bool,
     /// How many times this exact pattern has fired this session
     pub hit_count: u64,
 }
@@ -326,7 +326,11 @@ impl QuadCache {
     pub fn hit_rate(&self) -> f32 {
         let hits: u64 = self.hot_hits.values().sum();
         let total = hits + self.cold_misses;
-        if total == 0 { 0.0 } else { hits as f32 / total as f32 }
+        if total == 0 {
+            0.0
+        } else {
+            hits as f32 / total as f32
+        }
     }
 
     /// Top-N hot patterns — emitted to LLM wrapper as session context.

@@ -75,20 +75,20 @@ pub struct FrameState {
     pub in_combat: bool,
     pub boss_present: bool,
     pub champion_present: bool,
-    pub immune_detected: bool,        // vision saw immunity text on nearest target
+    pub immune_detected: bool, // vision saw immunity text on nearest target
 
     // Nearest enemy screen position (for targeted attacks)
     pub nearest_enemy_x: u16,
     pub nearest_enemy_y: u16,
-    pub nearest_enemy_hp_pct: u8,     // 0-100 from health bar vision
+    pub nearest_enemy_hp_pct: u8, // 0-100 from health bar vision
 
     // Location
     pub in_town: bool,
     pub current_act: u8,
     pub motion_magnitude: f32,
-    pub at_menu: bool,          // main menu / char select / difficulty select
-    pub loading_screen: bool,   // loading screen between areas
-    pub inventory_full: bool,   // no open inventory slots detected
+    pub at_menu: bool,        // main menu / char select / difficulty select
+    pub loading_screen: bool, // loading screen between areas
+    pub inventory_full: bool, // no open inventory slots detected
 
     // Character screen position (center of sprite)
     pub char_screen_x: u16,
@@ -118,14 +118,14 @@ pub struct FrameState {
     pub char_level: u8,
 
     // Quest-related visual cues
-    pub quest_complete_banner: bool,   // "Quest Completed" golden banner visible
-    pub waypoint_menu_open: bool,      // Waypoint selection UI is open
-    pub npc_dialog_open: bool,         // NPC dialog/trade window is open
-    pub stash_open: bool,              // Stash UI is open
-    pub cube_open: bool,               // Horadric Cube UI is open
-    pub skill_screen_open: bool,       // Skill tree UI is open (for auto-skill)
-    pub stat_screen_open: bool,        // Character stat screen is open (for auto-stat)
-    pub quest_log_open: bool,          // Quest log UI is open
+    pub quest_complete_banner: bool, // "Quest Completed" golden banner visible
+    pub waypoint_menu_open: bool,    // Waypoint selection UI is open
+    pub npc_dialog_open: bool,       // NPC dialog/trade window is open
+    pub stash_open: bool,            // Stash UI is open
+    pub cube_open: bool,             // Horadric Cube UI is open
+    pub skill_screen_open: bool,     // Skill tree UI is open (for auto-skill)
+    pub stat_screen_open: bool,      // Character stat screen is open (for auto-stat)
+    pub quest_log_open: bool,        // Quest log UI is open
 
     // Difficulty detected from char select or game (0=normal, 1=nightmare, 2=hell)
     pub difficulty: u8,
@@ -671,12 +671,12 @@ mod tests {
         }
 
         producer.join().unwrap();
-        let total_reads: u64 = consumers
-            .into_iter()
-            .map(|c| c.join().unwrap())
-            .sum();
+        let total_reads: u64 = consumers.into_iter().map(|c| c.join().unwrap()).sum();
 
-        println!("Multi-consumer test: {} total reads across 4 consumers", total_reads);
+        println!(
+            "Multi-consumer test: {} total reads across 4 consumers",
+            total_reads
+        );
         assert!(total_reads > 400, "expected many reads across consumers");
     }
 

@@ -8,14 +8,12 @@
 //! the strategic layer: when to go to town, which town tasks to do, when to
 //! exit the game, run counting, and session management.
 
-use crate::config::AgentConfig;
-use crate::vision::FrameState;
 use super::engine::{Action, Decision, DecisionEngine};
-use super::progression::{
-    ProgressionEngine, Script, ScriptStep, script_plan,
-};
+use super::progression::{script_plan, ProgressionEngine, Script, ScriptStep};
 use super::quad_cache::QuadCache;
 use super::script_executor::ScriptExecutor;
+use crate::config::AgentConfig;
+use crate::vision::FrameState;
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
@@ -85,56 +83,57 @@ struct TownNpcs {
     potion_vendor: (i32, i32),
     repair_vendor: (i32, i32),
     merc_revive: (i32, i32),
-    identify: (i32, i32),       // Cain / Deckard
-    waypoint: (i32, i32),
+    identify: (i32, i32), // Cain / Deckard
+    _waypoint: (i32, i32),
 }
 
 fn npcs_for_act(act: u8) -> TownNpcs {
     match act {
         1 => TownNpcs {
-            healer: (155, 72),       // Akara
-            stash: (127, 237),       // Stash (camp center)
-            potion_vendor: (155, 72),// Akara (same)
-            repair_vendor: (257, 209),// Charsi
-            merc_revive: (466, 236), // Kashya
-            identify: (155, 72),     // Akara (or Cain if rescued)
-            waypoint: (120, 280),    // WP in Rogue Camp
+            healer: (155, 72),         // Akara
+            stash: (127, 237),         // Stash (camp center)
+            potion_vendor: (155, 72),  // Akara (same)
+            repair_vendor: (257, 209), // Charsi
+            merc_revive: (466, 236),   // Kashya
+            identify: (155, 72),       // Akara (or Cain if rescued)
+            _waypoint: (120, 280),     // WP in Rogue Camp
         },
         2 => TownNpcs {
-            healer: (260, 142),      // Fara
-            stash: (230, 290),       // Stash
-            potion_vendor: (196, 93),// Drognan
-            repair_vendor: (260, 142),// Fara (same)
-            merc_revive: (457, 218), // Greiz
-            identify: (196, 93),     // Drognan (or Cain)
-            waypoint: (264, 288),    // WP in Lut Gholein
+            healer: (260, 142),        // Fara
+            stash: (230, 290),         // Stash
+            potion_vendor: (196, 93),  // Drognan
+            repair_vendor: (260, 142), // Fara (same)
+            merc_revive: (457, 218),   // Greiz
+            identify: (196, 93),       // Drognan (or Cain)
+            _waypoint: (264, 288),     // WP in Lut Gholein
         },
         3 => TownNpcs {
-            healer: (307, 170),      // Ormus
-            stash: (166, 310),       // Stash
-            potion_vendor: (307, 170),// Ormus
-            repair_vendor: (226, 63),// Hratli
-            merc_revive: (408, 95),  // Asheara
-            identify: (307, 170),    // Ormus (or Cain)
-            waypoint: (229, 306),    // WP in Kurast Docks
+            healer: (307, 170),        // Ormus
+            stash: (166, 310),         // Stash
+            potion_vendor: (307, 170), // Ormus
+            repair_vendor: (226, 63),  // Hratli
+            merc_revive: (408, 95),    // Asheara
+            identify: (307, 170),      // Ormus (or Cain)
+            _waypoint: (229, 306),     // WP in Kurast Docks
         },
         4 => TownNpcs {
-            healer: (152, 107),      // Jamella
-            stash: (186, 246),       // Stash
-            potion_vendor: (152, 107),// Jamella
-            repair_vendor: (181, 155),// Halbu
-            merc_revive: (152, 107), // Tyrael (act 4 = Tyrael)
-            identify: (152, 107),    // Jamella (or Cain)
-            waypoint: (158, 277),    // WP in Pandemonium Fortress
+            healer: (152, 107),        // Jamella
+            stash: (186, 246),         // Stash
+            potion_vendor: (152, 107), // Jamella
+            repair_vendor: (181, 155), // Halbu
+            merc_revive: (152, 107),   // Tyrael (act 4 = Tyrael)
+            identify: (152, 107),      // Jamella (or Cain)
+            _waypoint: (158, 277),     // WP in Pandemonium Fortress
         },
-        _ => TownNpcs { // Act 5
-            healer: (328, 63),       // Malah
-            stash: (306, 266),       // Stash
-            potion_vendor: (328, 63),// Malah
-            repair_vendor: (135, 142),// Larzuk
-            merc_revive: (458, 147), // Qual-Kehk
-            identify: (385, 154),    // Anya (or Cain)
-            waypoint: (210, 172),    // WP in Harrogath
+        _ => TownNpcs {
+            // Act 5
+            healer: (328, 63),         // Malah
+            stash: (306, 266),         // Stash
+            potion_vendor: (328, 63),  // Malah
+            repair_vendor: (135, 142), // Larzuk
+            merc_revive: (458, 147),   // Qual-Kehk
+            identify: (385, 154),      // Anya (or Cain)
+            _waypoint: (210, 172),     // WP in Harrogath
         },
     }
 }
@@ -162,12 +161,12 @@ pub struct GameManager {
     // Game lifecycle
     game_start: Instant,
     game_count: u32,
-    run_index: usize,          // Current position in farming.sequence
-    runs_this_game: u32,       // How many farming runs completed this game
+    run_index: usize,    // Current position in farming.sequence
+    runs_this_game: u32, // How many farming runs completed this game
     last_game_exit: Instant,
 
     // Session tracking
-    session_start: Instant,
+    _session_start: Instant,
     total_games: u32,
     total_chickens: u32,
 
@@ -175,7 +174,7 @@ pub struct GameManager {
     oog_click_cooldown: Instant,
 
     // Exit sequence state
-    exit_step: u8,             // 0=esc, 1=wait, 2=click_save
+    exit_step: u8, // 0=esc, 1=wait, 2=click_save
 
     // ─── Progression / Leveling ──────────────────────────────
     /// Quest progression engine (None = farming-only mode, no quest tracking).
@@ -213,7 +212,7 @@ impl GameManager {
             run_index: 0,
             runs_this_game: 0,
             last_game_exit: now,
-            session_start: now,
+            _session_start: now,
             total_games: 0,
             total_chickens: 0,
             oog_click_cooldown: now,
@@ -526,17 +525,18 @@ impl GameManager {
             TownTask::Done => {
                 // All town tasks complete.
                 // If no script is loaded yet (first town visit), select one.
-                if self.progression.is_some() && self.current_script.is_none() {
-                    if !self.select_next_script() {
-                        // No more scripts — exit game
-                        self.phase = GamePhase::ExitingGame;
-                        return Decision {
-                            action: Action::Wait,
-                            delay: Duration::from_millis(500),
-                            priority: 0,
-                            reason: "town: all scripts done, exiting",
-                        };
-                    }
+                if self.progression.is_some()
+                    && self.current_script.is_none()
+                    && !self.select_next_script()
+                {
+                    // No more scripts — exit game
+                    self.phase = GamePhase::ExitingGame;
+                    return Decision {
+                        action: Action::Wait,
+                        delay: Duration::from_millis(500),
+                        priority: 0,
+                        reason: "town: all scripts done, exiting",
+                    };
                 }
 
                 // Resume executor — it will handle WP navigation, walking, etc.
@@ -670,7 +670,8 @@ impl GameManager {
             if state.char_level < min_level {
                 tracing::info!(
                     "Level gate: need {}, have {} — retry next game",
-                    min_level, state.char_level
+                    min_level,
+                    state.char_level
                 );
                 if let Some(script) = self.current_script {
                     if let Some(ref mut progression) = self.progression {
@@ -795,8 +796,10 @@ impl GameManager {
         };
 
         if sequence_complete {
-            tracing::info!("Farming sequence complete ({} runs) — exiting game",
-                self.runs_this_game);
+            tracing::info!(
+                "Farming sequence complete ({} runs) — exiting game",
+                self.runs_this_game
+            );
             self.phase = GamePhase::ExitingGame;
             return Decision {
                 action: Action::Wait,
@@ -812,7 +815,10 @@ impl GameManager {
         self.town_task_started = Instant::now();
         self.run_index += 1;
 
-        tracing::info!("Run {} complete — starting town prep for next run", self.runs_this_game);
+        tracing::info!(
+            "Run {} complete — starting town prep for next run",
+            self.runs_this_game
+        );
         self.handle_town(state)
     }
 
@@ -907,7 +913,8 @@ impl GameManager {
         let jitter_x = self.rng.gen_range(-5i32..=5);
         let jitter_y = self.rng.gen_range(-5i32..=5);
         Decision {
-            action: Action::PickupLoot { // Reuse left-click action
+            action: Action::PickupLoot {
+                // Reuse left-click action
                 screen_x: pos.0 + jitter_x,
                 screen_y: pos.1 + jitter_y,
             },
@@ -942,11 +949,7 @@ impl GameManager {
         match progression.next_script() {
             Some(script) => {
                 let plan = script_plan(script, progression.state());
-                tracing::info!(
-                    "Selected script: {} ({} steps)",
-                    script.name(),
-                    plan.len()
-                );
+                tracing::info!("Selected script: {} ({} steps)", script.name(), plan.len());
                 self.current_script = Some(script);
                 self.script_steps = plan.clone();
                 self.script_step_index = 0;
@@ -1042,7 +1045,9 @@ impl GameManager {
     pub fn check_level_gate(&mut self, current_level: u8) -> bool {
         // Extract the min_level from current step without holding a borrow
         let min_level = if self.script_step_index < self.script_steps.len() {
-            if let ScriptStep::RequireLevel { min_level } = self.script_steps[self.script_step_index] {
+            if let ScriptStep::RequireLevel { min_level } =
+                self.script_steps[self.script_step_index]
+            {
                 Some(min_level)
             } else {
                 None
@@ -1057,7 +1062,9 @@ impl GameManager {
                 if let Some(script) = self.current_script {
                     tracing::info!(
                         "Level gate failed for {}: need {}, have {}",
-                        script.name(), min_lvl, current_level
+                        script.name(),
+                        min_lvl,
+                        current_level
                     );
                     if let Some(ref mut progression) = self.progression {
                         progression.retry_next_game(script);
@@ -1234,7 +1241,7 @@ mod tests {
             // All coordinates should be within reasonable screen bounds
             assert!(npcs.healer.0 > 0 && npcs.healer.0 < 800);
             assert!(npcs.stash.1 > 0 && npcs.stash.1 < 600);
-            assert!(npcs.waypoint.0 > 0 && npcs.waypoint.0 < 800);
+            assert!(npcs._waypoint.0 > 0 && npcs._waypoint.0 < 800);
         }
     }
 }

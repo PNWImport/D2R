@@ -147,18 +147,18 @@ impl CaptureTiming {
             if !self.in_burst {
                 self.in_burst = true;
                 self.frames_in_burst = 0;
-                self.burst_target = self.rng.gen_range(
-                    self.config.burst_min_frames..=self.config.burst_max_frames,
-                );
+                self.burst_target = self
+                    .rng
+                    .gen_range(self.config.burst_min_frames..=self.config.burst_max_frames);
                 self.total_bursts += 1;
                 return CaptureAction::StartBurst;
             }
 
             if self.frames_in_burst >= self.burst_target {
                 self.in_burst = false;
-                let pause = self.rng.gen_range(
-                    self.config.burst_pause_min_ms..=self.config.burst_pause_max_ms,
-                );
+                let pause = self
+                    .rng
+                    .gen_range(self.config.burst_pause_min_ms..=self.config.burst_pause_max_ms);
                 return CaptureAction::EndBurst(Duration::from_millis(pause));
             }
         }
@@ -166,9 +166,9 @@ impl CaptureTiming {
         // Long pause check (very rare: ~0.1% per frame = ~9/hour at 25Hz)
         if self.rng.gen::<f32>() < self.config.long_pause_rate {
             self.total_pauses += 1;
-            let pause = self.rng.gen_range(
-                self.config.long_pause_min_ms..=self.config.long_pause_max_ms,
-            );
+            let pause = self
+                .rng
+                .gen_range(self.config.long_pause_min_ms..=self.config.long_pause_max_ms);
             return CaptureAction::LongPause(Duration::from_millis(pause));
         }
 
@@ -182,10 +182,10 @@ impl CaptureTiming {
         }
 
         // Normal capture with jittered interval
-        let interval_ms = self
-            .interval_dist
-            .sample(&mut self.rng)
-            .clamp(self.config.min_interval_ms as f64, self.config.max_interval_ms as f64);
+        let interval_ms = self.interval_dist.sample(&mut self.rng).clamp(
+            self.config.min_interval_ms as f64,
+            self.config.max_interval_ms as f64,
+        );
 
         self.total_frames += 1;
         self.frames_in_burst += 1;
@@ -267,7 +267,10 @@ mod tests {
             }
         }
 
-        assert_eq!(captures, 1000, "all actions should be captures in continuous mode with no skips");
+        assert_eq!(
+            captures, 1000,
+            "all actions should be captures in continuous mode with no skips"
+        );
     }
 
     #[test]
@@ -318,10 +321,7 @@ mod tests {
         }
 
         let mean = intervals_ms.iter().sum::<f64>() / intervals_ms.len() as f64;
-        let variance = intervals_ms
-            .iter()
-            .map(|x| (x - mean).powi(2))
-            .sum::<f64>()
+        let variance = intervals_ms.iter().map(|x| (x - mean).powi(2)).sum::<f64>()
             / intervals_ms.len() as f64;
         let stddev = variance.sqrt();
 
@@ -433,17 +433,11 @@ mod tests {
         let timing = CaptureTiming::new(CaptureTimingConfig::default());
 
         // If action says wait 40ms and processing took 15ms, sleep 25ms
-        let wait = timing.compensated_wait(
-            Duration::from_millis(40),
-            Duration::from_millis(15),
-        );
+        let wait = timing.compensated_wait(Duration::from_millis(40), Duration::from_millis(15));
         assert_eq!(wait, Duration::from_millis(25));
 
         // If processing took longer than wait, return zero (don't go negative)
-        let wait = timing.compensated_wait(
-            Duration::from_millis(40),
-            Duration::from_millis(50),
-        );
+        let wait = timing.compensated_wait(Duration::from_millis(40), Duration::from_millis(50));
         assert_eq!(wait, Duration::ZERO);
     }
 

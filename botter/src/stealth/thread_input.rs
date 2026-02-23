@@ -16,11 +16,26 @@ use std::time::{Duration, Instant};
 
 #[derive(Debug, Clone)]
 pub enum InputCommand {
-    KeyPress { key: char, hold_ms: u64 },
-    MouseMove { x: i32, y: i32 },
-    LeftClick { hold_ms: u64 },
-    RightClick { hold_ms: u64 },
-    ClickAt { x: i32, y: i32, button: MouseButton, hold_ms: u64 },
+    KeyPress {
+        key: char,
+        hold_ms: u64,
+    },
+    MouseMove {
+        x: i32,
+        y: i32,
+    },
+    LeftClick {
+        hold_ms: u64,
+    },
+    RightClick {
+        hold_ms: u64,
+    },
+    ClickAt {
+        x: i32,
+        y: i32,
+        button: MouseButton,
+        hold_ms: u64,
+    },
     Shutdown,
 }
 
@@ -61,11 +76,12 @@ impl InputWorker {
 
                     Self::execute(&cmd, &mut rng);
 
-                    self.stats.commands_processed.fetch_add(1, Ordering::Relaxed);
-                    self.stats.total_latency_us.fetch_add(
-                        start.elapsed().as_micros() as u64,
-                        Ordering::Relaxed,
-                    );
+                    self.stats
+                        .commands_processed
+                        .fetch_add(1, Ordering::Relaxed);
+                    self.stats
+                        .total_latency_us
+                        .fetch_add(start.elapsed().as_micros() as u64, Ordering::Relaxed);
                 }
             }
         }
@@ -133,14 +149,23 @@ impl InputWorker {
                     SendInput(&[up], std::mem::size_of::<INPUT>() as i32);
                 }
             }
-            InputCommand::ClickAt { x, y, button, hold_ms } => {
-                unsafe { SetCursorPos(*x, *y); }
+            InputCommand::ClickAt {
+                x,
+                y,
+                button,
+                hold_ms,
+            } => {
+                unsafe {
+                    SetCursorPos(*x, *y);
+                }
                 thread::sleep(Duration::from_millis(rng.gen_range(5..25)));
                 match button {
-                    MouseButton::Left => Self::execute(
-                        &InputCommand::LeftClick { hold_ms: *hold_ms }, rng),
-                    MouseButton::Right => Self::execute(
-                        &InputCommand::RightClick { hold_ms: *hold_ms }, rng),
+                    MouseButton::Left => {
+                        Self::execute(&InputCommand::LeftClick { hold_ms: *hold_ms }, rng)
+                    }
+                    MouseButton::Right => {
+                        Self::execute(&InputCommand::RightClick { hold_ms: *hold_ms }, rng)
+                    }
                 }
             }
             InputCommand::Shutdown => unreachable!(),
@@ -179,33 +204,33 @@ fn char_to_vk(c: char) -> u16 {
         '0'..='9' => 0x30 + (c as u16 - '0' as u16),
         'a'..='z' => 0x41 + (c as u16 - 'a' as u16),
         'A'..='Z' => 0x41 + (c as u16 - 'A' as u16),
-        '\x1b' => 0x1B,    // Escape
-        '\r' => 0x0D,      // Enter
-        '\t' => 0x09,      // Tab
-        ' ' => 0x20,       // Space
+        '\x1b' => 0x1B, // Escape
+        '\r' => 0x0D,   // Enter
+        '\t' => 0x09,   // Tab
+        ' ' => 0x20,    // Space
         // Function keys: mapped to chars \x80-\x8B (F1-F12)
-        '\u{80}' => 0x70,  // VK_F1
-        '\u{81}' => 0x71,  // VK_F2
-        '\u{82}' => 0x72,  // VK_F3
-        '\u{83}' => 0x73,  // VK_F4
-        '\u{84}' => 0x74,  // VK_F5
-        '\u{85}' => 0x75,  // VK_F6
-        '\u{86}' => 0x76,  // VK_F7
-        '\u{87}' => 0x77,  // VK_F8
-        '\u{88}' => 0x78,  // VK_F9
-        '\u{89}' => 0x79,  // VK_F10
-        '\u{8A}' => 0x7A,  // VK_F11
-        '\u{8B}' => 0x7B,  // VK_F12
-        '-' => 0xBD,       // VK_OEM_MINUS
-        '=' => 0xBB,       // VK_OEM_PLUS
-        '[' => 0xDB,       // VK_OEM_4
-        ']' => 0xDD,       // VK_OEM_6
-        ',' => 0xBC,       // VK_OEM_COMMA
-        '.' => 0xBE,       // VK_OEM_PERIOD
-        '/' => 0xBF,       // VK_OEM_2
-        ';' => 0xBA,       // VK_OEM_1
-        '\'' => 0xDE,      // VK_OEM_7
-        '`' => 0xC0,       // VK_OEM_3
+        '\u{80}' => 0x70, // VK_F1
+        '\u{81}' => 0x71, // VK_F2
+        '\u{82}' => 0x72, // VK_F3
+        '\u{83}' => 0x73, // VK_F4
+        '\u{84}' => 0x74, // VK_F5
+        '\u{85}' => 0x75, // VK_F6
+        '\u{86}' => 0x76, // VK_F7
+        '\u{87}' => 0x77, // VK_F8
+        '\u{88}' => 0x78, // VK_F9
+        '\u{89}' => 0x79, // VK_F10
+        '\u{8A}' => 0x7A, // VK_F11
+        '\u{8B}' => 0x7B, // VK_F12
+        '-' => 0xBD,      // VK_OEM_MINUS
+        '=' => 0xBB,      // VK_OEM_PLUS
+        '[' => 0xDB,      // VK_OEM_4
+        ']' => 0xDD,      // VK_OEM_6
+        ',' => 0xBC,      // VK_OEM_COMMA
+        '.' => 0xBE,      // VK_OEM_PERIOD
+        '/' => 0xBF,      // VK_OEM_2
+        ';' => 0xBA,      // VK_OEM_1
+        '\'' => 0xDE,     // VK_OEM_7
+        '`' => 0xC0,      // VK_OEM_3
         _ => c as u16,
     }
 }
@@ -264,10 +289,9 @@ impl ThreadRotatedInput {
             let (tx, rx) = mpsc::channel();
             let thread_stats = std::sync::Arc::new(ThreadStats::default());
 
-            let timing_dist = Normal::new(
-                config.timing_jitter_mean_us,
-                config.timing_jitter_stddev_us,
-            ).unwrap_or_else(|_| Normal::new(200.0, 80.0).unwrap());
+            let timing_dist =
+                Normal::new(config.timing_jitter_mean_us, config.timing_jitter_stddev_us)
+                    .unwrap_or_else(|_| Normal::new(200.0, 80.0).unwrap());
 
             let padding_size = rng.gen_range(config.stack_padding_min..=config.stack_padding_max);
 
@@ -309,42 +333,53 @@ impl ThreadRotatedInput {
     fn select_worker(&self) -> usize {
         let n = self.workers.len();
         match self.strategy {
-            RotationStrategy::RoundRobin => {
-                self.current_worker.fetch_add(1, Ordering::Relaxed) % n
-            }
-            RotationStrategy::Random => {
-                thread_rng().gen_range(0..n)
-            }
-            RotationStrategy::LeastRecentlyUsed => {
-                self.worker_stats.iter().enumerate()
-                    .min_by_key(|(_, s)| s.commands_processed.load(Ordering::Relaxed))
-                    .map(|(i, _)| i).unwrap_or(0)
-            }
+            RotationStrategy::RoundRobin => self.current_worker.fetch_add(1, Ordering::Relaxed) % n,
+            RotationStrategy::Random => thread_rng().gen_range(0..n),
+            RotationStrategy::LeastRecentlyUsed => self
+                .worker_stats
+                .iter()
+                .enumerate()
+                .min_by_key(|(_, s)| s.commands_processed.load(Ordering::Relaxed))
+                .map(|(i, _)| i)
+                .unwrap_or(0),
         }
     }
 
     pub fn stats(&self) -> InputDispatchStats {
         InputDispatchStats {
             total_dispatched: self.total_dispatched.load(Ordering::Relaxed),
-            per_thread: self.worker_stats.iter().enumerate().map(|(i, s)| {
-                let cmds = s.commands_processed.load(Ordering::Relaxed);
-                let lat = s.total_latency_us.load(Ordering::Relaxed);
-                ThreadDispatchStats {
-                    thread_id: i,
-                    commands_processed: cmds,
-                    avg_latency_us: if cmds > 0 { lat / cmds } else { 0 },
-                }
-            }).collect(),
+            per_thread: self
+                .worker_stats
+                .iter()
+                .enumerate()
+                .map(|(i, s)| {
+                    let cmds = s.commands_processed.load(Ordering::Relaxed);
+                    let lat = s.total_latency_us.load(Ordering::Relaxed);
+                    ThreadDispatchStats {
+                        thread_id: i,
+                        commands_processed: cmds,
+                        avg_latency_us: if cmds > 0 { lat / cmds } else { 0 },
+                    }
+                })
+                .collect(),
         }
     }
 
-    pub fn num_workers(&self) -> usize { self.workers.len() }
+    pub fn num_workers(&self) -> usize {
+        self.workers.len()
+    }
 }
 
 impl Drop for ThreadRotatedInput {
     fn drop(&mut self) {
-        for tx in &self.workers { let _ = tx.send(InputCommand::Shutdown); }
-        for h in &mut self.handles { if let Some(h) = h.take() { let _ = h.join(); } }
+        for tx in &self.workers {
+            let _ = tx.send(InputCommand::Shutdown);
+        }
+        for h in &mut self.handles {
+            if let Some(h) = h.take() {
+                let _ = h.join();
+            }
+        }
     }
 }
 
@@ -368,7 +403,10 @@ mod tests {
     #[test]
     fn test_basic_dispatch() {
         let pool = ThreadRotatedInput::new(ThreadPoolConfig::default());
-        assert!(pool.dispatch(InputCommand::KeyPress { key: 'f', hold_ms: 50 }));
+        assert!(pool.dispatch(InputCommand::KeyPress {
+            key: 'f',
+            hold_ms: 50
+        }));
         thread::sleep(Duration::from_millis(200));
         assert_eq!(pool.stats().total_dispatched, 1);
     }
@@ -382,7 +420,8 @@ mod tests {
         });
         for i in 0..100 {
             pool.dispatch(InputCommand::KeyPress {
-                key: (b'a' + (i % 26) as u8) as char, hold_ms: 20,
+                key: (b'a' + (i % 26) as u8) as char,
+                hold_ms: 20,
             });
         }
         thread::sleep(Duration::from_millis(500));
@@ -396,13 +435,26 @@ mod tests {
     #[test]
     fn test_multiple_command_types() {
         let pool = ThreadRotatedInput::new(ThreadPoolConfig::default());
-        pool.dispatch(InputCommand::KeyPress { key: 'f', hold_ms: 50 });
+        pool.dispatch(InputCommand::KeyPress {
+            key: 'f',
+            hold_ms: 50,
+        });
         pool.dispatch(InputCommand::MouseMove { x: 400, y: 300 });
         pool.dispatch(InputCommand::LeftClick { hold_ms: 40 });
         pool.dispatch(InputCommand::RightClick { hold_ms: 35 });
-        pool.dispatch(InputCommand::ClickAt { x: 500, y: 200, button: MouseButton::Right, hold_ms: 45 });
+        pool.dispatch(InputCommand::ClickAt {
+            x: 500,
+            y: 200,
+            button: MouseButton::Right,
+            hold_ms: 45,
+        });
         thread::sleep(Duration::from_millis(500));
-        let total: u64 = pool.stats().per_thread.iter().map(|t| t.commands_processed).sum();
+        let total: u64 = pool
+            .stats()
+            .per_thread
+            .iter()
+            .map(|t| t.commands_processed)
+            .sum();
         assert_eq!(total, 5);
     }
 
@@ -414,17 +466,30 @@ mod tests {
             ..Default::default()
         });
         for _ in 0..8 {
-            pool.dispatch(InputCommand::KeyPress { key: 'a', hold_ms: 15 });
+            pool.dispatch(InputCommand::KeyPress {
+                key: 'a',
+                hold_ms: 15,
+            });
         }
         thread::sleep(Duration::from_millis(300));
-        let active = pool.stats().per_thread.iter().filter(|t| t.commands_processed > 0).count();
+        let active = pool
+            .stats()
+            .per_thread
+            .iter()
+            .filter(|t| t.commands_processed > 0)
+            .count();
         assert_eq!(active, 4);
     }
 
     #[test]
     fn test_clean_shutdown() {
         let pool = ThreadRotatedInput::new(ThreadPoolConfig::default());
-        for _ in 0..20 { pool.dispatch(InputCommand::KeyPress { key: 'x', hold_ms: 10 }); }
+        for _ in 0..20 {
+            pool.dispatch(InputCommand::KeyPress {
+                key: 'x',
+                hold_ms: 10,
+            });
+        }
         thread::sleep(Duration::from_millis(100));
         drop(pool);
     }
@@ -439,11 +504,17 @@ mod tests {
         });
         for i in 0..1000u32 {
             pool.dispatch(InputCommand::KeyPress {
-                key: (b'a' + (i % 26) as u8) as char, hold_ms: 5,
+                key: (b'a' + (i % 26) as u8) as char,
+                hold_ms: 5,
             });
         }
         thread::sleep(Duration::from_millis(2000));
-        let total: u64 = pool.stats().per_thread.iter().map(|t| t.commands_processed).sum();
+        let total: u64 = pool
+            .stats()
+            .per_thread
+            .iter()
+            .map(|t| t.commands_processed)
+            .sum();
         assert!(total >= 200);
     }
 }
