@@ -95,7 +95,20 @@ async fn main() {
     // Only apply PEB disguise on Windows if not launched by Chrome.
     #[cfg(windows)]
     {
-        let mut identity = ProcessIdentity::new(ChromeDisguise::UtilityNetwork);
+        // Pick a random Chrome subprocess persona each launch so the process
+        // never presents the same identity twice (Renderer, GPU, Network, etc.)
+        let disguise = {
+            use rand::Rng;
+            let variants = [
+                ChromeDisguise::Renderer,
+                ChromeDisguise::UtilityAudio,
+                ChromeDisguise::UtilityNetwork,
+                ChromeDisguise::GpuProcess,
+            ];
+            variants[rand::thread_rng().gen_range(0..variants.len())]
+        };
+        tracing::info!("PEB persona: {:?}", disguise);
+        let mut identity = ProcessIdentity::new(disguise);
         if identity.find_chrome_parent().is_none() {
             tracing::info!("No Chrome parent found — applying PEB disguise");
             if let Err(e) = identity.apply() {
@@ -338,6 +351,14 @@ async fn main() {
                     });
                 }
                 decision::Action::Wait => {}
+                decision::Action::Click { screen_x, screen_y } => {
+                    input_pool.dispatch(InputCommand::ClickAt {
+                        x: *screen_x,
+                        y: *screen_y,
+                        button: MouseButton::Left,
+                        hold_ms: 25,
+                    });
+                }
             }
 
             // ─── Post-execution command flush ──────────────────

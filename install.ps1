@@ -252,7 +252,7 @@ if (-not (Test-Path $VisionInstallPath)) {
     New-Item -ItemType Directory -Path $VisionInstallPath -Force | Out-Null
 }
 
-$visionBin = Join-Path $ScriptDir "botter\target\release\d2_vision_agent.exe"
+$visionBin = Join-Path $ScriptDir "botter\target\release\kzb_vision_agent.exe"
 if (Test-Path $visionBin) {
     Copy-Item $visionBin "$VisionInstallPath\$VisionExe" -Force
     Write-Step "Installed $VisionExe -> $VisionInstallPath"

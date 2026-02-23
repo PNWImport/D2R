@@ -1230,6 +1230,7 @@ impl ProgressionEngine {
     /// Update quest state when a waypoint is visually detected as obtained.
     pub fn on_waypoint_obtained(&mut self, area: &str) {
         match area {
+            // Act 1
             areas::COLD_PLAINS => self.quest_state.wp_cold_plains = true,
             areas::STONY_FIELD => self.quest_state.wp_stony_field = true,
             areas::DARK_WOOD => self.quest_state.wp_dark_wood = true,
@@ -1238,8 +1239,35 @@ impl ProgressionEngine {
             areas::JAIL_LEVEL_1 => self.quest_state.wp_jail_1 = true,
             areas::INNER_CLOISTER => self.quest_state.wp_inner_cloister = true,
             areas::CATACOMBS_LEVEL_2 => self.quest_state.wp_catacombs_2 = true,
+            // Act 2
+            areas::SEWERS_LEVEL_2 => self.quest_state.wp_sewers_2 = true,
+            areas::DRY_HILLS => self.quest_state.wp_dry_hills = true,
+            areas::HALLS_OF_THE_DEAD_2 => self.quest_state.wp_halls_dead_2 = true,
+            areas::FAR_OASIS => self.quest_state.wp_far_oasis = true,
+            areas::LOST_CITY => self.quest_state.wp_lost_city = true,
+            areas::ARCANE_SANCTUARY => self.quest_state.wp_arcane_sanctuary = true,
+            areas::CANYON_OF_THE_MAGI => self.quest_state.wp_canyon_of_magi = true,
+            // Act 3
+            areas::SPIDER_FOREST => self.quest_state.wp_spider_forest = true,
+            areas::GREAT_MARSH => self.quest_state.wp_great_marsh = true,
+            areas::FLAYER_JUNGLE => self.quest_state.wp_flayer_jungle = true,
+            areas::LOWER_KURAST => self.quest_state.wp_lower_kurast = true,
+            areas::KURAST_BAZAAR => self.quest_state.wp_kurast_bazaar = true,
+            areas::UPPER_KURAST => self.quest_state.wp_upper_kurast = true,
             areas::TRAVINCAL => self.quest_state.wp_travincal = true,
+            areas::DURANCE_OF_HATE_2 => self.quest_state.wp_durance_2 = true,
+            // Act 4
+            areas::CITY_OF_THE_DAMNED => self.quest_state.wp_city_of_damned = true,
             areas::RIVER_OF_FLAME => self.quest_state.wp_river_of_flame = true,
+            // Act 5
+            areas::FRIGID_HIGHLANDS => self.quest_state.wp_frigid_highlands = true,
+            areas::ARREAT_PLATEAU => self.quest_state.wp_arreat_plateau = true,
+            areas::CRYSTALLINE_PASSAGE => self.quest_state.wp_crystalline_passage = true,
+            areas::GLACIAL_TRAIL => self.quest_state.wp_glacial_trail = true,
+            areas::HALLS_OF_PAIN => self.quest_state.wp_halls_of_pain = true,
+            areas::FROZEN_TUNDRA => self.quest_state.wp_frozen_tundra = true,
+            areas::ANCIENTS_WAY => self.quest_state.wp_ancients_way = true,
+            areas::WORLDSTONE_KEEP_2 => self.quest_state.wp_worldstone_keep_2 = true,
             _ => {}
         }
     }
@@ -2524,11 +2552,7 @@ fn diablo_plan(qs: &QuestState) -> Vec<ScriptStep> {
             name: "Infector of Souls",
         },
         ScriptStep::ClearArea,
-        // Diablo spawns after all seals opened
-        ScriptStep::WaitForCue {
-            cue: VisualCue::QuestCompleteBanner,
-            timeout_secs: 20,
-        },
+        // All seals open — Diablo spawns. Kill him first, banner fires after.
         ScriptStep::KillTarget { name: "Diablo" },
         ScriptStep::LootArea,
     ];

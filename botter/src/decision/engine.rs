@@ -43,6 +43,14 @@ pub enum Action {
     },
     SwitchWeapon,
     Wait,
+    /// Generic left-click on a UI element, NPC, object, or dialog button.
+    /// Distinct from PickupLoot (which tracks the loots_picked stat) and
+    /// MoveTo (which is right-click movement). Use for NPC interaction,
+    /// cairn stones, seal levers, travel buttons, WP entries, etc.
+    Click {
+        screen_x: i32,
+        screen_y: i32,
+    },
 }
 
 /// Monster context passed from vision layer

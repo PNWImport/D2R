@@ -844,7 +844,7 @@ impl ScriptExecutor {
                         // The travel button sits in the lower half of the dialog box.
                         let (bx, by) = travel_button_position();
                         return Some(Decision {
-                            action: Action::PickupLoot {
+                            action: Action::Click {
                                 screen_x: bx + self.rng.gen_range(-10..10),
                                 screen_y: by + self.rng.gen_range(-5..5),
                             },
@@ -1022,7 +1022,7 @@ impl ScriptExecutor {
 
     fn jittered_click(&mut self, x: i32, y: i32, reason: &'static str) -> Decision {
         Decision {
-            action: Action::PickupLoot {
+            action: Action::Click {
                 screen_x: x + self.rng.gen_range(-6..=6),
                 screen_y: y + self.rng.gen_range(-4..=4),
             },
