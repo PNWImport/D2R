@@ -213,12 +213,12 @@ combat:
 **Included character configs** (in `botter/configs/`):
 
 1. `sorceress_blizzard.yaml` — Blizzard/Orb, pure damage
-2. `sorceress_light.yaml` — Lightning, chain damage
+2. `sorceress_meteorb.yaml` — Meteor/Orb, dual element
 3. `paladin_hammerdin.yaml` — Blessed Hammer, fast clear
 4. `amazon_javazon.yaml` — Lightning Fury, projectile
 5. `necromancer_fishymancer.yaml` — Summon + Mage hybrid
 6. `assassin_trapsin.yaml` — Lightning/Death traps
-7. `barbarian_ww.yaml` — Whirlwind melee
+7. `barbarian_whirlwind.yaml` — Whirlwind melee
 8. `druid_wind.yaml` — Tornado/Cyclone wind skills
 
 Copy any of these to `C:\ProgramData\DisplayCalibration\config.yaml` and edit to match your hotkeys.

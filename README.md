@@ -4,7 +4,7 @@
 
 > **Production-ready Diablo II: Resurrected farming bot built in Rust**
 >
-> Vision-based automation • Zero game memory access • Chrome control panel • 190 tests (100% passing)
+> Vision-based automation • Zero game memory access • Chrome control panel • 192 tests (100% passing)
 
 ---
 
@@ -69,7 +69,7 @@ OutOfGame → TownPrep → LeavingTown → Farming → Returning → ExitGame �
 
 ### ⚙️ Configuration System
 - **18 config sections**: Survival, Combat, Loot, Town, Buffs, Cubing, Gambling, Leveling, etc.
-- **8 character presets**: Sorceress (Blizzard/Light), Paladin (Hammerdin), Amazon (Javazon), Necromancer (Fishymancer), Assassin (Trapsin), Barbarian (WW), Druid (Wind)
+- **8 character presets**: Sorceress (Blizzard/Meteorb), Paladin (Hammerdin), Amazon (Javazon), Necromancer (Fishymancer), Assassin (Trapsin), Barbarian (Whirlwind), Druid (Wind)
 - **YAML-based**: Human-readable, backward-compatible (serde defaults)
 - **Hot-reload**: Change config, bot picks it up on next game
 
@@ -114,8 +114,8 @@ notepad C:\ProgramData\DisplayCalibration\config.yaml
 
 | Metric | Value |
 |--------|-------|
-| **Source Code** | 4500 LOC Rust + 400 LOC JavaScript |
-| **Tests** | 190 total (85 library, 97 binary, 8 stress) — **100% passing** |
+| **Source Code** | 11,400 LOC Rust + 3,100 LOC JS/CSS/HTML |
+| **Tests** | 192 total (85 library, 99 binary, 8 stress) — **100% passing** |
 | **Config Sections** | 18 (Survival, Combat, Loot, Town, Buffs, Session, Farming, etc.) |
 | **Character Presets** | 8 (Sorceress, Paladin, Amazon, Necromancer, Assassin, Barbarian, Druid) |
 | **NPC Locations** | 35 across 5 acts |
@@ -130,11 +130,11 @@ notepad C:\ProgramData\DisplayCalibration\config.yaml
 
 ## 🏗️ Architecture
 
-### Vision Agent (`botter/` — 4500 LOC)
+### Vision Agent (`botter/` — 8,400 LOC)
 ```
 src/
 ├── main.rs                          Entry point, config loading, main loop
-├── config/mod.rs                    AgentConfig (YAML, 18 sections)
+├── config/                          AgentConfig (YAML, 18 sections)
 ├── decision/
 │   ├── engine.rs                    DecisionEngine (1200 LOC) — combat, survival, loot
 │   └── game_manager.rs              GameManager (900 LOC) — 7-phase lifecycle
@@ -147,6 +147,7 @@ src/
 │   ├── syscall_cadence.rs           Syscall jitter for fingerprint breaking
 │   ├── process_identity.rs          PEB disguise (Windows)
 │   └── handle_table.rs              Pseudo-handle obfuscation
+├── host_registry.rs                 Chrome native host registration
 ├── native_messaging/mod.rs          Chrome native messaging host
 └── configs/                         8 YAML character presets
 
@@ -154,17 +155,20 @@ Key Design:
 ✓ Lock-free capture buffer (no contention, deterministic latency)
 ✓ Per-thread input jitter (avoids single-point detection)
 ✓ Humanization throughout (reaction time, aim variance, idle pauses)
-✓ 190 tests covering decision logic, game lifecycle, vision pipeline
+✓ 192 tests covering decision logic, game lifecycle, vision pipeline
 ```
 
 ### Map Helper (`maphack/`)
 ```
 src/
-├── main.rs                          Memory reader, map parser
-├── memory/                          D2R structure offsets
-├── map/                             Tile/object parsing
-├── rendering/                       Map overlay rendering
-└── native_messaging/                Chrome bridge
+├── main.rs                          Entry point, map reader
+├── discovery.rs                     D2R process discovery
+├── host_registry.rs                 Chrome native host registration
+├── mapgen.rs                        Map generation/parsing
+├── memory.rs                        D2R memory reading
+├── offsets.rs                       D2R structure offsets
+├── protocol.rs                      Native messaging protocol
+└── stealth/                         Stealth modules
 ```
 
 ### Chrome Extension (`extension/`)
@@ -172,9 +176,11 @@ src/
 chrome_extension/
 ├── manifest.json                    MV3 metadata, permissions
 ├── background.js                    Service worker (native host bridge)
-├── popup.html/js/css                Control panel UI
+├── popup.html                       Control panel markup
+├── popup.js                         Control panel logic
+├── popup.css                        Control panel styles
 ├── map_content.js                   Overlay injection
-└── map_overlay.*                    Map overlay styles
+└── kzb_header.webp                  Banner image
 ```
 
 ---
@@ -299,7 +305,7 @@ farming:                                      # Farming sequence
 - **Aggression drift** — Gets more/less aggressive over time
 - **Potion forgetfulness** — ~10% chance to "forget" to drink potion
 
-**For detection evasion, see [SECURITY.md](SECURITY.md)** (if created)
+**For detection evasion details, see Security & Legitimacy section above** (SECURITY.md planned)
 
 ---
 
@@ -310,8 +316,8 @@ farming:                                      # Farming sequence
 - ✅ **Chrome Extension** — Complete, tested, production-ready
 - ✅ **8 Character Presets** — YAML configs for common builds
 - ✅ **Unified Installer** — One PowerShell script to rule them all
-- ✅ **190 Tests** — Unit, integration, and stress tests (100% passing)
-- ✅ **5 Documentation Files** — INDEX, QUICKSTART, INSTALL, STRUCTURE, CHANGELOG
+- ✅ **192 Tests** — Unit, integration, and stress tests (100% passing)
+- ✅ **5 Documentation Files** — INDEX.md, QUICKSTART.md, INSTALL.md, STRUCTURE.md, CHANGELOG.md (plus test_gui.html test harness)
 
 ---
 
@@ -328,7 +334,7 @@ farming:                                      # Farming sequence
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Vision Agent | ✅ Production-Ready | 4500 LOC, 100 tests, fully featured |
+| Vision Agent | ✅ Production-Ready | 8,400 LOC, fully featured |
 | Map Helper | ✅ Production-Ready | Memory reading, overlay rendering |
 | Chrome Extension | ✅ Production-Ready | Control panel, stats, pause/resume |
 | 8 Character Configs | ✅ Complete | All major builds supported |
@@ -343,7 +349,7 @@ farming:                                      # Farming sequence
 - Vision-based farming bot (DXGI, no memory access)
 - Game lifecycle manager (7-phase state machine)
 - Chrome control panel (native messaging)
-- Complete testing suite (190 tests)
+- Complete testing suite (192 tests)
 
 ### Kolbot (Foundation)
 - 20+ years of D2BS JavaScript bot logic
@@ -366,7 +372,7 @@ farming:                                      # Farming sequence
 
 ## 📄 License
 
-**MIT License** — See [LICENSE](LICENSE) file for details.
+**MIT License**
 
 ```
 KZB is provided as-is for single-player offline D2R use only.
@@ -437,6 +443,6 @@ Special thanks to:
 
 ### 🎯 Ready to farm? Start with [QUICKSTART.md](QUICKSTART.md)
 
-**v1.0.0** — Production Release — [Documentation](INDEX.md) — [License](LICENSE)
+**v1.4.0** — Production Release — [Documentation](INDEX.md) — MIT License
 
 </div>

@@ -64,7 +64,7 @@ cargo build --release
 # Test everything works
 cd ..\botter
 cargo test
-# Should see: test result: ok. 190 passed
+# Should see: test result: ok. 192 passed
 ```
 
 ### Step 2: Load Chrome Extension

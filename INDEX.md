@@ -67,6 +67,7 @@ botter/
 │   ├── handle_table.rs            Pseudo-handle obfuscation
 │   ├── process_identity.rs        PEB disguise (Windows)
 │   └── mod.rs                     Stealth module
+├── src/host_registry.rs            Chrome native host registration
 ├── src/native_messaging/
 │   └── mod.rs                     Chrome native messaging host (stdio protocol)
 ├── src/input/
@@ -78,26 +79,26 @@ botter/
 │   └── mod.rs                     Training module
 ├── configs/                        8 character YAML templates
 │   ├── sorceress_blizzard.yaml
-│   ├── sorceress_light.yaml
+│   ├── sorceress_meteorb.yaml
 │   ├── paladin_hammerdin.yaml
 │   ├── amazon_javazon.yaml
 │   ├── necromancer_fishymancer.yaml
 │   ├── assassin_trapsin.yaml
-│   ├── barbarian_ww.yaml
+│   ├── barbarian_whirlwind.yaml
 │   └── druid_wind.yaml
 ├── deploy/                         Installation scripts
 │   ├── install_host.ps1
-│   ├── manifest.json
-│   └── uninstall.ps1
+│   └── native_host_manifest.json
 ├── tests/                          Integration tests
-│   ├── stress.rs                  8 stress tests (10s loops, lock-free)
-│   └── integration.rs             10+ integration tests
+│   └── stress.rs                  8 stress tests (10s loops, lock-free)
+├── benches/
+│   └── shard_bench.rs             Shard buffer benchmarks
 ├── Cargo.toml                     Rust project config
 └── build.rs                       Build script
 
 Key metrics:
-- 4500 LOC Rust
-- 190 tests (85 lib + 97 bin + 8 stress) — all passing
+- 8,400 LOC Rust
+- 192 tests (85 lib + 99 bin + 8 stress) — all passing
 - Zero warnings (only stubs flagged)
 - Lock-free design (16-shard frame buffer)
 - 4-thread input pool
@@ -107,39 +108,39 @@ Key metrics:
 ```
 maphack/
 ├── src/main.rs                    Entry point, map reader
-├── src/memory/
-│   ├── mod.rs                     Memory reading interface
-│   └── d2r_offsets.rs             D2R structure offsets
-├── src/map/
-│   ├── mod.rs                     Map data structures
-│   ├── tiles.rs                   Tile parsing
-│   └── objects.rs                 Object/NPC parsing
-├── src/rendering/
-│   └── mod.rs                     Map rendering pipeline
-├── src/native_messaging/
-│   └── mod.rs                     Chrome native messaging
-├── Cargo.toml
-└── configs/                        Map configuration templates
+├── src/discovery.rs               D2R process discovery
+├── src/host_registry.rs           Chrome native host registration
+├── src/mapgen.rs                  Map generation/parsing
+├── src/memory.rs                  D2R memory reading
+├── src/offsets.rs                 D2R structure offsets
+├── src/protocol.rs                Native messaging protocol
+├── src/stealth/mod.rs             Stealth module
+├── src/stealth/process_identity.rs PEB disguise
+├── src/stealth/syscall_cadence.rs Syscall jitter
+├── installer/install_map_host.ps1 Install script
+├── tests/protocol_test.py         Protocol tests
+├── tests/verify.py                Verification tests
+├── offsets.json.example            Example offsets config
+└── Cargo.toml
 ```
 
 ### Chrome Extension (JavaScript — Control Panel)
 ```
 extension/chrome_extension/
 ├── manifest.json                  MV3 manifest, permissions, metadata
-├── background.js                  Service worker (native host bridge) — 300 LOC
+├── background.js                  Service worker (native host bridge) — 375 LOC
 │                                  - Manages 2 native hosts
 │                                  - Stats caching
 │                                  - Command routing (pause/resume/update_config)
-├── popup.html                     Control panel layout — 50 LOC
-├── popup.js                        Control panel logic — 150 LOC
+├── popup.html                     Control panel layout — 1521 LOC (11 tabs, 503 settings, 77 kolbot scripts)
+├── popup.js                        Control panel logic — 372 LOC
 │                                  - Real-time stats (2s poll)
 │                                  - Pause/resume buttons
 │                                  - Config selector
 │                                  - Map overlay controls
-├── popup.css                       Dark theme styling — 200 LOC
-├── map_content.js                 Content script (map overlay injection) — 300 LOC
-├── map_overlay.html               Map overlay HTML
-└── map_overlay.css                Map overlay styles
+├── popup.css                       Dark theme styling — 615 LOC
+├── map_content.js                 Content script (map overlay injection) — 260 LOC
+└── kzb_header.webp                Extension header image
 ```
 
 ### Classic D2 Bot (Reference)
@@ -155,9 +156,11 @@ kolbot/
 │       └── config/                Character configurations
 ├── +setup/                        Setup/installation
 │   ├── setup.ps1
-│   ├── setup.bat
 │   └── starter/                   Starter configs
-└── docs/                          Documentation
+├── setup.bat                      Setup batch script
+├── update.bat                     Update batch script
+├── .gitignore
+└── .gitmodules
 ```
 
 ---
@@ -171,7 +174,7 @@ kolbot/
 
 # Run tests
 cd botter
-cargo test                      # All 190 tests
+cargo test                      # All 192 tests
 cargo test decision::           # Decision engine tests only
 
 # Format & lint
@@ -210,9 +213,9 @@ git push origin claude/prepare-kolbot-production-zGrdr
 
 | Metric | Value |
 |--------|-------|
-| Total Rust LOC | 4500 |
-| JavaScript LOC | 400 |
-| Total Tests | 190 (85 lib + 97 bin + 8 stress) |
+| Total Rust LOC | 11,400 |
+| JavaScript LOC | 3,100 |
+| Total Tests | 192 (85 lib + 99 bin + 8 stress) |
 | Test Pass Rate | 100% |
 | Config Sections | 18 |
 | Character Presets | 8 |
@@ -315,7 +318,7 @@ KZB avoids detection by:
 - Config system (18 sections, 8 presets)
 - Stealth features (thread pool, jitter, PEB disguise)
 - Input dispatch (4-worker pool, humanization)
-- 190 tests (all passing)
+- 192 tests (all passing)
 
 ⚠️ **Implemented, Config Only** (needs runtime execution)
 - Cubing/runewords

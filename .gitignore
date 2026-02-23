@@ -3,6 +3,9 @@ botter/target/
 maphack/target/
 *.exe
 *.dll
+# Kolbot ships pre-built binaries (required to run)
+!kolbot/D2Bot.exe
+!kolbot/d2bs/D2BS.dll
 
 # Logs
 *.log
@@ -27,4 +30,4 @@ extracted/
 # Runtime data
 *.yaml
 !botter/configs/*.yaml
-!maphack/configs/*.yaml
+!botter/deploy/default_config.yaml

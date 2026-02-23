@@ -4,6 +4,22 @@ Complete version history of KZB, a production D2R farming automation suite built
 
 ---
 
+## [1.4.0] — 2026-02-23
+
+### Chrome Extension GUI Rebuild
+- Rebuilt popup.html to full 11-tab GUI with all 503 kolbot settings and 77 scripts
+- popup.html: 1,521 LOC with Act-based script organization, sub-options, inventory grid
+- popup.js: 372 LOC with chrome API guard, debounced save, sub-options toggle
+- popup.css: 615 LOC with dark D2R theme, responsive tab bar, class sections
+- background.js: 375 LOC with dual native host management, stats caching
+- map_content.js: 260 LOC with overlay injection, keyboard shortcuts
+- Added test_gui.html test harness (blob URL iframe, chrome mock, 19/19 automated tests)
+- Added test_serve.sh helper for local HTTP serving
+- Fixed 8 bugs: load order, null deref, duplicate data-cfg keys, service worker cleanup
+- Extension version bumped to 1.4.0
+
+---
+
 ## [1.0.0] — 2026-02-22
 
 ### KZB v1.0: Complete D2R Farming Automation Suite (Rust + Chrome)
@@ -61,9 +77,9 @@ Complete version history of KZB, a production D2R farming automation suite built
   - 85 library unit tests
   - 20 decision engine tests (chicken, potions, dodge, static field, attack slots, delays, loot)
   - 10 game manager tests (phase transitions, town tasks, triggers, exit sequence)
-  - 97 binary integration tests (full pipeline, config round-trip, concurrent stats)
+  - 99 binary integration tests (full pipeline, config round-trip, concurrent stats)
   - 8 stress tests (10s sustained loop, 1M frame writes, 10k input commands)
-  - **Total: 190/190 passing**
+  - **Total: 192/192 passing**
 
 #### Rust Map Helper (`maphack/`)
 - Memory-based D2R map reader
@@ -120,12 +136,12 @@ Complete version history of KZB, a production D2R farming automation suite built
 #### Configuration Files
 8 character YAMLs pre-configured:
 - `sorceress_blizzard.yaml` — Blizzard/Orb Sorceress
-- `sorceress_light.yaml` — Lightning Sorceress
+- `sorceress_meteorb.yaml` — Meteorb Sorceress
 - `paladin_hammerdin.yaml` — Hammerdin Paladin
 - `amazon_javazon.yaml` — Javazon Amazon
 - `necromancer_fishymancer.yaml` — Fishymancer Necromancer (summon/mage hybrid)
 - `assassin_trapsin.yaml` — Trapsin Assassin
-- `barbarian_ww.yaml` — Whirlwind Barbarian
+- `barbarian_whirlwind.yaml` — Whirlwind Barbarian
 - `druid_wind.yaml` — Wind Druid
 
 ---
@@ -180,7 +196,7 @@ Complete version history of KZB, a production D2R farming automation suite built
 - YAML serde defaults (backward-compat)
 - Vision pipeline expansion (merc HP, belt, immune detection)
 - F-key + punctuation VK codes
-- 190 tests (85 lib + 97 bin + 8 stress)
+- 192 tests (85 lib + 99 bin + 8 stress)
 - Documentation (README, CHANGELOG, config guide)
 
 ---
@@ -232,10 +248,10 @@ Complete version history of KZB, a production D2R farming automation suite built
 
 | Metric | Value |
 |--------|-------|
-| Rust LOC | ~4500 |
-| JavaScript LOC | ~400 |
+| Rust LOC | ~11,400 (botter ~8,400 + maphack ~3,000) |
+| JavaScript/CSS/HTML LOC | ~3,100 |
 | YAML configs | 8 character presets |
-| Test count | 190 (85+97+8) |
+| Test count | 192 (85+99+8) |
 | Test pass rate | 100% |
 | Build time | ~10s (release) |
 | Frame buffer shards | 16 |
