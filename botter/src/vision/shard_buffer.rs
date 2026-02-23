@@ -104,7 +104,33 @@ pub struct FrameState {
     // Belt potions remaining per column (estimated visually)
     pub belt_columns: [u8; 4],
 
-    // Timing
+    // ─── Progression / Quest awareness ───────────────────────────
+    // Area name detected from the gold text banner (top-center on area entry).
+    // Fixed-size buffer: null-terminated ASCII, no heap alloc.
+    // e.g. "Blood Moor", "Den of Evil", "Cold Plains", "Rogue Encampment"
+    pub area_name: [u8; 32],
+    pub area_name_len: u8,
+
+    // Experience bar fill ratio (0-100), read from the thin bar at screen bottom
+    pub xp_bar_pct: u8,
+
+    // Character level detected from stat screen or level-up flash
+    pub char_level: u8,
+
+    // Quest-related visual cues
+    pub quest_complete_banner: bool,   // "Quest Completed" golden banner visible
+    pub waypoint_menu_open: bool,      // Waypoint selection UI is open
+    pub npc_dialog_open: bool,         // NPC dialog/trade window is open
+    pub stash_open: bool,              // Stash UI is open
+    pub cube_open: bool,               // Horadric Cube UI is open
+    pub skill_screen_open: bool,       // Skill tree UI is open (for auto-skill)
+    pub stat_screen_open: bool,        // Character stat screen is open (for auto-stat)
+    pub quest_log_open: bool,          // Quest log UI is open
+
+    // Difficulty detected from char select or game (0=normal, 1=nightmare, 2=hell)
+    pub difficulty: u8,
+
+    // ─── Timing ──────────────────────────────────────────────────
     pub tick: u64,
     pub tick_phase_ms: u16,
     pub phase_confidence: f32,
@@ -141,12 +167,41 @@ impl Default for FrameState {
             loot_labels: Default::default(),
             active_buffs: 0,
             belt_columns: [4, 4, 4, 0],
+            area_name: [0u8; 32],
+            area_name_len: 0,
+            xp_bar_pct: 0,
+            char_level: 1,
+            quest_complete_banner: false,
+            waypoint_menu_open: false,
+            npc_dialog_open: false,
+            stash_open: false,
+            cube_open: false,
+            skill_screen_open: false,
+            stat_screen_open: false,
+            quest_log_open: false,
+            difficulty: 0,
             tick: 0,
             tick_phase_ms: 0,
             phase_confidence: 0.0,
             capture_time_ns: 0,
             phash: 0,
         }
+    }
+}
+
+impl FrameState {
+    /// Read the area name as a &str (from the fixed-size buffer).
+    pub fn area_name_str(&self) -> &str {
+        let len = (self.area_name_len as usize).min(self.area_name.len());
+        std::str::from_utf8(&self.area_name[..len]).unwrap_or("")
+    }
+
+    /// Set the area name from a string slice.
+    pub fn set_area_name(&mut self, name: &str) {
+        let bytes = name.as_bytes();
+        let len = bytes.len().min(self.area_name.len());
+        self.area_name[..len].copy_from_slice(&bytes[..len]);
+        self.area_name_len = len as u8;
     }
 }
 

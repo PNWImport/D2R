@@ -184,6 +184,24 @@ impl CapturePipeline {
         // Belt potions (4 columns at bottom of screen)
         state.belt_columns = self.read_belt_columns(frame);
 
+        // ─── Progression-aware detections ────────────────────────
+        // Area name: gold text banner at top-center on area transitions
+        // D2R displays area names in gold/tan colored text (~rgb(198,166,99))
+        // centered at roughly y=40-60 for about 2 seconds on entry.
+        if let Some(area_detected) = self.detect_area_banner(frame) {
+            state.set_area_name(&area_detected);
+        }
+
+        // Quest complete banner: golden "Quest Completed" text
+        state.quest_complete_banner = self.detect_quest_banner(frame);
+
+        // UI panels open (NPC dialog, waypoint, stash, etc.)
+        state.npc_dialog_open = self.detect_dialog_panel(frame);
+        state.waypoint_menu_open = self.detect_waypoint_menu(frame);
+
+        // Experience bar: thin strip at very bottom of screen
+        state.xp_bar_pct = self.read_xp_bar(frame);
+
         state
     }
 
@@ -567,6 +585,189 @@ impl CapturePipeline {
         }
 
         green_count > 10
+    }
+
+    // ─── Area Name Banner Detection ────────────────────────────
+    // D2R displays area names as gold-colored text centered at the top
+    // of the screen (roughly y=40-60) for ~2 seconds when entering a new area.
+    // Gold text color: approximately RGB(198, 166, 99) — warm tan/gold.
+    // We detect a horizontal run of gold-ish pixels in the top-center band.
+
+    fn detect_area_banner(&self, frame: &CapturedFrame) -> Option<String> {
+        let banner_y_start = (frame.height as f32 * 0.05) as u32;
+        let banner_y_end = (frame.height as f32 * 0.12) as u32;
+        let banner_x_start = (frame.width as f32 * 0.25) as u32;
+        let banner_x_end = (frame.width as f32 * 0.75) as u32;
+
+        // Gold text RGB target: (198, 166, 99) with threshold ~45
+        let (tr, tg, tb) = (198i32, 166i32, 99i32);
+        let threshold_sq = 45i32 * 45;
+
+        let mut gold_pixel_count = 0u32;
+
+        for y in (banner_y_start..banner_y_end).step_by(2) {
+            for x in (banner_x_start..banner_x_end).step_by(3) {
+                let idx = (y * frame.stride + x * 4) as usize;
+                if idx + 2 >= frame.pixels.len() { continue; }
+
+                let b = frame.pixels[idx] as i32;
+                let g = frame.pixels[idx + 1] as i32;
+                let r = frame.pixels[idx + 2] as i32;
+
+                let dist_sq = (r - tr).pow(2) + (g - tg).pow(2) + (b - tb).pow(2);
+                if dist_sq < threshold_sq {
+                    gold_pixel_count += 1;
+                }
+            }
+        }
+
+        // If enough gold pixels detected in the banner zone, an area name is showing.
+        // We can't OCR the text yet — but we know *something* is there.
+        // The area name will be determined by the progression engine based on
+        // expected transitions (e.g., if we just used Cold Plains WP, the next
+        // area banner = "Cold Plains").
+        // For now, return a marker indicating banner is present.
+        if gold_pixel_count > 15 {
+            Some("_banner_detected".to_string())
+        } else {
+            None
+        }
+    }
+
+    // ─── Quest Complete Banner Detection ─────────────────────
+    // "Quest Completed" appears as a large golden banner in the center
+    // of the screen. Similar gold color but larger area than area name.
+
+    fn detect_quest_banner(&self, frame: &CapturedFrame) -> bool {
+        // Quest banner appears roughly at y=35-55%, centered horizontally
+        let banner_y_start = (frame.height as f32 * 0.35) as u32;
+        let banner_y_end = (frame.height as f32 * 0.55) as u32;
+        let banner_x_start = (frame.width as f32 * 0.30) as u32;
+        let banner_x_end = (frame.width as f32 * 0.70) as u32;
+
+        // Quest complete text is bright gold: ~RGB(255, 220, 100)
+        let (tr, tg, tb) = (255i32, 220i32, 100i32);
+        let threshold_sq = 50i32 * 50;
+        let mut gold_count = 0u32;
+
+        for y in (banner_y_start..banner_y_end).step_by(4) {
+            for x in (banner_x_start..banner_x_end).step_by(4) {
+                let idx = (y * frame.stride + x * 4) as usize;
+                if idx + 2 >= frame.pixels.len() { continue; }
+
+                let b = frame.pixels[idx] as i32;
+                let g = frame.pixels[idx + 1] as i32;
+                let r = frame.pixels[idx + 2] as i32;
+
+                let dist_sq = (r - tr).pow(2) + (g - tg).pow(2) + (b - tb).pow(2);
+                if dist_sq < threshold_sq {
+                    gold_count += 1;
+                }
+            }
+        }
+
+        // Quest banner has a lot more gold text than area names
+        gold_count > 40
+    }
+
+    // ─── NPC Dialog Panel Detection ──────────────────────────
+    // NPC dialog appears as a large dark panel in the lower half of screen
+    // with gold-bordered edges and text options.
+
+    fn detect_dialog_panel(&self, frame: &CapturedFrame) -> bool {
+        // Dialog panel occupies roughly y=50-85%, x=10-60%
+        let panel_y = (frame.height as f32 * 0.70) as u32;
+        let panel_x_start = (frame.width as f32 * 0.10) as u32;
+        let panel_x_end = (frame.width as f32 * 0.55) as u32;
+
+        let mut dark_panel_pixels = 0u32;
+        let mut total = 0u32;
+
+        for x in (panel_x_start..panel_x_end).step_by(6) {
+            for dy in 0..30u32 {
+                let y = panel_y + dy;
+                let idx = (y * frame.stride + x * 4) as usize;
+                if idx + 2 >= frame.pixels.len() { continue; }
+
+                let b = frame.pixels[idx];
+                let g = frame.pixels[idx + 1];
+                let r = frame.pixels[idx + 2];
+
+                total += 1;
+                // Dark brownish panel background: low brightness, slight warm tint
+                let avg = (r as u32 + g as u32 + b as u32) / 3;
+                if avg > 15 && avg < 60 && r > g && r > b {
+                    dark_panel_pixels += 1;
+                }
+            }
+        }
+
+        total > 0 && (dark_panel_pixels as f32 / total as f32) > 0.5
+    }
+
+    // ─── Waypoint Menu Detection ─────────────────────────────
+    // Waypoint menu is a large dark panel that covers most of the screen
+    // with act tabs at the top and destination names listed below.
+
+    fn detect_waypoint_menu(&self, frame: &CapturedFrame) -> bool {
+        // Waypoint panel: dark background with act tabs
+        // The panel has a distinctive frame/border at known positions
+        // Check for the dark panel at center-screen with gold accents
+        let panel_y = (frame.height as f32 * 0.15) as u32;
+        let panel_x = (frame.width as f32 * 0.25) as u32;
+        let panel_x_end = (frame.width as f32 * 0.75) as u32;
+
+        let mut dark_count = 0u32;
+        let mut total = 0u32;
+
+        for x in (panel_x..panel_x_end).step_by(8) {
+            let idx = (panel_y * frame.stride + x * 4) as usize;
+            if idx + 2 >= frame.pixels.len() { continue; }
+
+            let b = frame.pixels[idx];
+            let g = frame.pixels[idx + 1];
+            let r = frame.pixels[idx + 2];
+
+            total += 1;
+            let avg = (r as u32 + g as u32 + b as u32) / 3;
+            if avg < 40 {
+                dark_count += 1;
+            }
+        }
+
+        // Waypoint menu covers a large area with dark background
+        total > 0 && (dark_count as f32 / total as f32) > 0.7
+    }
+
+    // ─── Experience Bar Detection ────────────────────────────
+    // Thin bar at the very bottom of the screen, fills left-to-right
+    // with a yellowish color as XP increases.
+
+    fn read_xp_bar(&self, frame: &CapturedFrame) -> u8 {
+        let bar_y = frame.height.saturating_sub(3); // 3 pixels from bottom
+        let bar_x_start = (frame.width as f32 * 0.12) as u32;
+        let bar_x_end = (frame.width as f32 * 0.88) as u32;
+        let total_width = bar_x_end - bar_x_start;
+
+        if total_width == 0 { return 0; }
+
+        let mut filled = 0u32;
+
+        for x in bar_x_start..bar_x_end {
+            let idx = (bar_y * frame.stride + x * 4) as usize;
+            if idx + 2 >= frame.pixels.len() { continue; }
+
+            let b = frame.pixels[idx];
+            let g = frame.pixels[idx + 1];
+            let r = frame.pixels[idx + 2];
+
+            // XP bar is yellow-ish: high R, high G, low B
+            if r > 120 && g > 100 && b < 80 {
+                filled += 1;
+            }
+        }
+
+        ((filled as f32 / total_width as f32) * 100.0).min(100.0) as u8
     }
 
     // ─── Simulation (non-Windows) ──────────────────────────────

@@ -11,6 +11,9 @@
 use crate::config::AgentConfig;
 use crate::vision::FrameState;
 use super::engine::{Action, Decision, DecisionEngine};
+use super::progression::{
+    ProgressionEngine, Script, ScriptStep, script_plan,
+};
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
@@ -166,6 +169,18 @@ pub struct GameManager {
 
     // Exit sequence state
     exit_step: u8,             // 0=esc, 1=wait, 2=click_save
+
+    // ─── Progression / Leveling ──────────────────────────────
+    /// Quest progression engine (None = farming-only mode, no quest tracking).
+    progression: Option<ProgressionEngine>,
+    /// Currently executing script (selected by progression engine).
+    current_script: Option<Script>,
+    /// Steps remaining for the current script.
+    script_steps: Vec<ScriptStep>,
+    /// Index into script_steps.
+    script_step_index: usize,
+    /// When the current script step started (for timeouts).
+    step_started: Instant,
 }
 
 impl GameManager {
@@ -190,7 +205,21 @@ impl GameManager {
             total_chickens: 0,
             oog_click_cooldown: now,
             exit_step: 0,
+            progression: None,
+            current_script: None,
+            script_steps: Vec::new(),
+            script_step_index: 0,
+            step_started: now,
         }
+    }
+
+    /// Create a GameManager with quest progression enabled (leveling mode).
+    /// `state_path` is the path to the quest state JSON file.
+    pub fn with_progression(config: AgentConfig, state_path: std::path::PathBuf) -> Self {
+        let class = config.character_class.clone();
+        let mut mgr = Self::new(config);
+        mgr.progression = Some(ProgressionEngine::new(class, state_path));
+        mgr
     }
 
     /// Current game phase
@@ -257,6 +286,7 @@ impl GameManager {
                     self.total_games += 1;
                     self.runs_this_game = 0;
                     self.run_index = 0;
+                    self.on_game_start_progression();
                     tracing::info!("Game #{} started — entering town prep", self.game_count);
                 }
             }
@@ -295,6 +325,7 @@ impl GameManager {
                     self.phase = GamePhase::InterGameDelay;
                     self.last_game_exit = Instant::now();
                     self.exit_step = 0;
+                    self.on_game_end_progression();
                     tracing::info!("Game exited — starting inter-game delay");
                 }
             }
@@ -475,7 +506,33 @@ impl GameManager {
                 self.handle_town(state)
             }
             TownTask::Done => {
-                // All town tasks complete — go to waypoint
+                // All town tasks complete.
+                // If progression is active, select the next quest script.
+                if self.progression.is_some() && self.current_script.is_none() {
+                    if !self.select_next_script() {
+                        // No more scripts — exit game
+                        self.phase = GamePhase::ExitingGame;
+                        return Decision {
+                            action: Action::Wait,
+                            delay: Duration::from_millis(500),
+                            priority: 0,
+                            reason: "town: all scripts done, exiting",
+                        };
+                    }
+                    // Check level gate on the newly selected script
+                    let current_level = state.char_level;
+                    if self.check_level_gate(current_level) {
+                        // Level too low — exit game and retry next game
+                        self.phase = GamePhase::ExitingGame;
+                        return Decision {
+                            action: Action::Wait,
+                            delay: Duration::from_millis(500),
+                            priority: 0,
+                            reason: "town: level gate failed, exiting to retry",
+                        };
+                    }
+                }
+
                 tracing::info!("Town prep complete — heading to waypoint");
                 self.phase = GamePhase::LeavingTown;
                 self.walk_to(npcs.waypoint, "town: walking to waypoint")
@@ -503,6 +560,16 @@ impl GameManager {
     // Delegates to DecisionEngine for combat. Checks town triggers.
 
     fn handle_farming(&mut self, state: &FrameState) -> Decision {
+        // Update character level from vision
+        if state.char_level > 0 {
+            self.update_level_from_vision(state.char_level);
+        }
+
+        // Check for quest completion visual cue
+        if state.quest_complete_banner {
+            self.on_quest_complete_visual();
+        }
+
         // Check if we should return to town
         if self.should_return_to_town(state) {
             tracing::info!("Town trigger hit — casting TP");
@@ -703,6 +770,145 @@ impl GameManager {
             priority: 1,
             reason,
         }
+    }
+
+    // ─── Progression Integration ──────────────────────────────
+
+    /// Access the progression engine (if enabled).
+    pub fn progression(&self) -> Option<&ProgressionEngine> {
+        self.progression.as_ref()
+    }
+
+    /// Mutable access to progression engine.
+    pub fn progression_mut(&mut self) -> Option<&mut ProgressionEngine> {
+        self.progression.as_mut()
+    }
+
+    /// Select the next script from the progression engine and load its plan.
+    /// Returns true if a script was selected, false if all scripts are done
+    /// (game should end).
+    pub fn select_next_script(&mut self) -> bool {
+        let progression = match self.progression.as_mut() {
+            Some(p) => p,
+            None => return false, // No progression = farming-only mode
+        };
+
+        match progression.next_script() {
+            Some(script) => {
+                let plan = script_plan(script, progression.state());
+                tracing::info!(
+                    "Selected script: {} ({} steps)",
+                    script.name(),
+                    plan.len()
+                );
+                self.current_script = Some(script);
+                self.script_steps = plan;
+                self.script_step_index = 0;
+                self.step_started = Instant::now();
+                true
+            }
+            None => {
+                tracing::info!("All scripts done for this game — exiting");
+                self.current_script = None;
+                self.script_steps.clear();
+                false
+            }
+        }
+    }
+
+    /// Get the current script step (if executing a script).
+    pub fn current_step(&self) -> Option<&ScriptStep> {
+        if self.script_step_index < self.script_steps.len() {
+            Some(&self.script_steps[self.script_step_index])
+        } else {
+            None
+        }
+    }
+
+    /// Advance to the next script step.
+    pub fn advance_step(&mut self) {
+        self.script_step_index += 1;
+        self.step_started = Instant::now();
+
+        if self.script_step_index >= self.script_steps.len() {
+            // Script complete
+            if let Some(script) = self.current_script {
+                if let Some(ref mut progression) = self.progression {
+                    progression.mark_done(script);
+                }
+                tracing::info!("Script {} completed all steps", script.name());
+            }
+            self.current_script = None;
+        }
+    }
+
+    /// Notify the progression engine that a quest was completed
+    /// (called when vision detects a quest complete banner).
+    pub fn on_quest_complete_visual(&mut self) {
+        if let (Some(script), Some(ref mut progression)) =
+            (self.current_script, self.progression.as_mut())
+        {
+            progression.on_quest_complete(script);
+            tracing::info!("Quest completion detected for {}", script.name());
+        }
+    }
+
+    /// Notify progression on game start.
+    pub fn on_game_start_progression(&mut self) {
+        if let Some(ref mut progression) = self.progression {
+            progression.on_game_start();
+        }
+        self.current_script = None;
+        self.script_steps.clear();
+        self.script_step_index = 0;
+    }
+
+    /// Notify progression on game end + save state.
+    pub fn on_game_end_progression(&mut self) {
+        if let Some(ref mut progression) = self.progression {
+            progression.on_game_end();
+        }
+    }
+
+    /// Update character level from visual detection.
+    pub fn update_level_from_vision(&mut self, level: u8) {
+        if let Some(ref mut progression) = self.progression {
+            progression.quest_state.update_level(level);
+        }
+    }
+
+    /// Check if the current script step is a level gate that fails.
+    /// If so, push retry and signal that the script should be abandoned.
+    pub fn check_level_gate(&mut self, current_level: u8) -> bool {
+        // Extract the min_level from current step without holding a borrow
+        let min_level = if self.script_step_index < self.script_steps.len() {
+            if let ScriptStep::RequireLevel { min_level } = self.script_steps[self.script_step_index] {
+                Some(min_level)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        if let Some(min_lvl) = min_level {
+            if current_level < min_lvl {
+                // Level too low — retry this script next game
+                if let Some(script) = self.current_script {
+                    tracing::info!(
+                        "Level gate failed for {}: need {}, have {}",
+                        script.name(), min_lvl, current_level
+                    );
+                    if let Some(ref mut progression) = self.progression {
+                        progression.retry_next_game(script);
+                    }
+                }
+                self.current_script = None;
+                self.script_steps.clear();
+                return true; // Gate failed
+            }
+        }
+        false // Gate passed or no gate
     }
 }
 
