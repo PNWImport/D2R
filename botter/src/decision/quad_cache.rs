@@ -344,3 +344,153 @@ impl QuadCache {
         pairs
     }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// TESTS & BENCHMARKS
+// ═══════════════════════════════════════════════════════════════
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::AgentConfig;
+    use std::time::Instant;
+
+    #[test]
+    fn test_quad_cache_warm_and_access() {
+        let config = AgentConfig::default();
+        let cache = QuadCache::warm(&config);
+
+        // Lane 2: runs may be empty in default config
+        // (not testing farm runs here, they're optional)
+
+        // Lane 3: ThresholdBins access
+        assert!(cache.thresholds.chicken_hp > 0);
+        assert!(cache.thresholds.hp_potion > 0);
+
+        // Lane 4: HotKey initially empty
+        assert_eq!(cache.cold_misses, 0);
+        assert_eq!(cache.hit_rate(), 0.0);
+    }
+
+    #[test]
+    fn test_hp_bin_classification() {
+        let thresholds = ThresholdBins {
+            chicken_hp: 10,
+            hp_potion: 50,
+            ..Default::default()
+        };
+
+        assert_eq!(HpBin::classify(5, &thresholds), HpBin::Critical);
+        assert_eq!(HpBin::classify(30, &thresholds), HpBin::Low);
+        assert_eq!(HpBin::classify(55, &thresholds), HpBin::Medium);
+        assert_eq!(HpBin::classify(80, &thresholds), HpBin::High);
+    }
+
+    #[test]
+    fn test_hot_key_lookup_and_recording() {
+        let mut cache = QuadCache::warm(&AgentConfig::default());
+
+        let key1 = HotKey {
+            hp_bin: HpBin::High,
+            in_combat: true,
+            has_loot: false,
+        };
+
+        // First hit — should record
+        let _span = cache.record_hit(key1);
+        assert_eq!(cache.hit_rate(), 1.0); // 1 hit, 0 misses
+
+        // Second hit of same pattern
+        cache.record_hit(key1);
+        assert_eq!(cache.hit_rate(), 1.0);
+
+        // Different pattern — miss
+        cache.record_miss();
+        assert_eq!(cache.hit_rate(), 2.0 / 3.0); // 2 hits, 1 miss
+
+        // Top patterns
+        let top = cache.top_patterns(1);
+        assert_eq!(top.len(), 1);
+        assert_eq!(top[0].0, key1);
+        assert_eq!(top[0].1, 2); // recorded 2 times
+    }
+
+    #[test]
+    fn test_cache_warm_latency() {
+        let config = AgentConfig::default();
+        let start = Instant::now();
+        let _cache = QuadCache::warm(&config);
+        let elapsed = start.elapsed().as_micros();
+
+        println!("QuadCache::warm latency: {} μs", elapsed);
+        // Should be <100 μs
+        assert!(elapsed < 100);
+    }
+
+    #[test]
+    fn test_lane3_threshold_speed() {
+        let config = AgentConfig::default();
+        let cache = QuadCache::warm(&config);
+
+        // Lane 3: 10,000 threshold reads
+        let start = Instant::now();
+        for i in 0..10000 {
+            let hp_pct = (i % 100) as u8;
+            let _bin = HpBin::classify(hp_pct, &cache.thresholds);
+        }
+        let elapsed = start.elapsed().as_micros() as f64 / 10000.0;
+        println!("Lane 3 threshold check avg: {:.3} μs per call", elapsed);
+        assert!(elapsed < 0.5);
+    }
+
+    #[test]
+    fn test_full_session_simulation() {
+        // Simulate 300 frames of decision making
+        let mut cache = QuadCache::warm(&AgentConfig::default());
+
+        for frame in 0..300 {
+            // Lane 3: threshold access
+            let hp_pct = match frame / 100 {
+                1 => 80,
+                2 => 50,
+                _ => 80,
+            };
+            let _bin = HpBin::classify(hp_pct, &cache.thresholds);
+
+            // Lane 4: pattern recording
+            if frame % 3 == 0 {
+                let key = HotKey {
+                    hp_bin: HpBin::High,
+                    in_combat: true,
+                    has_loot: false,
+                };
+                cache.record_hit(key);
+            } else {
+                cache.record_miss();
+            }
+        }
+
+        let hit_rate = cache.hit_rate();
+        println!("Session hit rate: {:.1}%", hit_rate * 100.0);
+        assert!(hit_rate > 0.25); // expect ~33% hits
+    }
+
+    impl Default for ThresholdBins {
+        fn default() -> Self {
+            Self {
+                chicken_hp: 10,
+                chicken_mana: 20,
+                chicken_merc: 50,
+                rejuv_hp: 25,
+                rejuv_mana: 30,
+                hp_potion: 50,
+                mp_potion: 40,
+                tp_retreat: 15,
+                merc_hp: 30,
+                hp_potion_cooldown_ms: 500,
+                mp_potion_cooldown_ms: 1000,
+                rejuv_cooldown_ms: 2000,
+            }
+        }
+    }
+}
