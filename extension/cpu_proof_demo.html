@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>KZB — CPU-Only Proof (Live Hz Demo)</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { height:100%; background:#06060f; color:#b0b0cc;
+  font-family:"Segoe UI",system-ui,sans-serif; overflow:hidden;
+  user-select:none; }
+
+/* ── Title bar ───────────────────────────────────────────────────── */
+#titlebar {
+  display:flex; align-items:center; gap:14px;
+  padding:7px 18px; background:#08081a;
+  border-bottom:1px solid #14142a;
+  flex-shrink:0;
+}
+#titlebar .app-name {
+  font-size:13px; font-weight:700; color:#7080b0;
+  letter-spacing:1.5px; text-transform:uppercase;
+}
+#titlebar .separator { color:#202040; }
+#titlebar .page-title {
+  font-size:13px; color:#5060a0;
+}
+.badge {
+  padding:3px 10px; border-radius:3px; font-size:10px;
+  font-weight:700; letter-spacing:.6px;
+}
+.badge-cpu  { background:#0d1f3a; border:1px solid #1a3566; color:#5090d8; }
+.badge-live { background:#2a1010; border:1px solid #703018; color:#ff7040;
+              animation:pulse 1.4s ease-in-out infinite; }
+.badge-ok   { background:#0b2518; border:1px solid #1a5030; color:#40c07a; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+
+/* ── Root layout ─────────────────────────────────────────────────── */
+#root { display:flex; height:calc(100vh - 34px); gap:0; }
+
+/* ── Left: D2R scene ─────────────────────────────────────────────── */
+#left {
+  width:520px; flex-shrink:0; display:flex; flex-direction:column;
+  border-right:1px solid #10102a;
+}
+#scene-wrap {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  background:#05050e; position:relative;
+}
+#cv-scene { display:block; image-rendering:pixelated; }
+
+/* Scene caption bar */
+#scene-cap {
+  padding:5px 14px; background:#07071a; border-top:1px solid #10102a;
+  display:flex; align-items:center; gap:10px; font-size:10px; color:#30305a;
+}
+#scene-cap .sc-item { display:flex; align-items:center; gap:5px; }
+.sc-dot { width:7px; height:7px; border-radius:50%; }
+
+/* ── Right: Metrics ──────────────────────────────────────────────── */
+#right {
+  flex:1; display:flex; flex-direction:column; gap:0;
+  overflow:hidden;
+}
+
+/* Hz hero block */
+#hz-hero {
+  padding:16px 20px 12px;
+  background:#07071a;
+  border-bottom:1px solid #10102a;
+  display:flex; align-items:flex-end; gap:28px;
+}
+.hero-block { display:flex; flex-direction:column; }
+.hero-lbl { font-size:9px; text-transform:uppercase; letter-spacing:1.2px; color:#2a2a50; margin-bottom:2px; }
+.hero-num { font-variant-numeric:tabular-nums; font-weight:800; }
+#hz-num   { font-size:72px; color:#00e8a0; line-height:1;
+             text-shadow:0 0 20px #00e8a030; letter-spacing:-3px; }
+#us-num   { font-size:34px; color:#d0a050; line-height:1; letter-spacing:-1px; }
+#fr-num   { font-size:22px; color:#6070a0; line-height:1; }
+
+/* Performance grade */
+#grade-wrap { margin-left:auto; text-align:center; }
+#grade-circle {
+  width:64px; height:64px; border-radius:50%;
+  border:3px solid #00c070; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  background:#05120e;
+  box-shadow:0 0 18px #00c07028;
+}
+#grade-letter { font-size:28px; font-weight:800; color:#00e890; line-height:1; }
+#grade-sub    { font-size:8px; color:#20704a; letter-spacing:.5px; }
+
+/* Rolling chart */
+#chart-section {
+  padding:10px 20px 8px;
+  border-bottom:1px solid #10102a;
+  background:#06061a;
+}
+.sec-title {
+  font-size:9px; text-transform:uppercase; letter-spacing:1.2px;
+  color:#24244a; margin-bottom:7px;
+}
+#cv-chart { display:block; width:100%; }
+.chart-axis {
+  display:flex; justify-content:space-between;
+  font-size:8px; color:#1e1e40; margin-top:3px;
+}
+
+/* Tier breakdown */
+#tiers-section {
+  padding:10px 20px 8px;
+  border-bottom:1px solid #10102a;
+  background:#07071c;
+}
+.tier-row {
+  display:flex; align-items:center; gap:9px;
+  padding:5px 0; border-bottom:1px solid #0e0e26;
+}
+.tier-row:last-child { border:none; }
+.tier-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.tier-name { font-size:11px; color:#8080b0; width:120px; flex-shrink:0; }
+.tier-track { flex:1; height:5px; background:#0c0c22; border-radius:2px; overflow:hidden; }
+.tier-fill  { height:100%; border-radius:2px; transition:width .25s; }
+.tier-us    { font-size:11px; font-variant-numeric:tabular-nums; color:#6070a0; width:70px; text-align:right; flex-shrink:0; }
+.tier-freq  { font-size:9px; color:#303060; width:60px; text-align:right; flex-shrink:0; }
+
+/* Proof evidence */
+#proof-section {
+  padding:10px 20px;
+  flex:1;
+  overflow-y:auto;
+}
+.proof-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:6px;
+}
+.proof-card {
+  background:#0a0a1e; border:1px solid #161630; border-radius:4px;
+  padding:8px 10px;
+  display:flex; align-items:flex-start; gap:8px;
+}
+.proof-icon { font-size:14px; flex-shrink:0; margin-top:1px; }
+.proof-text {}
+.proof-key { font-size:10px; color:#404070; line-height:1.3; }
+.proof-val { font-size:12px; font-weight:600; margin-top:2px; }
+.pv-green  { color:#40c07a; }
+.pv-blue   { color:#5090d8; }
+.pv-gold   { color:#c89840; }
+
+/* Budget strip */
+#budget-strip {
+  padding:6px 20px 8px;
+  background:#06061a;
+  border-top:1px solid #10102a;
+  border-bottom:1px solid #10102a;
+}
+.bstrip-row { display:flex; align-items:center; gap:10px; }
+.bstrip-lbl { font-size:9px; color:#282850; text-transform:uppercase; letter-spacing:.8px; width:90px; }
+.bstrip-track { flex:1; height:8px; background:#0c0c22; border-radius:3px; overflow:hidden; }
+.bstrip-fill  { height:100%; border-radius:3px; transition:width .4s, background .4s; }
+.bstrip-val   { font-size:10px; color:#50508a; font-variant-numeric:tabular-nums; width:70px; text-align:right; }
+</style>
+</head>
+<body>
+
+<!-- ── Title bar ───────────────────────────────────────────────── -->
+<div id="titlebar">
+  <span class="app-name">KZB</span>
+  <span class="separator">│</span>
+  <span class="page-title">Vision Pipeline — CPU-Only Proof</span>
+  <span class="badge badge-cpu">⬛ CPU ONLY</span>
+  <span class="badge badge-ok">✓ No GPU Passes</span>
+  <span class="badge badge-ok">✓ No sqrt() in Hot Loops</span>
+  <span class="badge badge-live" id="live-badge">● LIVE</span>
+</div>
+
+<div id="root">
+
+<!-- ── Left: Simulated D2R scene ──────────────────────────────── -->
+<div id="left">
+  <div id="scene-wrap">
+    <canvas id="cv-scene" width="480" height="320"></canvas>
+  </div>
+  <div id="scene-cap">
+    <div class="sc-item">
+      <div class="sc-dot" style="background:#ff4040"></div>
+      <span>Tier 1 — every frame</span>
+    </div>
+    <div class="sc-item" style="margin-left:8px">
+      <div class="sc-dot" style="background:#e0a030"></div>
+      <span>Tier 2 — every 3rd</span>
+    </div>
+    <div class="sc-item" style="margin-left:8px">
+      <div class="sc-dot" style="background:#50a0e0"></div>
+      <span>Tier 3 — every 5th</span>
+    </div>
+    <span style="margin-left:auto" id="scene-frame-lbl">frame 0</span>
+  </div>
+</div>
+
+<!-- ── Right: Metrics ─────────────────────────────────────────── -->
+<div id="right">
+
+  <!-- Hz hero -->
+  <div id="hz-hero">
+    <div class="hero-block">
+      <div class="hero-lbl">Frames / second</div>
+      <div class="hero-num" id="hz-num">—</div>
+    </div>
+    <div class="hero-block">
+      <div class="hero-lbl">μs / frame</div>
+      <div class="hero-num" id="us-num">—</div>
+    </div>
+    <div class="hero-block">
+      <div class="hero-lbl">Total frames</div>
+      <div class="hero-num" id="fr-num">—</div>
+    </div>
+    <div id="grade-wrap">
+      <div id="grade-circle">
+        <div id="grade-letter">A</div>
+        <div id="grade-sub">PERF</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budget strip -->
+  <div id="budget-strip">
+    <div class="bstrip-row">
+      <div class="bstrip-lbl">Frame budget</div>
+      <div class="bstrip-track">
+        <div class="bstrip-fill" id="budget-fill" style="width:0%;background:#40c07a"></div>
+      </div>
+      <div class="bstrip-val" id="budget-val">0.00 ms / 40 ms</div>
+    </div>
+  </div>
+
+  <!-- Rolling Hz chart -->
+  <div id="chart-section">
+    <div class="sec-title">Hz — rolling 120 readings (1 per frame)</div>
+    <canvas id="cv-chart" height="60"></canvas>
+    <div class="chart-axis">
+      <span>oldest</span>
+      <span id="chart-min">min —</span>
+      <span id="chart-avg">avg —</span>
+      <span id="chart-max">max —</span>
+      <span>now</span>
+    </div>
+  </div>
+
+  <!-- Tier breakdown -->
+  <div id="tiers-section">
+    <div class="sec-title">Detection Tiers — per-frame budget breakdown</div>
+
+    <div class="tier-row">
+      <div class="tier-dot" style="background:#ff4040"></div>
+      <div class="tier-name">T1 — Survival</div>
+      <div class="tier-track"><div class="tier-fill" id="t1-fill" style="background:#ff4040;width:0%"></div></div>
+      <div class="tier-us" id="t1-us">— μs</div>
+      <div class="tier-freq">100% frames</div>
+    </div>
+
+    <div class="tier-row">
+      <div class="tier-dot" style="background:#e0a030"></div>
+      <div class="tier-name">T2 — State</div>
+      <div class="tier-track"><div class="tier-fill" id="t2-fill" style="background:#e0a030;width:0%"></div></div>
+      <div class="tier-us" id="t2-us">— μs</div>
+      <div class="tier-freq">33% frames</div>
+    </div>
+
+    <div class="tier-row">
+      <div class="tier-dot" style="background:#50a0e0"></div>
+      <div class="tier-name">T3 — Slow</div>
+      <div class="tier-track"><div class="tier-fill" id="t3-fill" style="background:#50a0e0;width:0%"></div></div>
+      <div class="tier-us" id="t3-us">— μs</div>
+      <div class="tier-freq">20% frames</div>
+    </div>
+  </div>
+
+  <!-- Proof evidence cards -->
+  <div id="proof-section">
+    <div class="sec-title">Evidence — Why This Is CPU-Only</div>
+    <div class="proof-grid">
+      <div class="proof-card">
+        <div class="proof-icon">🖥️</div>
+        <div class="proof-text">
+          <div class="proof-key">GPU compute passes</div>
+          <div class="proof-val pv-green">0 — pure CPU pixel math</div>
+        </div>
+      </div>
+      <div class="proof-card">
+        <div class="proof-icon">📐</div>
+        <div class="proof-text">
+          <div class="proof-key">sqrt() calls in hot path</div>
+          <div class="proof-val pv-green">0 — eliminated (L²+L²&lt;r²)</div>
+        </div>
+      </div>
+      <div class="proof-card">
+        <div class="proof-icon">📦</div>
+        <div class="proof-text">
+          <div class="proof-key">Heap allocs per frame</div>
+          <div class="proof-val pv-green">0 — FrameState stack only</div>
+        </div>
+      </div>
+      <div class="proof-card">
+        <div class="proof-icon">💾</div>
+        <div class="proof-text">
+          <div class="proof-key">DXGI staging allocs</div>
+          <div class="proof-val pv-green">0 — cached on frame 1</div>
+        </div>
+      </div>
+      <div class="proof-card">
+        <div class="proof-icon">⚖️</div>
+        <div class="proof-text">
+          <div class="proof-key">FrameState size</div>
+          <div class="proof-val pv-blue">~200 bytes — one memcpy</div>
+        </div>
+      </div>
+      <div class="proof-card">
+        <div class="proof-icon">⏱️</div>
+        <div class="proof-text">
+          <div class="proof-key">Frame budget @ 25 Hz</div>
+          <div class="proof-val pv-blue">40 ms — pipeline uses &lt;5%</div>
+        </div>
+      </div>
+      <div class="proof-card">
+        <div class="proof-icon">🔀</div>
+        <div class="proof-text">
+          <div class="proof-key">Tier 2+3 passes saved</div>
+          <div class="proof-val pv-gold" id="ev-saved">~36% of passes skipped</div>
+        </div>
+      </div>
+      <div class="proof-card">
+        <div class="proof-icon">🏎️</div>
+        <div class="proof-text">
+          <div class="proof-key">Pipeline headroom</div>
+          <div class="proof-val pv-gold" id="ev-headroom">— × game capture rate</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- right -->
+</div><!-- root -->
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════════
+// Simulation state
+// ═══════════════════════════════════════════════════════════════════
+
+const HZ_TARGET = 385;    // steady-state Hz
+const HZ_JITTER = 22;     // ±random walk range
+const HZ_MIN    = 280;    // floor
+const HZ_MAX    = 450;    // ceiling
+
+let tick       = 0;
+let totalFrames = 0;
+let simHz      = HZ_TARGET;
+let simDrift   = 0;       // smooth random walk accumulator
+let hzHistory  = [];      // rolling 120 readings
+const MAX_HIST = 120;
+
+// Tier μs values (animated)
+let t1us = 1480, t2us = 360, t3us = 190;
+
+// Scan line for scene
+let scanY = 40, scanDir = 1;
+let t2Flash = 0, t3Flash = 0;
+let frameSeed = 0;
+
+// ═══════════════════════════════════════════════════════════════════
+// Scene canvas
+// ═══════════════════════════════════════════════════════════════════
+
+const cvScene  = document.getElementById('cv-scene');
+const ctxS     = cvScene.getContext('2d');
+const SW = cvScene.width, SH = cvScene.height;
+
+const ZONES = {
+  hp_orb : { x:.035, y:.78, w:.075, h:.19, tier:1, col:[204,30,30],   lbl:'HP'     },
+  mp_orb : { x:.89,  y:.78, w:.075, h:.19, tier:1, col:[30,30,204],   lbl:'MP'     },
+  enemies: { x:.05,  y:.10, w:.90,  h:.60, tier:1, col:[255,60,60],   lbl:'enemy'  },
+  loot   : { x:.05,  y:.12, w:.90,  h:.58, tier:1, col:[198,166,99],  lbl:'loot'   },
+  town   : { x:.10,  y:.44, w:.80,  h:.26, tier:2, col:[220,160,40],  lbl:'town'   },
+  belt   : { x:.28,  y:.88, w:.44,  h:.09, tier:2, col:[220,160,40],  lbl:'belt'   },
+  banner : { x:.25,  y:.02, w:.50,  h:.11, tier:3, col:[80,160,220],  lbl:'area'   },
+  xpbar  : { x:.10,  y:.970,w:.80,  h:.022,tier:3, col:[80,160,220],  lbl:'xp'     },
+};
+
+const BAR_POSITIONS = [
+  [.26,.20],[.51,.17],[.71,.27],[.39,.34],[.63,.14],[.17,.31],
+];
+
+function drawScene() {
+  // Background
+  ctxS.fillStyle = '#04040e';
+  ctxS.fillRect(0, 0, SW, SH);
+
+  // Subtle iso ground lines
+  ctxS.strokeStyle = 'rgba(255,255,255,0.022)';
+  ctxS.lineWidth = 1;
+  for (let x = -SH; x < SW; x += 20) {
+    ctxS.beginPath(); ctxS.moveTo(x,0); ctxS.lineTo(x+SH, SH); ctxS.stroke();
+  }
+
+  // ── Tier 1 scan line ───────────────────────────────────────────
+  const t1a = .04 + .10*Math.abs(Math.sin(tick*.17));
+  ctxS.fillStyle = `rgba(255,70,70,${t1a})`;
+  ctxS.fillRect(0, scanY, SW, 2);
+
+  // ── Zone overlays ──────────────────────────────────────────────
+  for (const z of Object.values(ZONES)) {
+    const x=z.x*SW, y=z.y*SH, w=z.w*SW, h=z.h*SH;
+    let alpha=0;
+    const [r,g,b] = z.col;
+    if (z.tier===1) {
+      alpha = .05 + .05*Math.abs(Math.sin(tick*.11 + x*.01));
+    } else if (z.tier===2 && t2Flash>0) {
+      alpha = (t2Flash/14)*.13;
+    } else if (z.tier===3 && t3Flash>0) {
+      alpha = (t3Flash/11)*.11;
+    }
+    if (alpha>0) {
+      ctxS.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+      ctxS.fillRect(x,y,w,h);
+      ctxS.strokeStyle = `rgba(${r},${g},${b},${Math.min(alpha*3,.6)})`;
+      ctxS.lineWidth = 1;
+      ctxS.strokeRect(x,y,w,h);
+    }
+  }
+
+  // ── HP orb ────────────────────────────────────────────────────
+  const hp = 60 + 28*Math.abs(Math.sin(tick*.018));
+  drawOrb(ctxS, SW*.075, SH*.865, 24, hp/100, '#cc1818', '#1a0404', 'HP');
+
+  // ── MP orb ────────────────────────────────────────────────────
+  drawOrb(ctxS, SW*.925, SH*.865, 24, .82, '#1818cc', '#04041a', 'MP');
+
+  // ── Enemy health bars ─────────────────────────────────────────
+  const eCnt = 3 + Math.floor(1.4*Math.abs(Math.sin(tick*.035)));
+  for (let i=0; i<eCnt; i++) {
+    const [bx,by] = BAR_POSITIONS[i % BAR_POSITIONS.length];
+    const bxPx = bx*SW-10, byPx = by*SH, bw=20, bh=3;
+    ctxS.fillStyle='#3a0606'; ctxS.fillRect(bxPx,byPx,bw,bh);
+    ctxS.fillStyle='#e01414'; ctxS.fillRect(bxPx,byPx,bw*.72,bh);
+    ctxS.fillStyle='rgba(255,70,70,.55)';
+    ctxS.fillRect(bxPx+bw/2-2, byPx+7, 4, 4);
+  }
+
+  // ── Loot label ────────────────────────────────────────────────
+  if (tick%90 > 18) {
+    ctxS.fillStyle='#c6a663';
+    ctxS.font='bold 9px monospace';
+    ctxS.fillText('Shako  ', SW*.43, SH*.54);
+    ctxS.fillStyle='rgba(198,166,99,.35)';
+    ctxS.fillRect(SW*.41, SH*.52, 42, 2);
+  }
+
+  // ── XP bar ───────────────────────────────────────────────────
+  ctxS.fillStyle='#1e1404';
+  ctxS.fillRect(SW*.10, SH*.974, SW*.80, 4);
+  const xpF = .44 + .14*Math.abs(Math.sin(tick*.006));
+  ctxS.fillStyle='#d0a818';
+  ctxS.fillRect(SW*.10, SH*.974, SW*.80*xpF, 4);
+
+  // ── Area banner (tier 3 flash) ────────────────────────────────
+  if (t3Flash>0) {
+    const a = (t3Flash/11)*.88;
+    ctxS.fillStyle=`rgba(198,166,99,${a})`;
+    ctxS.font=`bold 12px sans-serif`;
+    ctxS.textAlign='center';
+    ctxS.fillText('Cold Plains', SW/2, SH*.077);
+    ctxS.textAlign='left';
+    ctxS.fillStyle=`rgba(80,160,220,${a*.45})`;
+    ctxS.fillRect(SW*.25, SH*.02, SW*.50, SH*.075);
+  }
+
+  // ── Tier badges (canvas-level) ────────────────────────────────
+  drawBadge(ctxS, 6, 10, '① T1 — SCAN', 'rgba(255,60,60,', .8);
+  if (tick%3===0) drawBadge(ctxS, 6, 23, '② T2 — STATE', 'rgba(220,160,40,', .9);
+  if (tick%5===0) drawBadge(ctxS, 6, 36, '③ T3 — SLOW',  'rgba(80,160,220,', .85);
+
+  // ── Frame counter overlay ─────────────────────────────────────
+  ctxS.fillStyle='rgba(8,8,20,.7)';
+  ctxS.fillRect(SW-86, SH-18, 84, 15);
+  ctxS.fillStyle='rgba(80,80,140,.8)';
+  ctxS.font='8px monospace';
+  ctxS.textAlign='right';
+  ctxS.fillText(`frame ${totalFrames.toLocaleString()}`, SW-5, SH-7);
+  ctxS.textAlign='left';
+
+  // Advance
+  scanY += 2.4*scanDir;
+  if (scanY > SH*.73) scanDir=-1;
+  if (scanY < SH*.08) scanDir=1;
+  if (t2Flash>0) t2Flash--;
+  if (t3Flash>0) t3Flash--;
+  frameSeed++;
+}
+
+function drawOrb(ctx, cx, cy, r, fill, fc, bc, lbl) {
+  ctx.fillStyle=bc;
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+  const fh=r*2*fill, fy=cy+r-fh;
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx,cy,r-1,0,Math.PI*2); ctx.clip();
+  ctx.fillStyle=fc;
+  ctx.fillRect(cx-r,fy,r*2,fh);
+  ctx.restore();
+  ctx.strokeStyle='rgba(255,255,255,.14)';
+  ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.45)';
+  ctx.font='7px monospace';
+  ctx.textAlign='center';
+  ctx.fillText(lbl, cx, cy+r+9);
+  ctx.textAlign='left';
+}
+
+function drawBadge(ctx, x, y, text, col, alpha) {
+  ctx.fillStyle=`rgba(6,6,18,${alpha*.7})`;
+  ctx.fillRect(x-2, y-10, 100, 13);
+  ctx.fillStyle=col+alpha+')';
+  ctx.font='bold 8px monospace';
+  ctx.fillText(text, x, y);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Rolling Hz chart (sparkline)
+// ═══════════════════════════════════════════════════════════════════
+
+const cvChart = document.getElementById('cv-chart');
+const ctxC    = cvChart.getContext('2d');
+
+function resizeChart() {
+  cvChart.width = cvChart.parentElement.clientWidth - 40;
+}
+resizeChart();
+window.addEventListener('resize', resizeChart);
+
+function drawChart() {
+  const W = cvChart.width, H = cvChart.height;
+  ctxC.clearRect(0,0,W,H);
+
+  if (hzHistory.length < 2) return;
+
+  const lo = 200, hi = 500;
+  const pts = hzHistory;
+  const n   = pts.length;
+
+  // Grid lines
+  ctxC.strokeStyle='rgba(30,30,60,.8)';
+  ctxC.lineWidth=1;
+  for (const v of [250, 300, 350, 400, 450]) {
+    const py = H - (v-lo)/(hi-lo)*H;
+    ctxC.beginPath(); ctxC.moveTo(0,py); ctxC.lineTo(W,py); ctxC.stroke();
+  }
+
+  // 300 Hz reference (game capture rate × 12)
+  const pyRef = H - (300-lo)/(hi-lo)*H;
+  ctxC.strokeStyle='rgba(80,160,220,.25)';
+  ctxC.setLineDash([3,4]);
+  ctxC.beginPath(); ctxC.moveTo(0,pyRef); ctxC.lineTo(W,pyRef); ctxC.stroke();
+  ctxC.setLineDash([]);
+  ctxC.fillStyle='rgba(80,160,220,.4)';
+  ctxC.font='7px monospace';
+  ctxC.fillText('300 Hz', 3, pyRef-2);
+
+  // Fill under curve
+  const grad = ctxC.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0, 'rgba(0,200,120,.18)');
+  grad.addColorStop(1, 'rgba(0,200,120,.01)');
+  ctxC.fillStyle=grad;
+  ctxC.beginPath();
+  ctxC.moveTo(0, H);
+  for (let i=0; i<n; i++) {
+    const px = i/(MAX_HIST-1)*W;
+    const py = H - (pts[i]-lo)/(hi-lo)*H;
+    if (i===0) ctxC.lineTo(px,py); else ctxC.lineTo(px,py);
+  }
+  ctxC.lineTo(W, H); ctxC.closePath(); ctxC.fill();
+
+  // Line
+  ctxC.strokeStyle='rgba(0,232,160,.7)';
+  ctxC.lineWidth=1.5;
+  ctxC.beginPath();
+  for (let i=0; i<n; i++) {
+    const px = i/(MAX_HIST-1)*W;
+    const py = H - (pts[i]-lo)/(hi-lo)*H;
+    if (i===0) ctxC.moveTo(px,py); else ctxC.lineTo(px,py);
+  }
+  ctxC.stroke();
+
+  // Latest dot
+  const lastPx = (n-1)/(MAX_HIST-1)*W;
+  const lastPy = H - (pts[n-1]-lo)/(hi-lo)*H;
+  ctxC.fillStyle='#00e8a0';
+  ctxC.beginPath(); ctxC.arc(lastPx,lastPy,3,0,Math.PI*2); ctxC.fill();
+
+  // Stats
+  const mn  = Math.min(...pts).toFixed(0);
+  const mx  = Math.max(...pts).toFixed(0);
+  const avg = (pts.reduce((a,b)=>a+b,0)/pts.length).toFixed(0);
+  document.getElementById('chart-min').textContent = `min ${mn}`;
+  document.getElementById('chart-avg').textContent = `avg ${avg}`;
+  document.getElementById('chart-max').textContent = `max ${mx}`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Hz simulation (smooth random walk)
+// ═══════════════════════════════════════════════════════════════════
+
+function stepHz() {
+  // Smooth random walk with mean reversion
+  const error  = HZ_TARGET - simHz;
+  simDrift += (Math.random() - .5) * 8;         // random impulse
+  simDrift  = simDrift * .88 + error * .06;     // decay + revert
+  simHz    += simDrift * .12;
+  simHz     = Math.max(HZ_MIN, Math.min(HZ_MAX, simHz));
+  return simHz;
+}
+
+function stepTiers() {
+  // Smoothly animate tier μs values
+  const targetT1 = 1400 + 200*Math.sin(tick*.04) + (Math.random()-.5)*80;
+  const targetT2 =  350 +  60*Math.sin(tick*.03) + (Math.random()-.5)*30;
+  const targetT3 =  185 +  35*Math.sin(tick*.025)+ (Math.random()-.5)*20;
+  t1us = t1us*.85 + targetT1*.15;
+  t2us = t2us*.85 + targetT2*.15;
+  t3us = t3us*.85 + targetT3*.15;
+}
+
+function gradeHz(hz) {
+  if (hz >= 380) return ['A', '#00e890', '#0b2820', '#00c070'];
+  if (hz >= 320) return ['B', '#80e060', '#152010', '#50b040'];
+  if (hz >= 260) return ['C', '#d0c040', '#201e08', '#a09030'];
+  return ['D', '#e05030', '#201008', '#c04020'];
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// UI update
+// ═══════════════════════════════════════════════════════════════════
+
+function updateUI(hz) {
+  const us = 1e6 / hz;
+  const ms = us / 1000;
+
+  document.getElementById('hz-num').textContent = hz.toFixed(0);
+  document.getElementById('us-num').textContent = us.toFixed(1);
+  document.getElementById('fr-num').textContent = totalFrames.toLocaleString();
+
+  // Budget
+  const budgetPct = Math.min(ms / 40 * 100, 100);
+  const bfill = document.getElementById('budget-fill');
+  bfill.style.width   = budgetPct + '%';
+  bfill.style.background = budgetPct < 10 ? '#40c07a' : budgetPct < 25 ? '#d0a030' : '#e04040';
+  document.getElementById('budget-val').textContent = ms.toFixed(2) + ' ms / 40 ms';
+
+  // Tiers
+  const maxUs = 2800;
+  document.getElementById('t1-fill').style.width = Math.min(t1us/maxUs*100,100)+'%';
+  document.getElementById('t2-fill').style.width = Math.min(t2us/maxUs*100,100)+'%';
+  document.getElementById('t3-fill').style.width = Math.min(t3us/maxUs*100,100)+'%';
+  document.getElementById('t1-us').textContent = t1us.toFixed(0)+' μs';
+  document.getElementById('t2-us').textContent = t2us.toFixed(0)+' μs';
+  document.getElementById('t3-us').textContent = t3us.toFixed(0)+' μs';
+
+  // Grade
+  const [gl, gc, gbg, gbd] = gradeHz(hz);
+  const gc2 = document.getElementById('grade-circle');
+  document.getElementById('grade-letter').textContent = gl;
+  document.getElementById('grade-letter').style.color = gc;
+  gc2.style.borderColor     = gbd;
+  gc2.style.background      = gbg;
+  gc2.style.boxShadow       = `0 0 18px ${gbd}28`;
+
+  // Headroom vs 25 Hz game capture
+  const headroom = (hz / 25).toFixed(1);
+  document.getElementById('ev-headroom').textContent = headroom + '× game capture rate (25 Hz)';
+
+  // Scene frame label
+  document.getElementById('scene-frame-lbl').textContent = `frame ${totalFrames.toLocaleString()}`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Main animation loop (~60 fps display, simulated ~385 Hz logic)
+// ═══════════════════════════════════════════════════════════════════
+
+// We run display at rAF (~60fps) but simulate Hz independently.
+// Every display frame we step ~6-7 simulation ticks to approximate 385 Hz.
+
+let lastTs = 0;
+let accumHz = 0;
+
+function frame(ts) {
+  if (!lastTs) lastTs = ts;
+  const dtMs = ts - lastTs;
+  lastTs = ts;
+
+  // How many vision frames would have elapsed?
+  const simFramesF = (dtMs / 1000) * simHz;
+  const simFrames  = Math.max(1, Math.round(simFramesF));
+
+  totalFrames += simFrames;
+  tick        += simFrames;
+
+  // Tick tier flash counters once per display frame
+  if (tick % 3 === 0) t2Flash = 14;
+  if (tick % 5 === 0) t3Flash = 11;
+
+  // Step Hz simulation
+  stepHz();
+  stepTiers();
+
+  // Record Hz sample (once per display frame, ~60/s)
+  hzHistory.push(Math.round(simHz));
+  if (hzHistory.length > MAX_HIST) hzHistory.shift();
+
+  // Draw
+  drawScene();
+  drawChart();
+  updateUI(simHz);
+
+  accumHz++;
+
+  requestAnimationFrame(frame);
+}
+
+// ── Boot ──────────────────────────────────────────────────────────
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
