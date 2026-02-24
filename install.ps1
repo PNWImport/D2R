@@ -227,7 +227,8 @@ if (-not $SkipBuild) {
     Write-Host "  Building vision agent..." -ForegroundColor Gray
     Push-Location (Join-Path $ScriptDir "botter")
     try {
-        cargo build --release 2>&1 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
+        $env:CARGO_TERM_COLOR = "never"
+        & cargo build --release 2>&1 | Out-Host
         if ($LASTEXITCODE -ne 0) { Write-Err "Vision agent build failed!"; exit 1 }
         Write-Step "Vision agent built"
     } finally { Pop-Location }
@@ -236,7 +237,7 @@ if (-not $SkipBuild) {
     Write-Host "  Building map helper..." -ForegroundColor Gray
     Push-Location (Join-Path $ScriptDir "maphack")
     try {
-        cargo build --release 2>&1 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
+        & cargo build --release 2>&1 | Out-Host
         if ($LASTEXITCODE -ne 0) { Write-Err "Map helper build failed!"; exit 1 }
         Write-Step "Map helper built"
     } finally { Pop-Location }
