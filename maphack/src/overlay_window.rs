@@ -12,7 +12,10 @@
 // =============================================================================
 
 /// Snapshot of vision-agent detection state passed to the overlay for drawing.
+/// Fields are read by the Win32 overlay painter on Windows; on other platforms
+/// this struct is only constructed/stored, so the fields appear unused.
 #[derive(Debug, Clone, Default)]
+#[allow(dead_code)]
 pub struct DebugState {
     pub hp_pct: u8,
     pub mp_pct: u8,
