@@ -48,7 +48,7 @@ fn bench_decide(c: &mut Criterion) {
         CapturePipeline::synthetic_frame(10, 4, 30, false),  // heavy combat, low HP
         CapturePipeline::synthetic_frame(2, 0, 95, false),   // clearing
     ];
-    for (i, scene) in scenes.iter().enumerate().cycle().take(200) {
+    for scene in scenes.iter().cycle().take(200) {
         let state = pipeline.bench_extract(scene);
         let _ = engine.decide(&state);
     }
