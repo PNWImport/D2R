@@ -1307,8 +1307,7 @@ impl DxgiCapturer {
             let duplication = output1.DuplicateOutput(&device)?;
 
             // Get dimensions from duplication desc
-            let mut dup_desc = DXGI_OUTDUPL_DESC::default();
-            duplication.GetDesc(&mut dup_desc);
+            let dup_desc = duplication.GetDesc();
             let width = dup_desc.ModeDesc.Width;
             let height = dup_desc.ModeDesc.Height;
 
