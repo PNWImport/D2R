@@ -89,7 +89,7 @@ KZB/
 │   │   ├── host_registry.rs  ← Native messaging host registry helpers
 │   │   ├── mapgen.rs         ← Map generation / tile assembly
 │   │   ├── memory.rs         ← Memory reading interface
-│   │   ├── offsets.rs        ← D2R memory structure offsets
+│   │   ├── offsets.rs        ← Game memory structure offsets
 │   │   ├── protocol.rs       ← Native messaging protocol handling
 │   │   └── stealth/
 │   │       ├── mod.rs        ← Stealth module (flat file, not a subdir tree)
@@ -303,7 +303,7 @@ KZB/
   - Signal handling (graceful shutdown)
 
 - **`overlay/src/main.rs`** -- Map helper main loop
-  - D2R process discovery and memory reading
+  - Game process discovery and memory reading
   - Map data parsing and generation
   - Native messaging host connection
 
@@ -652,8 +652,8 @@ All hardcoded at 800x600 base resolution (scales with math):
 
 1. **Clone/pull the repository**
    ```bash
-   git clone <repo-url> D2R
-   cd D2R/kolbot
+   git clone <repo-url> KZB
+   cd KZB/kolbot
    ```
 
 2. **Initialize submodules** (downloads SoloPlay + limedrop)
@@ -663,8 +663,8 @@ All hardcoded at 800x600 base resolution (scales with math):
    git submodule update --init --recursive
    ```
 
-3. **Configure D2R installation path**
-   - Edit `+setup/d2bs.ini` - Set `D2RPath` to your D2R installation directory
+3. **Configure game installation path**
+   - Edit `+setup/d2bs.ini` - Set `D2RPath` to your game installation directory
    - Edit `+setup/starter/StarterConfig.js` - Set server IP and account details
 
 4. **Create a leveling character**
@@ -762,7 +762,7 @@ All hardcoded at 800x600 base resolution (scales with math):
 
 ## Useful References
 
-- **D2R Memory Offsets**: See `overlay/src/offsets.rs` and `overlay/offsets.json.example`
+- **Game Offsets**: See `overlay/src/offsets.rs` and `overlay/offsets.json.example`
 - **Kolbot Docs**: `kolbot/d2bs/api.html`
 - **D2 Forums**: Community reverse-engineering threads
 - **Chrome Native Messaging**: [Google Docs](https://developer.chrome.com/docs/extensions/mv3/nativeMessaging/)

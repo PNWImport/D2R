@@ -144,11 +144,11 @@ Key metrics:
 ```
 overlay/
 ├── src/main.rs                    Entry point, map reader
-├── src/discovery.rs               D2R process discovery
+├── src/discovery.rs               Game process discovery
 ├── src/host_registry.rs           Chrome native host registration
 ├── src/mapgen.rs                  Map generation/parsing
-├── src/memory.rs                  D2R memory reading
-├── src/offsets.rs                 D2R structure offsets
+├── src/memory.rs                  Game memory reading
+├── src/offsets.rs                 Game structure offsets
 ├── src/protocol.rs                Native messaging protocol
 ├── src/stealth/mod.rs             Stealth module
 ├── src/stealth/process_identity.rs PEB disguise
@@ -317,7 +317,7 @@ KZB avoids detection by:
 1. QUICKSTART.md (5 min)
 2. Run install.ps1
 3. Load extension
-4. Start D2R and farm!
+4. Start the game and farm!
 
 ### ...Having setup issues
 1. INSTALL.md (15 min)
@@ -372,7 +372,7 @@ KZB avoids detection by:
 ❌ **Not Yet Implemented**
 - Advanced pathfinding (A* on vision-detected map)
 - Multi-resolution scaling (hardcoded 800x600)
-- D2R 3.x offset updates (if Blizzard changes memory)
+- Game 3.x offset updates (if patch changes memory)
 
 ---
 
@@ -387,7 +387,7 @@ KZB avoids detection by:
 - Pickit/loot evaluation
 - Configuration design
 
-**D2R Research Community** — Memory offsets, spell effects, item classification
+**Community Research** — Memory offsets, spell effects, item classification
 
 ---
 
@@ -401,7 +401,7 @@ MIT License — See LICENSE file for details.
 
 ## 🔗 Quick Links
 
-- **Source**: `/home/user/D2R` (git repo)
+- **Source**: `/home/user/KZB` (git repo)
 - **Branch**: `claude/cpu-video-test-docs-IVwhE`
 - **Configs**: `C:\ProgramData\DisplayCalibration\`
 - **Logs**: `C:\ProgramData\DisplayCalibration\*.log`

@@ -1,4 +1,4 @@
-# D2R Levelbot Install Check & Full Walkthrough — Session Complete
+# KZB Install Check & Full Walkthrough — Session Complete
 
 **Date**: 2026-02-23
 **Branch**: `claude/prepare-kolbot-production-zGrdr`

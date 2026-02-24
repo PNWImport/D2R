@@ -1,4 +1,4 @@
-# D2R Bot — Technical Backlog
+# KZB — Technical Backlog
 
 ## Known Gaps (Post-Install Check & Walkthrough)
 

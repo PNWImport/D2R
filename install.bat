@@ -1,5 +1,5 @@
 @echo off
-:: D2R Suite — Quick Installer
+:: KZB Suite — Quick Installer
 :: Double-click this file or run from command prompt
 :: Requires PowerShell and Rust (cargo)
 
