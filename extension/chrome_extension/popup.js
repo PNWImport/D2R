@@ -424,6 +424,10 @@ document.querySelectorAll("[data-cfg]").forEach((el) => {
 
 // ─── Start ───────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
+  // Detect if running as a full tab (not a popup)
+  if (window.innerWidth > 600) {
+    document.body.classList.add("tab-mode");
+  }
   initInventoryGrid();
   loadAllSettings(() => {
     // These must run AFTER settings are loaded from storage

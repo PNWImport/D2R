@@ -7,7 +7,7 @@
 #   - Chrome Extension (Display Calibration Helper)
 #
 # Usage:
-#   .\install.ps1                            # Install (prompts for extension ID)
+#   .\install.ps1                            # Full auto: build, detect extension, install
 #   .\install.ps1 -ExtensionId <id>          # Install with known extension ID
 #   .\install.ps1 -SkipBuild                 # Skip cargo build, use existing binaries
 #   .\install.ps1 -Uninstall                 # Remove everything
@@ -106,6 +106,33 @@ function Unregister-Host($hostName) {
             Write-Step "Removed registry: $_"
         }
     }
+}
+
+function Find-ExtensionId {
+    # Auto-detect the KZB extension ID from Chrome's Preferences file.
+    # Chrome stores all installed extensions (including unpacked dev-mode)
+    # in the Preferences JSON under extensions.settings.
+    $profiles = @("Default", "Profile 1", "Profile 2", "Profile 3")
+    foreach ($profile in $profiles) {
+        $prefsPath = "$env:LOCALAPPDATA\Google\Chrome\User Data\$profile\Preferences"
+        if (-not (Test-Path $prefsPath)) { continue }
+        try {
+            $json = Get-Content $prefsPath -Raw | ConvertFrom-Json
+            $settings = $json.extensions.settings
+            if (-not $settings) { continue }
+            foreach ($prop in $settings.PSObject.Properties) {
+                $ext = $prop.Value
+                # Match by manifest name
+                if ($ext.manifest.name -eq "KZB Control Panel") {
+                    return $prop.Name
+                }
+            }
+        } catch {
+            # Preferences locked or malformed — skip this profile
+            continue
+        }
+    }
+    return $null
 }
 
 function Write-Manifest($path, $hostName, $exePath, $extId) {
@@ -216,23 +243,70 @@ if ($ExtensionOnly) {
 # =============================================
 Write-Banner "D2R Suite - Unified Installer"
 
-# ---- Step 1: Check extension ID ----
+# ---- Step 1: Resolve extension ID (fully automatic) ----
 if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
-    Write-Warn "No extension ID provided."
-    Write-Host ""
-    Write-Host "If you haven't loaded the extension yet, run:" -ForegroundColor White
-    Write-Host "  .\install.ps1 -ExtensionOnly" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "Then re-run with your extension ID:" -ForegroundColor White
-    Write-Host "  .\install.ps1 -ExtensionId <your-id>" -ForegroundColor Cyan
-    Write-Host ""
-    $ExtensionId = Read-Host "Enter extension ID (or press Enter to use placeholder)"
-    if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
-        $ExtensionId = "EXTENSION_ID_HERE"
-        Write-Warn "Using placeholder. Re-run with real ID after loading extension."
+    Write-Host "Detecting extension ID..." -ForegroundColor Yellow
+
+    # First, try auto-detect from Chrome Preferences
+    $detected = Find-ExtensionId
+    if ($detected) {
+        $ExtensionId = $detected
+        Write-Step "Auto-detected extension ID: $ExtensionId"
+    } else {
+        # Extension not loaded yet — load it, then re-detect
+        $extPath = Join-Path $ScriptDir "extension\chrome_extension"
+        if (-not (Test-Path "$extPath\manifest.json")) {
+            Write-Err "Extension not found at: $extPath"
+            exit 1
+        }
+        Write-Warn "Extension not found in Chrome. Loading it now..."
+        Write-Info "Opening Chrome with the extension loaded..."
+
+        # Launch Chrome with --load-extension to auto-install in dev mode
+        $chromePaths = @(
+            "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
+            "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
+            "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
+        )
+        $chromeExe = $null
+        foreach ($p in $chromePaths) {
+            if (Test-Path $p) { $chromeExe = $p; break }
+        }
+        if (-not $chromeExe) {
+            $chromeExe = (Get-Command chrome -ErrorAction SilentlyContinue).Source
+        }
+        if ($chromeExe) {
+            Start-Process $chromeExe -ArgumentList "--load-extension=`"$extPath`"" 2>$null
+            Write-Info "Waiting for Chrome to register the extension..."
+            # Poll for up to 15 seconds
+            $maxWait = 15
+            for ($i = 0; $i -lt $maxWait; $i++) {
+                Start-Sleep -Seconds 1
+                $detected = Find-ExtensionId
+                if ($detected) {
+                    $ExtensionId = $detected
+                    Write-Step "Auto-detected extension ID: $ExtensionId"
+                    break
+                }
+            }
+        }
+
+        # Final fallback: manual entry
+        if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
+            Write-Warn "Could not auto-detect. Please load the extension manually:"
+            Write-Host "  1. Open chrome://extensions" -ForegroundColor Cyan
+            Write-Host "  2. Enable Developer mode" -ForegroundColor Cyan
+            Write-Host "  3. Load unpacked -> $extPath" -ForegroundColor Cyan
+            Write-Host ""
+            $ExtensionId = Read-Host "Enter extension ID"
+            if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
+                Write-Err "Extension ID is required. Cannot continue."
+                exit 1
+            }
+        }
     }
 }
-Write-Info "Extension ID: $ExtensionId"
+Write-Step "Using extension ID: $ExtensionId"
 
 # ---- Step 2: Build binaries ----
 if (-not $SkipBuild) {
@@ -469,9 +543,9 @@ if (-not $SkipNetworkOptimize) {
 
 Write-Host ""
 Write-Host "Quick Start:" -ForegroundColor Yellow
-Write-Host "  1. Load extension in Chrome (if not done):" -ForegroundColor White
-Write-Host "     chrome://extensions -> Load unpacked -> $extPath" -ForegroundColor Cyan
-Write-Host "  2. Copy your character config to $configDir" -ForegroundColor White
+Write-Host "  1. Click the KZB extension icon in Chrome toolbar" -ForegroundColor White
+Write-Host "     (Opens as a full-screen control panel tab)" -ForegroundColor Gray
+Write-Host "  2. Select your character config" -ForegroundColor White
 Write-Host "  3. Launch D2R and start a game" -ForegroundColor White
 Write-Host "  4. The extension connects automatically" -ForegroundColor White
 Write-Host ""

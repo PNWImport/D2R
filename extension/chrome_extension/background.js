@@ -190,6 +190,22 @@ function broadcastToTabs(message) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// EXTENSION ICON CLICK → open panel as full browser tab
+// ═══════════════════════════════════════════════════════════════
+
+chrome.action.onClicked.addListener(async () => {
+  const panelUrl = chrome.runtime.getURL("popup.html");
+  // Reuse existing KZB tab if one is already open
+  const tabs = await chrome.tabs.query({ url: panelUrl });
+  if (tabs.length > 0) {
+    chrome.tabs.update(tabs[0].id, { active: true });
+    chrome.windows.update(tabs[0].windowId, { focused: true });
+  } else {
+    chrome.tabs.create({ url: panelUrl });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
 // KEYBOARD SHORTCUTS
 // ═══════════════════════════════════════════════════════════════
 
