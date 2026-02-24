@@ -58,12 +58,12 @@ if (-not (Test-Path $HostPath)) {
 
 # Copy binary (assumes build output is in current or parent dir)
 $sourceBin = $null
-@(
+foreach ($candidate in @(
     ".\target\release\chrome_map_helper.exe",
     "..\target\release\chrome_map_helper.exe",
     ".\chrome_map_helper.exe"
-) | ForEach-Object {
-    if (Test-Path $_) { $sourceBin = $_ }
+)) {
+    if (Test-Path $candidate) { $sourceBin = $candidate; break }
 }
 
 if ($sourceBin) {
@@ -88,7 +88,8 @@ $manifest = @"
   ]
 }
 "@
-$manifest | Out-File -FilePath $manifestPath -Encoding utf8 -Force
+# Write UTF8 without BOM — Out-File adds a BOM on Windows PS 5.1 which Chrome may reject
+[System.IO.File]::WriteAllText($manifestPath, $manifest, [System.Text.UTF8Encoding]::new($false))
 Write-Status Green "[+] Created manifest: $manifestPath"
 
 # Register in registry (Chrome + Edge)
@@ -116,16 +117,15 @@ Write-Status Green "==========================================="
 Write-Status Yellow ""
 Write-Status Yellow "Registered hosts:"
 
-$visionHost = Get-ItemProperty "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.d2vision.agent" -ErrorAction SilentlyContinue
+$visionHost = Get-ItemProperty "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.display.calibration" -ErrorAction SilentlyContinue
 $mapHost = Get-ItemProperty "HKCU:\Software\Google\Chrome\NativeMessagingHosts\$HostName" -ErrorAction SilentlyContinue
 
-if ($visionHost) { Write-Status Green "  [*] com.d2vision.agent (vision)" }
-else { Write-Status Red "  [ ] com.d2vision.agent (not installed)" }
+if ($visionHost) { Write-Status Green "  [*] com.chromium.display.calibration (vision)" }
+else { Write-Status Red "  [ ] com.chromium.display.calibration (not installed)" }
 
 if ($mapHost) { Write-Status Green "  [*] $HostName (map)" }
 else { Write-Status Red "  [ ] $HostName (not installed)" }
 
 Write-Status Yellow ""
-Write-Status Yellow "Next: Update your Chrome extension to connect to both hosts."
-Write-Status Yellow "  chrome.runtime.connectNative('com.d2vision.agent')  // vision"
-Write-Status Yellow "  chrome.runtime.connectNative('com.d2vision.map')    // map"
+Write-Status Yellow "NOTE: Prefer using the unified installer (install.ps1) in the repo root."
+Write-Status Yellow "  It handles both hosts, extension detection, and network optimization."

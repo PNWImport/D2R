@@ -321,6 +321,8 @@ impl AreaId {
             1 => Self::RogueEncampment, 2 => Self::BloodMoor, 3 => Self::ColdPlains,
             4 => Self::StonyField, 5 => Self::DarkWood, 6 => Self::BlackMarsh,
             7 => Self::TamoeHighland, 8 => Self::DenOfEvil,
+            9 => Self::CaveLvl1, 10 => Self::UndergroundPassLvl1,
+            11 => Self::UndergroundPassLvl2,
             12 => Self::Pit, 37 => Self::CatacombsLvl4, 39 => Self::MooMooFarm,
             40 => Self::LutGholein, 65 => Self::AncientTunnels,
             74 => Self::ArcaneSanctuary, 75 => Self::KurastDocks,

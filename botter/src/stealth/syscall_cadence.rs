@@ -291,7 +291,7 @@ impl SyscallCadence {
         if self.rng.gen::<f32>() < global_decoy_rate {
             let all = DecoyType::all();
             decoys.push(all[self.rng.gen_range(0..all.len())]);
-            self.stats.total_decoys.fetch_add(1, Ordering::Relaxed);
+            // total_decoys is incremented in execute_single_decoy()
         }
 
         SyscallPrep {

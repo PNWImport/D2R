@@ -810,7 +810,7 @@ impl DecisionEngine {
     // --- Humanization helpers ---
 
     fn humanize_threshold(&mut self, base: u8) -> u8 {
-        let v = self.config.humanization.potion_threshold_variance as i8;
+        let v = self.config.humanization.potion_threshold_variance.min(127) as i8;
         let offset = self.rng.gen_range(-v..=v);
         (base as i16 + offset as i16).clamp(20, 95) as u8
     }

@@ -415,7 +415,7 @@ impl CapturePipeline {
         let inner = (r as f32 * 0.30) as i32;
         let col_offsets: [i32; 5] = [-inner * 2, -inner, 0, inner, inner * 2];
 
-        let mut fill_top_y = orb_top; // worst case: completely empty
+        let mut fill_top_y = orb_bottom; // worst case: completely empty (liquid at bottom)
         let mut any_hit = false;
 
         for &dx in &col_offsets {

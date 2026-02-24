@@ -12,26 +12,31 @@ Step-by-step setup for Windows 10/11 with Chrome/Edge.
 - ✅ D2R installed and working (offline/single-player)
 - ✅ PowerShell 5.0+ (built-in on Windows 10+)
 
-### Option 1: Automated (Recommended)
+### Option 1: Automated — 1-Click (Recommended)
 
 ```powershell
 # 1. Open PowerShell AS ADMINISTRATOR (right-click -> Run as Administrator)
-#    The installer will refuse to run without admin rights.
+#    The installer needs admin for ProgramData writes and network optimization.
 
 # 2. Navigate to repo root
 cd C:\Users\YourName\Downloads\D2R
 
-# 3. Load the Chrome extension first (to get your Extension ID)
-.\install.ps1 -ExtensionOnly
-#    - Go to chrome://extensions
-#    - Enable Developer Mode (top right)
-#    - Click "Load unpacked" -> select D2R\extension\chrome_extension\
-#    - Copy the Extension ID (blue text under the extension name)
+# 3. Run the unified installer
+.\install.ps1
 
-# 4. Run the full installer with your Extension ID
-.\install.ps1 -ExtensionId <paste-your-id-here>
-
-# 5. Done! Bot will auto-start when you load a D2R game
+# That's it! The installer will:
+#   a. Build both Rust binaries (vision agent + map helper)
+#   b. Auto-detect your Chrome extension ID
+#      (or launch Chrome to load it if not already loaded)
+#   c. Install binaries, manifests, registry entries
+#   d. Copy config templates
+#   e. Apply network latency optimizations (Leatrix-style)
+#
+# Optional flags:
+#   .\install.ps1 -SkipBuild          # Use pre-built binaries
+#   .\install.ps1 -SkipNetworkOptimize # Skip TCP tweaks
+#   .\install.ps1 -ExtensionId <id>   # Skip auto-detect
+#   .\install.ps1 -ExtensionOnly      # Just show extension load instructions
 ```
 
 ### Option 2: Manual (Fine-grained control)
@@ -53,17 +58,17 @@ cd C:\Users\YourName\Downloads\D2R
 # Build vision agent
 cd botter
 cargo build --release
-# Output: target\release\d2_vision_agent.exe (3-5 minutes)
+# Output: target\release\kzb_vision_agent.exe (3-5 minutes)
 
 # Build map helper
 cd ..\maphack
 cargo build --release
-# Output: target\release\d2r_map_helper.exe (2-3 minutes)
+# Output: target\release\chrome_map_helper.exe (2-3 minutes)
 
 # Test everything works
 cd ..\botter
 cargo test
-# Should see: test result: ok. 282 passed
+# Should see: test result: ok. 294 passed
 ```
 
 ### Step 2: Load Chrome Extension
@@ -84,34 +89,37 @@ cargo test
 ```powershell
 cd C:\Users\YourName\Downloads\D2R
 
-# Run installer with extension ID
+# Run installer — extension ID is auto-detected from Chrome
 .\install.ps1
 
-# When prompted, paste the extension ID you noted in Step 2
-# Example: abcdefghijklmnopqrstuvwxyz123456
-
 # Script will:
-# ✓ Install two native messaging hosts (registry entries)
-# ✓ Copy binaries to Program Files
-# ✓ Copy default configs to C:\ProgramData\DisplayCalibration\
-# ✓ Register with Chrome
+# ✓ Build vision agent + map helper (Rust release binaries)
+# ✓ Auto-detect extension ID from Chrome Preferences
+#   (or launch Chrome with --load-extension if not yet loaded)
+# ✓ Install native messaging host binaries:
+#   - chrome_helper.exe    → C:\ProgramData\DisplayCalibration\
+#   - chrome_map_helper.exe → C:\ProgramData\Google\Chrome\NativeMessagingHosts\
+# ✓ Write JSON manifests to %USERPROFILE%\D2R\native-hosts\
+# ✓ Register hosts in HKCU registry (Chrome + Edge)
+# ✓ Copy config templates to C:\ProgramData\DisplayCalibration\configs\
 # ✓ Apply Leatrix TCP optimization (TcpNoDelay, TcpAckFrequency)
 #
 # Optional flags:
+#   -SkipBuild              Skip Rust compilation (use existing binaries)
 #   -SkipNetworkOptimize    Skip TCP optimization
-#   -SkipBuild              Skip Rust compilation
+#   -ExtensionId <id>       Skip auto-detect, use this ID
 #   -Uninstall              Remove everything
 ```
 
 **Verify installation:**
 
 ```powershell
-# Check registry entries exist
-Get-Item "HKLM:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.display.calibration"
-# Should list: default_policy = C:\Program Files\D2R Agent\manifest.json
+# Check registry entries exist (installer uses HKCU, not HKLM)
+Get-ItemProperty "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.display.calibration"
+# Should show (Default) pointing to your native_host_manifest.json
 
-Get-Item "HKLM:\Software\Google\Chrome\NativeMessagingHosts\com.d2vision.map"
-# Should list: default_policy = C:\Program Files\D2R Maphack\manifest.json
+Get-ItemProperty "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.d2vision.map"
+# Should show (Default) pointing to your map_manifest.json
 ```
 
 ### Step 4: OpenClaw Gateway Setup (WSL)
@@ -245,54 +253,54 @@ If you prefer to set things up manually or the script fails:
 ```powershell
 cd C:\Users\YourName\Downloads\D2R\botter
 cargo build --release
-copy target\release\d2_vision_agent.exe "C:\Program Files\D2R Agent\"
+copy target\release\kzb_vision_agent.exe "C:\ProgramData\DisplayCalibration\chrome_helper.exe"
 
 cd ..\maphack
 cargo build --release
-copy target\release\d2r_map_helper.exe "C:\Program Files\D2R Maphack\"
+copy target\release\chrome_map_helper.exe "C:\ProgramData\Google\Chrome\NativeMessagingHosts\"
 ```
 
 ### Create Registry Entries
 
-**For Vision Agent**, in PowerShell as Administrator:
+**For Vision Agent**, in PowerShell:
 
 ```powershell
-$regPath = "HKLM:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.display.calibration"
+$manifestPath = "$env:USERPROFILE\D2R\native-hosts\native_host_manifest.json"
+$regPath = "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.display.calibration"
 New-Item -Path $regPath -Force -ErrorAction SilentlyContinue | Out-Null
-New-ItemProperty -Path $regPath -Name "(Default)" `
-  -Value "C:\Program Files\D2R Agent\manifest.json" -Force | Out-Null
+Set-ItemProperty -Path $regPath -Name "(Default)" -Value $manifestPath
 ```
 
 **For Map Helper:**
 
 ```powershell
-$regPath = "HKLM:\Software\Google\Chrome\NativeMessagingHosts\com.d2vision.map"
+$manifestPath = "$env:USERPROFILE\D2R\native-hosts\map_manifest.json"
+$regPath = "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.d2vision.map"
 New-Item -Path $regPath -Force -ErrorAction SilentlyContinue | Out-Null
-New-ItemProperty -Path $regPath -Name "(Default)" `
-  -Value "C:\Program Files\D2R Maphack\manifest.json" -Force | Out-Null
+Set-ItemProperty -Path $regPath -Name "(Default)" -Value $manifestPath
 ```
 
 ### Create Native Host Manifests
 
-**File: `C:\Program Files\D2R Agent\manifest.json`**
+**File: `%USERPROFILE%\D2R\native-hosts\native_host_manifest.json`**
 
 ```json
 {
   "name": "com.chromium.display.calibration",
-  "description": "Display Calibration Service",
-  "path": "C:\\Program Files\\D2R Agent\\d2_vision_agent.exe",
+  "description": "Chrome Native Messaging Host",
+  "path": "C:\\ProgramData\\DisplayCalibration\\chrome_helper.exe",
   "type": "stdio",
   "allowed_origins": ["chrome-extension://YOUR_EXTENSION_ID/"]
 }
 ```
 
-**File: `C:\Program Files\D2R Maphack\manifest.json`**
+**File: `%USERPROFILE%\D2R\native-hosts\map_manifest.json`**
 
 ```json
 {
   "name": "com.d2vision.map",
-  "description": "D2 Vision Map",
-  "path": "C:\\Program Files\\D2R Maphack\\d2r_map_helper.exe",
+  "description": "Chrome Native Messaging Host",
+  "path": "C:\\ProgramData\\Google\\Chrome\\NativeMessagingHosts\\chrome_map_helper.exe",
   "type": "stdio",
   "allowed_origins": ["chrome-extension://YOUR_EXTENSION_ID/"]
 }
@@ -303,9 +311,9 @@ New-ItemProperty -Path $regPath -Name "(Default)" `
 ### Copy Config Directory
 
 ```powershell
-mkdir "C:\ProgramData\DisplayCalibration" -ErrorAction SilentlyContinue
+mkdir "C:\ProgramData\DisplayCalibration\configs" -ErrorAction SilentlyContinue
 copy "C:\Users\YourName\Downloads\D2R\botter\configs\*.yaml" `
-      "C:\ProgramData\DisplayCalibration\"
+      "C:\ProgramData\DisplayCalibration\configs\"
 ```
 
 ---
@@ -325,12 +333,12 @@ cd C:\Users\YourName\Downloads\D2R
 
 ```powershell
 # Remove registry entries
-Remove-Item -Path "HKLM:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.display.calibration" -Force
-Remove-Item -Path "HKLM:\Software\Google\Chrome\NativeMessagingHosts\com.d2vision.map" -Force
+Remove-Item -Path "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.display.calibration" -Force
+Remove-Item -Path "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.d2vision.map" -Force
 
 # Remove binaries
-rmdir "C:\Program Files\D2R Agent\" -Recurse -Force
-rmdir "C:\Program Files\D2R Maphack\" -Recurse -Force
+Remove-Item "C:\ProgramData\DisplayCalibration\chrome_helper.exe" -Force
+Remove-Item "C:\ProgramData\Google\Chrome\NativeMessagingHosts\chrome_map_helper.exe" -Force
 
 # Remove TCP optimizations (Leatrix)
 Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces" |
@@ -357,18 +365,18 @@ Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfac
 **Fix**:
 1. Check registry exists:
    ```powershell
-   Get-Item "HKLM:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.display.calibration"
+   Get-Item "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.display.calibration"
    ```
    If not found, re-run installer.
 
-2. Check manifest.json path is correct:
+2. Check manifest path is correct:
    ```powershell
-   Get-Content "C:\Program Files\D2R Agent\manifest.json"
+   Get-Content "$env:USERPROFILE\D2R\native-hosts\native_host_manifest.json"
    ```
 
 3. Check binary exists:
    ```powershell
-   Test-Path "C:\Program Files\D2R Agent\d2_vision_agent.exe"
+   Test-Path "C:\ProgramData\DisplayCalibration\chrome_helper.exe"
    ```
 
 4. Check Chrome console for errors:
@@ -421,7 +429,7 @@ Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfac
 **Fix**:
 1. Check map helper registry:
    ```powershell
-   Get-Item "HKLM:\Software\Google\Chrome\NativeMessagingHosts\com.d2vision.map"
+   Get-Item "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.d2vision.map"
    ```
 
 2. Check popup status: should show "Map Host: Connected"
@@ -514,20 +522,23 @@ Return JSON (stats, acks, etc.)
 ### File Locations
 
 ```
-Install:
-  C:\Program Files\D2R Agent\
-  C:\Program Files\D2R Maphack\
+Binaries:
+  C:\ProgramData\DisplayCalibration\chrome_helper.exe        (vision agent)
+  C:\ProgramData\Google\Chrome\NativeMessagingHosts\chrome_map_helper.exe  (map helper)
+
+Manifests:
+  %USERPROFILE%\D2R\native-hosts\native_host_manifest.json
+  %USERPROFILE%\D2R\native-hosts\map_manifest.json
 
 Configs:
-  C:\ProgramData\DisplayCalibration\
+  C:\ProgramData\DisplayCalibration\configs\
 
 Logs:
   C:\ProgramData\DisplayCalibration\agent.log
   C:\ProgramData\DisplayCalibration\decision.log
-  C:\ProgramData\DisplayCalibration\training_logs\
 
-Registry:
-  HKLM:\Software\Google\Chrome\NativeMessagingHosts\
+Registry (HKCU):
+  HKCU:\Software\Google\Chrome\NativeMessagingHosts\
     com.chromium.display.calibration
     com.d2vision.map
 ```

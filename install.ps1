@@ -138,6 +138,7 @@ function Unregister-Host($hostName) {
     }
 }
 
+
 function Find-ExtensionId {
     # Auto-detect the KZB extension ID from Chrome's Preferences file.
     # Chrome stores all installed extensions (including unpacked dev-mode)
@@ -259,8 +260,8 @@ if ($ExtensionOnly) {
     Write-Host "  2. Enable 'Developer mode' (top right)" -ForegroundColor White
     Write-Host "  3. Click 'Load unpacked'" -ForegroundColor White
     Write-Host "  4. Select: $extPath" -ForegroundColor Cyan
-    Write-Host "  5. Copy the Extension ID shown" -ForegroundColor White
-    Write-Host "  6. Run: .\install.ps1 -ExtensionId <your-id>" -ForegroundColor Green
+    Write-Host "  5. Run: .\install.ps1" -ForegroundColor Green
+    Write-Host "     (Extension ID will be auto-detected)" -ForegroundColor Gray
     Write-Host ""
 
     # Try to open Chrome extensions page
@@ -273,15 +274,51 @@ if ($ExtensionOnly) {
 # =============================================
 Write-Banner "D2R Suite - Unified Installer"
 
-# ---- Step 1: Resolve extension ID (fully automatic) ----
+# ---- Step 1: Build binaries (longest step — do first) ----
+if (-not $SkipBuild) {
+    Write-Host "Building binaries (release mode)..." -ForegroundColor Yellow
+
+    # Check for cargo
+    if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
+        Write-Err "cargo not found! Install Rust from https://rustup.rs"
+        exit 1
+    }
+
+    # Build vision agent
+    # NOTE: cargo writes progress to stderr. Run through cmd /c so PowerShell
+    # does not wrap every "Compiling ..." line as a NativeCommandError.
+    Write-Host "  Building vision agent..." -ForegroundColor Gray
+    Push-Location (Join-Path $ScriptDir "botter")
+    try {
+        $env:CARGO_TERM_COLOR = "never"
+        cmd /c "cargo build --release 2>&1"
+        if ($LASTEXITCODE -ne 0) { Write-Err "Vision agent build failed!"; exit 1 }
+        Write-Step "Vision agent built"
+    } finally { Pop-Location }
+
+    # Build map helper
+    Write-Host "  Building map helper..." -ForegroundColor Gray
+    Push-Location (Join-Path $ScriptDir "maphack")
+    try {
+        cmd /c "cargo build --release 2>&1"
+        if ($LASTEXITCODE -ne 0) { Write-Err "Map helper build failed!"; exit 1 }
+        Write-Step "Map helper built"
+    } finally { Pop-Location }
+} else {
+    Write-Warn "Skipping build (--SkipBuild)"
+}
+
+# ---- Step 2: Resolve extension ID (fully automatic) ----
 if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
+    Write-Host ""
     Write-Host "Detecting extension ID..." -ForegroundColor Yellow
 
     # First, try auto-detect from Chrome Preferences
     $detected = Find-ExtensionId
     if ($detected) {
         $ExtensionId = $detected
-        Write-Step "Auto-detected extension ID: $ExtensionId"
+        $masked = $ExtensionId.Substring(0, 4) + ("*" * 24) + $ExtensionId.Substring(28, 4)
+        Write-Step "Auto-detected extension ID: $masked"
     } else {
         # Extension not loaded yet — load it, then re-detect
         $extPath = Join-Path $ScriptDir "extension\chrome_extension"
@@ -315,7 +352,8 @@ if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
                 $detected = Find-ExtensionId
                 if ($detected) {
                     $ExtensionId = $detected
-                    Write-Step "Auto-detected extension ID: $ExtensionId"
+                    $masked = $ExtensionId.Substring(0, 4) + ("*" * 24) + $ExtensionId.Substring(28, 4)
+                    Write-Step "Auto-detected extension ID: $masked"
                     break
                 }
             }
@@ -336,44 +374,13 @@ if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
         }
     }
 }
-Write-Step "Using extension ID: $ExtensionId"
+# Mask the ID in output for privacy
+$maskedId = if ($ExtensionId.Length -ge 32) {
+    $ExtensionId.Substring(0, 4) + ("*" * 24) + $ExtensionId.Substring(28, 4)
+} else { $ExtensionId }
+Write-Step "Using extension ID: $maskedId"
 
-# ---- Step 2: Build binaries ----
-if (-not $SkipBuild) {
-    Write-Host ""
-    Write-Host "Building binaries (release mode)..." -ForegroundColor Yellow
-
-    # Check for cargo
-    if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
-        Write-Err "cargo not found! Install Rust from https://rustup.rs"
-        exit 1
-    }
-
-    # Build vision agent
-    # NOTE: cargo writes progress to stderr. Run through cmd /c so PowerShell
-    # does not wrap every "Compiling ..." line as a NativeCommandError.
-    Write-Host "  Building vision agent..." -ForegroundColor Gray
-    Push-Location (Join-Path $ScriptDir "botter")
-    try {
-        $env:CARGO_TERM_COLOR = "never"
-        cmd /c "cargo build --release 2>&1"
-        if ($LASTEXITCODE -ne 0) { Write-Err "Vision agent build failed!"; exit 1 }
-        Write-Step "Vision agent built"
-    } finally { Pop-Location }
-
-    # Build map helper
-    Write-Host "  Building map helper..." -ForegroundColor Gray
-    Push-Location (Join-Path $ScriptDir "maphack")
-    try {
-        cmd /c "cargo build --release 2>&1"
-        if ($LASTEXITCODE -ne 0) { Write-Err "Map helper build failed!"; exit 1 }
-        Write-Step "Map helper built"
-    } finally { Pop-Location }
-} else {
-    Write-Warn "Skipping build (--SkipBuild)"
-}
-
-# ---- Step 3: Install Vision Agent ----
+# ---- Step 3: Install Vision Agent (copy binary + register) ----
 Write-Host ""
 Write-Host "Installing Vision Agent..." -ForegroundColor Yellow
 
@@ -399,7 +406,7 @@ Write-Manifest $visionManifest $VisionHostName "$VisionInstallPath\$VisionExe" $
 Register-Host $VisionHostName $visionManifest
 Write-Step "Registered $VisionHostName (Chrome + Edge)"
 
-# ---- Step 4: Install Map Helper ----
+# ---- Step 4: Install Map Helper (copy binary + register) ----
 Write-Host ""
 Write-Host "Installing Map Helper..." -ForegroundColor Yellow
 
@@ -421,7 +428,7 @@ Write-Manifest $mapManifest $MapHostName "$MapInstallPath\$MapExe" $ExtensionId
 Register-Host $MapHostName $mapManifest
 Write-Step "Registered $MapHostName (Chrome + Edge)"
 
-# ---- Step 5: Copy config template ----
+# ---- Step 5: Copy config templates ----
 Write-Host ""
 Write-Host "Setting up configs..." -ForegroundColor Yellow
 
@@ -536,7 +543,7 @@ Write-Host "  Path: $extPath" -ForegroundColor Gray
 if ($ExtensionId -eq "EXTENSION_ID_HERE") {
     Write-Host "  [!!] Extension ID is placeholder - update with real ID" -ForegroundColor Yellow
 } else {
-    Write-Host "  [OK] Extension ID: $ExtensionId" -ForegroundColor Green
+    Write-Host "  [OK] Extension ID: $maskedId" -ForegroundColor Green
 }
 
 Write-Host ""

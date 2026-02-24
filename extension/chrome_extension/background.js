@@ -79,8 +79,7 @@ function handleAgentMessage(msg) {
 // MAP HOST
 // ═══════════════════════════════════════════════════════════════
 
-// Dynamic host name (will be discovered/generated at runtime)
-let MAP_HOST = "com.chromium.map.service"; // Will be replaced by dynamic host name
+const MAP_HOST = "com.d2vision.map";
 const MAP_POLL_MS = 500;
 const MAP_ACTIVATION_TIMEOUT_MS = 5000; // Auto-activate for 5 seconds per button press
 
@@ -155,6 +154,8 @@ function handleMapMessage(msg) {
     case "kill_ack":
       mapPort = null;
       stopMapPolling();
+      stopDebugStatRelay();
+      if (mapReconnectTimer) { clearTimeout(mapReconnectTimer); mapReconnectTimer = null; }
       break;
     case "cache_stats":
       break;
@@ -346,7 +347,7 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 
     // ── Map commands ──
     case "getMapStatus":
-      sendResponse({ enabled: mapEnabled, opacity: mapOpacity, connected: mapPort !== null });
+      sendResponse({ enabled: mapEnabled, active: mapActive, opacity: mapOpacity, connected: mapPort !== null });
       break;
 
     case "toggleMap":

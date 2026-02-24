@@ -89,31 +89,24 @@ OutOfGame → TownPrep → LeavingTown → Farming → Returning → ExitGame �
 
 ## 🚀 Quick Start
 
-### 1. Install (2 minutes)
+### 1. Install (1-click)
 ```powershell
 cd C:\path\to\KZB
 .\install.ps1
 ```
-Builds Rust binaries, registers native messaging hosts, copies configs.
+Builds Rust binaries, auto-detects Chrome extension, registers native messaging hosts, copies configs, applies network optimizations — all in one step.
 
-### 2. Load Chrome Extension (1 minute)
-```
-chrome://extensions → Developer mode → Load unpacked
-Select: C:\path\to\KZB\extension\chrome_extension\
-Copy the Extension ID when prompted back to PowerShell
-```
-
-### 3. Configure (1 minute)
+### 2. Configure
 ```powershell
-notepad C:\ProgramData\DisplayCalibration\config.yaml
+notepad C:\ProgramData\DisplayCalibration\configs\sorceress_blizzard.yaml
 # Edit: character_class, build, combat.attack_slots with your hotkeys
 ```
 
-### 4. Start Farming (< 1 minute)
+### 3. Start Farming
 ```
 1. Launch D2R
 2. Create/load single-player game in town
-3. Click extension icon
+3. Click the KZB extension icon (opens full-tab control panel)
 4. Wait for "Agent: Connected" (green indicator)
 5. Bot auto-starts farming!
 ```

@@ -173,7 +173,7 @@
         }
 
         // Player dot
-        if (gameState && gameState.player_x && gameState.player_y) {
+        if (gameState && gameState.player_x != null && gameState.player_y != null) {
             const px = ox + (gameState.player_x - (mapData.origin_x || 0)) * scale;
             const py = oy + (gameState.player_y - (mapData.origin_y || 0)) * scale;
 
@@ -225,7 +225,7 @@
             ctx.textAlign = 'left';
             ctx.fillText(gameState.area_name + ' (' + diff + ')', 5, h - 5);
             ctx.textAlign = 'right';
-            ctx.fillText('Seed: ' + gameState.map_seed.toString(16).toUpperCase(), w - 5, h - 5);
+            ctx.fillText('Seed: ' + (gameState.map_seed != null ? gameState.map_seed.toString(16).toUpperCase() : '?'), w - 5, h - 5);
         }
     }
 

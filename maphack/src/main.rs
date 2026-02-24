@@ -320,8 +320,8 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
         }
 
         InboundCommand::ActivateMap { duration_ms } => {
-            state.activate_map(duration_ms);
             let actual_duration = duration_ms.max(1000); // At least 1 second
+            state.activate_map(actual_duration);
             eprintln!("[map_helper] Map activated for {} ms", actual_duration);
             let _ = send_response("activate_ack", json!({
                 "activated": true,

@@ -393,7 +393,7 @@ body::-webkit-scrollbar-thumb:hover { background: #4a4a65; }
   gap: 4px 12px;
 }
 
-.check-grid-3 {
+.check-grid-4 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 4px 10px;

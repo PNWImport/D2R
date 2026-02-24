@@ -4,6 +4,68 @@ Complete version history of KZB, a production D2R farming automation suite built
 
 ---
 
+## [1.7.0] — 2026-02-24
+
+### Installer Overhaul, Lint Pass & Bug Fixes
+
+#### Installer — True 1-Click Flow
+- **Reordered install steps**: Build first (longest step), then detect extension ID
+  - Previously: detect ID → build → install (user waited with Chrome open during build)
+  - Now: build → detect ID → install (Chrome interaction happens after build)
+- **Extension ID privacy**: Masked in all console output (`jmdl************************lbe`)
+- **MAP_HOST name fix (critical)**: Extension was using `com.chromium.map.service` but
+  installer registered `com.d2vision.map` — map host **never connected**. Now consistent
+  everywhere as `com.d2vision.map`
+- Updated standalone installers to point to unified `install.ps1`
+
+#### Extension Bug Fixes
+- **`background.js`**: `kill_ack` handler now cancels reconnect timer and stops debug relay
+  (previously kept trying to reconnect after explicit kill)
+- **`background.js`**: `getMapStatus` now includes `active` field — popup can show correct
+  activate/deactivate button state
+- **`popup.js`**: Activate/Deactivate buttons now reflect `mapActive` state instead of
+  `mapEnabled` toggle (buttons were logically inverted)
+- **`map_content.js`**: Player dot renders at coordinate (0, y) and (x, 0) — was skipped
+  due to falsy check on `0`
+- **`map_content.js`**: `map_seed` null guard prevents TypeError crash when seed unavailable
+- **`popup.html`**: Fixed typo `AnnounceGameTimeRemaing` → `AnnounceGameTimeRemaining`
+- **`popup.css`**: Renamed `.check-grid-3` → `.check-grid-4` (it defines 4 columns)
+
+#### Maphack Bug Fixes
+- **`main.rs`**: `activate_map()` duration now clamped to minimum 1s **before** calling
+  `state.activate_map()` — was reporting clamped value but using unclamped internally
+- **`offsets.rs`**: `AreaId::from_u32()` now maps area IDs 9, 10, 11 (Cave Level 1,
+  Underground Passage Lv1/Lv2) — were falling through to `None`/"Unknown"
+
+#### Vision Agent Bug Fixes
+- **`capture.rs` (critical)**: HP/MP orb reading always returned ~100% — `fill_top_y` was
+  initialized to `orb_top` (full) instead of `orb_bottom` (empty). The fill level comparison
+  could never find a higher fill point, so potions and chicken never triggered
+- **`engine.rs`**: `humanize_threshold()` panics if `potion_threshold_variance > 127` —
+  the `as i8` cast wraps to negative, producing an inverted `gen_range`. Now clamped to 127
+- **`script_executor.rs`**: Replaced `is_multiple_of(80)` with `% 80 == 0` for Rust < 1.82
+- **`syscall_cadence.rs`**: Fixed double-counting of global decoys in stats
+
+#### Standalone Installer Fixes
+- **`install_map_host.ps1`**: Fixed `ForEach-Object` scope bug — `$sourceBin` was written
+  to child scope, always remained `$null`. Switched to `foreach` statement
+- **`install_map_host.ps1`**: Fixed UTF-8 BOM in manifest JSON — `Out-File -Encoding utf8`
+  adds BOM on PS 5.1, Chrome may reject. Now uses `[System.IO.File]::WriteAllText()`
+- **`install_host.ps1`**: Same UTF-8 BOM fix for vision agent manifest
+- **`install_map_host.ps1`**: Updated stale `com.d2vision.agent` reference to
+  `com.chromium.display.calibration`
+
+#### Documentation
+- **INSTALL.md**: Updated all paths, binary names, and registry keys to match actual installer
+  - Fixed `HKLM:` → `HKCU:` throughout (installer uses per-user registry)
+  - Fixed binary names (`d2_vision_agent.exe` → `kzb_vision_agent.exe`, etc.)
+  - Updated Quick Start to reflect 1-click auto-detect flow
+  - Updated file locations section
+- **README.md**: Simplified Quick Start to 3 steps (was 4)
+- **CHANGELOG.md**: This entry
+
+---
+
 ## [1.6.0] — 2026-02-23
 
 ### Vision Pipeline Optimizations & CPU Proof

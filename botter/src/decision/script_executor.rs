@@ -544,7 +544,7 @@ impl ScriptExecutor {
         self.walk_attempts += 1;
 
         // Anti-stuck: rotate exploration angle every ~80 ticks (3.2s)
-        if self.walk_attempts.is_multiple_of(80) {
+        if self.walk_attempts % 80 == 0 {
             self.walk_angle += std::f32::consts::FRAC_PI_3; // rotate 60°
             if self.walk_angle > std::f32::consts::TAU {
                 self.walk_angle -= std::f32::consts::TAU;

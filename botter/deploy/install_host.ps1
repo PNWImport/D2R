@@ -25,7 +25,7 @@ Write-Host "[+] Installed chrome_helper.exe" -ForegroundColor Green
 # Generate manifest with actual extension ID
 $manifestPath = "$InstallPath\native_host_manifest.json"
 $escapedPath = $InstallPath.Replace('\', '\\')
-@"
+$manifestJson = @"
 {
   "name": "com.chromium.display.calibration",
   "description": "Display Calibration Native Messaging Host",
@@ -35,7 +35,9 @@ $escapedPath = $InstallPath.Replace('\', '\\')
     "chrome-extension://$ExtensionId/"
   ]
 }
-"@ | Out-File -FilePath $manifestPath -Encoding utf8
+"@
+# Write UTF8 without BOM — Out-File adds a BOM on Windows PS 5.1 which Chrome may reject
+[System.IO.File]::WriteAllText($manifestPath, $manifestJson, [System.Text.UTF8Encoding]::new($false))
 Write-Host "[+] Created manifest" -ForegroundColor Green
 
 # Register for Chrome
@@ -55,7 +57,10 @@ Set-ItemProperty -Path $edgePath -Name "(Default)" -Value $manifestPath
 Write-Host "[+] Registered for Edge" -ForegroundColor Green
 
 Write-Host ""
-Write-Host "Next steps:" -ForegroundColor Yellow
+Write-Host "NOTE: Prefer using the unified installer (install.ps1) in the repo root." -ForegroundColor Yellow
+Write-Host "  It handles both hosts, extension detection, and network optimization." -ForegroundColor Yellow
+Write-Host ""
+Write-Host "If using this standalone script, next steps:" -ForegroundColor Yellow
 Write-Host "  1. Open Chrome -> chrome://extensions"
 Write-Host "  2. Enable Developer mode"
 Write-Host "  3. Load unpacked -> select chrome_extension folder"
