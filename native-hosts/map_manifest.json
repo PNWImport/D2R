@@ -1,0 +1,9 @@
+{
+  "name": "com.d2vision.map",
+  "description": "Chrome Native Messaging Host",
+  "path": "C:\\ProgramData\\Google\\Chrome\\NativeMessagingHosts\\chrome_map_helper.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://jmdlgkjiakchgaaafjojlpemlhjejlbe/"
+  ]
+}

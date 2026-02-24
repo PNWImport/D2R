@@ -15,24 +15,23 @@ Step-by-step setup for Windows 10/11 with Chrome/Edge.
 ### Option 1: Automated (Recommended)
 
 ```powershell
-# 1. Extract the repo
-# 2. Open PowerShell as Administrator
-# 3. Navigate to repo root
+# 1. Open PowerShell AS ADMINISTRATOR (right-click -> Run as Administrator)
+#    The installer will refuse to run without admin rights.
+
+# 2. Navigate to repo root
 cd C:\Users\YourName\Downloads\D2R
 
-# 4. Run unified installer
-.\install.ps1
+# 3. Load the Chrome extension first (to get your Extension ID)
+.\install.ps1 -ExtensionOnly
+#    - Go to chrome://extensions
+#    - Enable Developer Mode (top right)
+#    - Click "Load unpacked" -> select D2R\extension\chrome_extension\
+#    - Copy the Extension ID (blue text under the extension name)
 
-# 5. When prompted, load the extension:
-# - Go to chrome://extensions
-# - Enable Developer Mode (top right)
-# - Copy the Extension ID (highlighted in blue)
-# - Return to PowerShell and paste the ID
+# 4. Run the full installer with your Extension ID
+.\install.ps1 -ExtensionId <paste-your-id-here>
 
-# 6. Run installer again with the ID
-.\install.ps1
-
-# 7. Done! Bot will auto-start when you load a D2R game
+# 5. Done! Bot will auto-start when you load a D2R game
 ```
 
 ### Option 2: Manual (Fine-grained control)
@@ -115,7 +114,61 @@ Get-Item "HKLM:\Software\Google\Chrome\NativeMessagingHosts\com.d2vision.map"
 # Should list: default_policy = C:\Program Files\D2R Maphack\manifest.json
 ```
 
-### Step 4: Configure Your Character
+### Step 4: OpenClaw Gateway Setup (WSL)
+
+If you're running OpenClaw as your AI backend, set up a dedicated instance for D2R.
+This keeps it isolated from any existing OpenClaw installation.
+
+**Clone and install (Linux filesystem for performance):**
+
+```bash
+# In WSL terminal
+gh repo clone openclaw/openclaw ~/D2R-openclaw
+cd ~/D2R-openclaw
+pnpm install
+```
+
+**Start the gateway on port 18791:**
+
+```bash
+node openclaw.mjs --profile d2r gateway --bind loopback --port 18791
+```
+
+> The `--profile d2r` flag isolates all config under `~/.openclaw-d2r/`
+> so it won't conflict with an existing OpenClaw on port 18789.
+
+**Connect the browser (first time only):**
+
+```bash
+# Get the tokenized dashboard URL
+node openclaw.mjs --profile d2r dashboard --no-open
+# Open the printed URL in Chrome to sync the token
+```
+
+**Approve device pairing (first time only):**
+
+```bash
+# After opening the dashboard URL, approve the browser pairing:
+node openclaw.mjs --profile d2r devices list
+node openclaw.mjs --profile d2r devices approve <requestId>
+```
+
+**Copy API auth from existing installation (if you already have OpenClaw configured):**
+
+```bash
+cp ~/.openclaw/agents/main/agent/auth-profiles.json \
+   ~/.openclaw-d2r/agents/dev/agent/auth-profiles.json
+```
+
+**Troubleshooting token mismatch:**
+- Always start the gateway with `--profile d2r` (not `OPENCLAW_CONFIG_HOME`)
+- If the browser shows "token mismatch", re-open the `dashboard --no-open` URL
+- If the CLI shows "token mismatch", check that `gateway.remote.token` matches
+  `gateway.auth.token` in `~/.openclaw-d2r/openclaw.json`
+
+---
+
+### Step 5: Configure Your Character
 
 Edit the config for your build:
 
@@ -169,7 +222,7 @@ farming:
 # Full list of settings in README.md > Configuration Guide
 ```
 
-### Step 5: Launch the Bot
+### Step 6: Launch the Bot
 
 ```
 1. Start D2R

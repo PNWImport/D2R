@@ -18,6 +18,7 @@ param(
     [string]$ExtensionId = "",
     [string]$VisionInstallPath = "$env:ProgramData\DisplayCalibration",
     [string]$MapInstallPath = "$env:ProgramData\Google\Chrome\NativeMessagingHosts",
+    [string]$ManifestPath = "$env:USERPROFILE\D2R\native-hosts",
     [switch]$Uninstall,
     [switch]$SkipBuild,
     [switch]$ExtensionOnly,
@@ -26,6 +27,25 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+
+# ---- Early Admin Check ----
+# Writing to C:\ProgramData and HKLM registry requires Administrator.
+# Fail fast with a clear message instead of dying mid-install.
+$isAdmin = ([Security.Principal.WindowsPrincipal] `
+    [Security.Principal.WindowsIdentity]::GetCurrent() `
+).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if (-not $isAdmin -and -not $ExtensionOnly) {
+    if ($env:D2R_FORCE_INSTALL -eq "1") {
+        Write-Host "[!] WARNING: Running without Administrator. Some steps may fail." -ForegroundColor Yellow
+    } else {
+        Write-Host "[-] This installer requires Administrator privileges." -ForegroundColor Red
+        Write-Host "    Right-click PowerShell -> 'Run as Administrator'" -ForegroundColor Yellow
+        Write-Host "    Then re-run: .\install.ps1 $($args -join ' ')" -ForegroundColor Cyan
+        Write-Host "    Or set D2R_FORCE_INSTALL=1 to try anyway (may fail on ProgramData writes)" -ForegroundColor Gray
+        exit 1
+    }
+}
 
 # Host identifiers
 $VisionHostName = "com.chromium.display.calibration"
@@ -89,8 +109,8 @@ function Unregister-Host($hostName) {
 }
 
 function Write-Manifest($path, $hostName, $exePath, $extId) {
-    $escaped = $exePath -replace '\\', '\\\\'
-    @"
+    $escaped = $exePath -replace '\\', '\\'
+    $json = @"
 {
   "name": "$hostName",
   "description": "Chrome Native Messaging Host",
@@ -100,7 +120,9 @@ function Write-Manifest($path, $hostName, $exePath, $extId) {
     "chrome-extension://$extId/"
   ]
 }
-"@ | Out-File -FilePath $path -Encoding utf8 -Force
+"@
+    # Use .NET to write UTF8 without BOM — avoids PowerShell double-escaping
+    [System.IO.File]::WriteAllText($path, $json, [System.Text.UTF8Encoding]::new($false))
 }
 
 # =============================================
@@ -262,7 +284,11 @@ if (Test-Path $visionBin) {
     Write-Warn "Run without -SkipBuild or build manually: cd botter && cargo build --release"
 }
 
-$visionManifest = "$VisionInstallPath\native_host_manifest.json"
+# Write manifests to user-writable location (no admin needed)
+if (-not (Test-Path $ManifestPath)) {
+    New-Item -ItemType Directory -Path $ManifestPath -Force | Out-Null
+}
+$visionManifest = "$ManifestPath\native_host_manifest.json"
 Write-Manifest $visionManifest $VisionHostName "$VisionInstallPath\$VisionExe" $ExtensionId
 Register-Host $VisionHostName $visionManifest
 Write-Step "Registered $VisionHostName (Chrome + Edge)"
@@ -284,7 +310,7 @@ if (Test-Path $mapBin) {
     Write-Warn "Run without -SkipBuild or build manually: cd maphack && cargo build --release"
 }
 
-$mapManifest = "$MapInstallPath\map_manifest.json"
+$mapManifest = "$ManifestPath\map_manifest.json"
 Write-Manifest $mapManifest $MapHostName "$MapInstallPath\$MapExe" $ExtensionId
 Register-Host $MapHostName $mapManifest
 Write-Step "Registered $MapHostName (Chrome + Edge)"
