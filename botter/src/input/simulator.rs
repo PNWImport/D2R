@@ -164,7 +164,7 @@ impl InputSimulator {
         }
     }
 
-    fn mouse_down(&self, left: bool) {
+    fn mouse_down(&self, #[cfg_attr(not(windows), allow(unused_variables))] left: bool) {
         #[cfg(windows)]
         {
             use windows::Win32::UI::Input::KeyboardAndMouse::*;
@@ -182,7 +182,7 @@ impl InputSimulator {
         }
     }
 
-    fn mouse_up(&self, left: bool) {
+    fn mouse_up(&self, #[cfg_attr(not(windows), allow(unused_variables))] left: bool) {
         #[cfg(windows)]
         {
             use windows::Win32::UI::Input::KeyboardAndMouse::*;
@@ -200,7 +200,7 @@ impl InputSimulator {
         }
     }
 
-    fn key_down(&self, key: char) {
+    fn key_down(&self, #[cfg_attr(not(windows), allow(unused_variables))] key: char) {
         #[cfg(windows)]
         {
             use windows::Win32::UI::Input::KeyboardAndMouse::*;
@@ -213,7 +213,7 @@ impl InputSimulator {
         }
     }
 
-    fn key_up(&self, key: char) {
+    fn key_up(&self, #[cfg_attr(not(windows), allow(unused_variables))] key: char) {
         #[cfg(windows)]
         {
             use windows::Win32::UI::Input::KeyboardAndMouse::*;

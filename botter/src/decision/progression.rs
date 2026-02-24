@@ -419,7 +419,8 @@ impl Difficulty {
 /// Each script represents a game objective (quest, farming run, etc.)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Script {
-    // Act 1
+    // Act 1 — early grind (lvl 1-7, sorc-specific gap filler)
+    BloodMoor,
     Den,
     Bishibosh,
     Cave,
@@ -478,7 +479,8 @@ impl Script {
     /// The act this script belongs to.
     pub fn act(self) -> u8 {
         match self {
-            Self::Den
+            Self::BloodMoor
+            | Self::Den
             | Self::Bishibosh
             | Self::Cave
             | Self::BloodRaven
@@ -527,6 +529,7 @@ impl Script {
 
     pub fn name(self) -> &'static str {
         match self {
+            Self::BloodMoor => "bloodmoor",
             Self::Den => "den",
             Self::Bishibosh => "bishibosh",
             Self::Cave => "cave",
@@ -578,7 +581,9 @@ impl Script {
 /// The ordered script sequence — mirrors kolbot SoloIndex.scripts exactly.
 /// This is the master order that the progression engine iterates through.
 pub const SCRIPT_SEQUENCE: &[Script] = &[
-    // Act 1
+    // Act 1 — early grind before Den gate (lvl 1-7)
+    Script::BloodMoor,
+    Script::Cave,
     Script::Den,
     Script::Bishibosh,
     Script::BloodRaven,
@@ -645,6 +650,16 @@ pub fn should_run(script: Script, qs: &QuestState, class: &str, can_teleport: bo
 
     match script {
         // ─── Act 1 ───────────────────────────────────────────
+
+        Script::BloodMoor => {
+            // Sorc-specific gap filler: lvl 1-4, walk Blood Moor until ready for Cave.
+            // Repeatable every game — no quest flag, just a level gate.
+            if qs.den {
+                return false; // done with early game entirely
+            }
+            lvl < 5
+        }
+
         Script::Den => {
             // kolbot: skipIf: me.den || (charlvl > 8 && charlvl < (sorceress ? 18 : 12))
             if qs.den {
@@ -671,9 +686,12 @@ pub fn should_run(script: Script, qs: &QuestState, class: &str, can_teleport: bo
         }
 
         Script::Cave => {
-            // Cave is a sub-script called from Den for early leveling.
-            // Not run standalone from the main sequence.
-            false
+            // Sorc gap filler: lvl 5-7, clear Cave L1+L2 under Blood Moor.
+            // Repeatable every game until Den is done.
+            if qs.den {
+                return false;
+            }
+            (5..8).contains(&lvl)
         }
 
         Script::BloodRaven => {
@@ -1328,6 +1346,7 @@ pub enum VisualCue {
 pub fn script_plan(script: Script, qs: &QuestState) -> Vec<ScriptStep> {
     match script {
         // Act 1
+        Script::BloodMoor => bloodmoor_plan(),
         Script::Den => den_plan(qs),
         Script::Bishibosh => bishibosh_plan(),
         Script::Cave => cave_plan(),
@@ -1380,6 +1399,21 @@ pub fn script_plan(script: Script, qs: &QuestState) -> Vec<ScriptStep> {
 }
 
 // ─── Act 1 Script Plans ──────────────────────────────────────
+
+fn bloodmoor_plan() -> Vec<ScriptStep> {
+    // Lvl 1-4 grind: walk out of Rogue Encampment, clear Blood Moor, loot, TP back.
+    // Simple loop — no waypoints needed, no dungeon, just the open field monsters.
+    // The script runner repeats this until lvl 5 gates it out and Cave takes over.
+    vec![
+        ScriptStep::TownChores,
+        ScriptStep::WalkToExit {
+            target_area: areas::BLOOD_MOOR,
+        },
+        ScriptStep::ClearArea,
+        ScriptStep::LootArea,
+        ScriptStep::TownPortal,
+    ]
+}
 
 fn den_plan(qs: &QuestState) -> Vec<ScriptStep> {
     let mut steps = Vec::new();
@@ -2909,19 +2943,37 @@ mod tests {
 
     #[test]
     fn test_script_sequence_order() {
-        // First script should be Den
-        assert_eq!(SCRIPT_SEQUENCE[0], Script::Den);
-        // Last script should be Baal
+        // First script should be BloodMoor (lvl 1 sorc grind), last should be Baal
+        assert_eq!(SCRIPT_SEQUENCE[0], Script::BloodMoor);
         assert_eq!(*SCRIPT_SEQUENCE.last().unwrap(), Script::Baal);
     }
 
     #[test]
-    fn test_progression_engine_selects_den_first() {
+    fn test_progression_engine_selects_bloodmoor_first() {
+        // Fresh lvl 1 sorc: BloodMoor fires (lvl < 5, !den)
         let dir = std::env::temp_dir().join("d2r_test_progression");
         let _ = std::fs::create_dir_all(&dir);
         let path = dir.join("test_quest_state.json");
 
         let mut engine = ProgressionEngine::new("Sorceress".into(), path.clone());
+        engine.quest_state.level = 1;
+        engine.on_game_start();
+
+        let next = engine.next_script();
+        assert_eq!(next, Some(Script::BloodMoor));
+
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn test_progression_engine_selects_den_at_level_8() {
+        // lvl 8: BloodMoor (needs <5) and Cave (needs 5..8) both gate out → Den fires
+        let dir = std::env::temp_dir().join("d2r_test_progression_den");
+        let _ = std::fs::create_dir_all(&dir);
+        let path = dir.join("test_quest_state_den.json");
+
+        let mut engine = ProgressionEngine::new("Sorceress".into(), path.clone());
+        engine.quest_state.level = 8;
         engine.on_game_start();
 
         let next = engine.next_script();
