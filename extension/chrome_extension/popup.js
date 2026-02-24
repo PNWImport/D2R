@@ -277,6 +277,180 @@ configSelect.addEventListener("change", async () => {
   }
 });
 
+// ─── Presets ─────────────────────────────────────────────────
+const PRESETS = {
+  "sorc-lvl1-walkthrough": {
+    _config: "sorceress",
+    // Scripts: full Normal walkthrough sequence
+    "Scripts.Corpsefire": true,
+    "Corpsefire.ClearDen": true,
+    "Scripts.BloodRaven": true,
+    "Scripts.Tristram": true,
+    "Tristram.WalkClear": false,
+    "Scripts.Smith": true,
+    "Scripts.BoneAsh": true,
+    "Scripts.Countess": true,
+    "Scripts.Andariel": true,
+    "Scripts.Radament": true,
+    "Scripts.Coldworm": true,
+    "Coldworm.KillBeetleburst": true,
+    "Scripts.Summoner": true,
+    "Scripts.Tombs": true,
+    "Tombs.KillDuriel": true,
+    "Scripts.Duriel": true,
+    "Scripts.Travincal": true,
+    "Scripts.Mephisto": true,
+    "Mephisto.TakeRedPortal": true,
+    "Scripts.Izual": true,
+    "Scripts.Diablo": true,
+    "Diablo.Entrance": true,
+    "Scripts.Shenk": true,
+    "Scripts.Eldritch": true,
+    "Eldritch.KillShenk": true,
+    "Scripts.Ancients": true,
+    "Scripts.Baal": true,
+    // Survival — conservative for fresh sorc
+    "LifeChicken": 35,
+    "ManaChicken": 0,
+    "MercChicken": 0,
+    "TownHP": 35,
+    "HealHP": 60,
+    "UseHP": 80,
+    "UseRejuvHP": 45,
+    "UseMercHP": 80,
+    "HPBuffer": 4,
+    // Combat — StartBuild: FireBolt primary, nothing secondary yet
+    "AttackSkill.0": -1,
+    "AttackSkill.1": 174,  // FireBolt
+    "AttackSkill.2": -1,
+    "AttackSkill.3": 174,
+    "AttackSkill.4": -1,
+    "AttackSkill.5": 0,
+    "AttackSkill.6": 0,
+    "LowManaSkill.0": 0,
+    "LowManaSkill.1": 0,
+    "DodgeHP": 50,
+    "MaxAttackCount": 200,
+  },
+
+  "sorc-blizzard-farmer": {
+    _config: "sorceress",
+    // Scripts: Hell farming loop
+    "Scripts.Mephisto": true,
+    "Mephisto.MoatTrick": false,
+    "Mephisto.KillCouncil": false,
+    "Mephisto.TakeRedPortal": true,
+    "Scripts.AncientTunnels": true,
+    "AncientTunnels.OpenChest": true,
+    "Scripts.Pindleskin": true,
+    "Pindleskin.KillNihlathak": true,
+    "Scripts.Baal": true,
+    // Survival — experienced sorc, tighter thresholds
+    "LifeChicken": 25,
+    "ManaChicken": 0,
+    "MercChicken": 0,
+    "TownHP": 0,
+    "HealHP": 45,
+    "UseHP": 70,
+    "UseRejuvHP": 35,
+    "UseMercHP": 70,
+    "HPBuffer": 2,
+    // Combat — Blizzard primary, Nova fallback
+    "AttackSkill.0": -1,
+    "AttackSkill.1": 285,  // Blizzard
+    "AttackSkill.2": 257,  // Nova
+    "AttackSkill.3": 285,
+    "AttackSkill.4": 257,
+    "AttackSkill.5": 257,
+    "AttackSkill.6": 0,
+    "LowManaSkill.0": -1,
+    "LowManaSkill.1": -1,
+    "DodgeHP": 40,
+    "MaxAttackCount": 300,
+  },
+
+  "sorc-meph-runner": {
+    _config: "sorceress",
+    "Scripts.Mephisto": true,
+    "Mephisto.MoatTrick": true,
+    "Mephisto.KillCouncil": false,
+    "Mephisto.TakeRedPortal": true,
+    "LifeChicken": 30,
+    "ManaChicken": 0,
+    "MercChicken": 0,
+    "TownHP": 0,
+    "HealHP": 50,
+    "UseHP": 75,
+    "UseRejuvHP": 40,
+    "UseMercHP": 75,
+    "HPBuffer": 2,
+    "AttackSkill.0": -1,
+    "AttackSkill.1": 285,
+    "AttackSkill.2": 257,
+    "AttackSkill.3": 285,
+    "AttackSkill.4": 257,
+    "AttackSkill.5": 0,
+    "AttackSkill.6": 0,
+    "LowManaSkill.0": -1,
+    "LowManaSkill.1": -1,
+    "DodgeHP": 40,
+    "MaxAttackCount": 300,
+  },
+
+  "clear-all": {},  // no keys = all inputs reset to defaults by applyPreset
+};
+
+function applyPreset(key) {
+  const preset = PRESETS[key];
+  if (!preset) return;
+
+  // First clear every data-cfg input to its default/unchecked state
+  document.querySelectorAll("[data-cfg]").forEach((el) => {
+    if (el.type === "checkbox") {
+      el.checked = false;
+    } else if (el.tagName === "SELECT") {
+      el.selectedIndex = 0;
+    } else if (el.tagName === "TEXTAREA") {
+      el.value = "";
+    } else {
+      el.value = el.defaultValue || "";
+    }
+  });
+
+  // Apply class config
+  if (preset._config) {
+    configSelect.value = preset._config;
+    updateClassSections();
+    chrome.storage.local.set({ selectedConfig: preset._config });
+  }
+
+  // Apply preset values
+  Object.entries(preset).forEach(([k, v]) => {
+    if (k.startsWith("_")) return;
+    const el = document.querySelector(`[data-cfg="${k}"]`);
+    if (!el) return;
+    if (el.type === "checkbox") {
+      el.checked = Boolean(v);
+    } else {
+      el.value = v;
+    }
+  });
+
+  // Persist to storage so it survives popup close
+  saveAllSettings();
+}
+
+$("preset-select").addEventListener("change", () => {
+  // Just selecting doesn't load — user hits Load button
+});
+
+$("btn-load-preset").addEventListener("click", () => {
+  const key = $("preset-select").value;
+  if (!key) return;
+  applyPreset(key);
+  $("preset-select").value = "";  // reset dropdown after load
+});
+
 btnMapActivate.addEventListener("click", async () => {
   await send("activateMap", { durationMs: 5000 });
   btnMapActivate.disabled = true;
