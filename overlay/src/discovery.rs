@@ -194,7 +194,7 @@ pub fn verify_seed_chain(
     read_u64: &dyn Fn(u64) -> Option<u64>,
     read_u32: &dyn Fn(u64) -> Option<u32>,
     player_unit: u64,
-    offsets: &D2ROffsets,
+    offsets: &Offsets,
 ) -> Option<u32> {
     let act = read_u64(player_unit + offsets.unit_any.act_ptr)?;
     if !is_valid_ptr(act) { return None; }
@@ -225,7 +225,7 @@ pub fn auto_discover(
     base_addr: u64,
     module_size: u64,
 ) -> DiscoveryResult {
-    let offsets = D2ROffsets::default();
+    let offsets = Offsets::default();
     let mut result = DiscoveryResult {
         player_hash_table: None,
         ui_settings: None,
