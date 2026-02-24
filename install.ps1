@@ -28,6 +28,36 @@ param(
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
+# ---- OS Detection ----
+# This installer targets native Windows. Detect the environment early
+# and bail with actionable guidance if we're somewhere else.
+$osType = if ($IsLinux)    { "linux"  }
+          elseif ($IsMacOS) { "macos"  }
+          else              { "windows" }
+
+# Detect WSL (pwsh running inside Windows Subsystem for Linux)
+$isWSL = $false
+if ($osType -eq "linux" -and (Test-Path "/proc/version")) {
+    $procVer = Get-Content "/proc/version" -Raw -ErrorAction SilentlyContinue
+    if ($procVer -match "microsoft|WSL") { $isWSL = $true }
+}
+
+if ($isWSL) {
+    Write-Host "[-] Running inside WSL — this installer must run in native Windows PowerShell." -ForegroundColor Red
+    Write-Host ""
+    Write-Host "    Open a PowerShell (Admin) window and run:" -ForegroundColor Yellow
+    Write-Host "      cd $($ScriptDir -replace '/mnt/c','C:' -replace '/','\')" -ForegroundColor Cyan
+    Write-Host "      .\install.ps1" -ForegroundColor Cyan
+    exit 1
+}
+
+if ($osType -ne "windows") {
+    Write-Host "[-] Unsupported OS: $osType" -ForegroundColor Red
+    Write-Host "    This installer requires native Windows (registry, ProgramData, Chrome)." -ForegroundColor Yellow
+    Write-Host "    The Rust crates (botter, maphack) also require Windows APIs (DXGI, Win32)." -ForegroundColor Gray
+    exit 1
+}
+
 # ---- Early Admin Check ----
 # Writing to C:\ProgramData and HKLM registry requires Administrator.
 # Fail fast with a clear message instead of dying mid-install.
