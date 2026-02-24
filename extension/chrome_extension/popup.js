@@ -279,122 +279,74 @@ configSelect.addEventListener("change", async () => {
 
 // ─── Presets ─────────────────────────────────────────────────
 const PRESETS = {
-  "sorc-lvl1-walkthrough": {
+  // ── Lvl 1 Start — Sorceress ────────────────────────────────
+  // Full Normal walkthrough from character creation to Baal.
+  // Conservative survival thresholds for a fresh character with no gear.
+  // Attack config matches StartBuild: FireBolt early, swaps to
+  // ChargedBolt/IceBlast automatically as skills are allocated.
+  "lvl1-start": {
     _config: "sorceress",
-    // Scripts: full Normal walkthrough sequence
-    "Scripts.Corpsefire": true,
+
+    // Act 1 — full quest chain
+    "Scripts.Corpsefire": true,   // Den of Evil (skill point from Akara)
     "Corpsefire.ClearDen": true,
     "Scripts.BloodRaven": true,
     "Scripts.Tristram": true,
     "Tristram.WalkClear": false,
-    "Scripts.Smith": true,
+    "Scripts.Smith": true,        // Tools of the Trade (Charsi imbue)
     "Scripts.BoneAsh": true,
-    "Scripts.Countess": true,
+    "Scripts.Countess": true,     // runes early, even if small
     "Scripts.Andariel": true,
-    "Scripts.Radament": true,
+
+    // Act 2
+    "Scripts.Radament": true,     // skill point from Atma
     "Scripts.Coldworm": true,
     "Coldworm.KillBeetleburst": true,
     "Scripts.Summoner": true,
     "Scripts.Tombs": true,
     "Tombs.KillDuriel": true,
     "Scripts.Duriel": true,
-    "Scripts.Travincal": true,
+
+    // Act 3
+    "Scripts.Travincal": true,    // Khalim's Will → Durance access
     "Scripts.Mephisto": true,
     "Mephisto.TakeRedPortal": true,
-    "Scripts.Izual": true,
+
+    // Act 4
+    "Scripts.Izual": true,        // 2 skill points
     "Scripts.Diablo": true,
     "Diablo.Entrance": true,
+
+    // Act 5
     "Scripts.Shenk": true,
     "Scripts.Eldritch": true,
     "Eldritch.KillShenk": true,
     "Scripts.Ancients": true,
     "Scripts.Baal": true,
-    // Survival — conservative for fresh sorc
-    "LifeChicken": 35,
+
+    // Survival — fresh sorc, no gear, dies easily
+    "LifeChicken": 35,   // bail at 35% HP — sorc is squishy
     "ManaChicken": 0,
     "MercChicken": 0,
-    "TownHP": 35,
-    "HealHP": 60,
-    "UseHP": 80,
-    "UseRejuvHP": 45,
+    "TownHP": 35,        // heal at Akara if below 35%
+    "HealHP": 65,        // use heal potion early
+    "UseHP": 80,         // drink HP pot at 80% — aggressive, she has no life
+    "UseRejuvHP": 45,    // rejuv when things get dicey
     "UseMercHP": 80,
-    "HPBuffer": 4,
-    // Combat — StartBuild: FireBolt primary, nothing secondary yet
+    "HPBuffer": 4,       // keep 4 HP pots minimum in belt
+
+    // Combat — FireBolt to start, engine swaps as skills unlock
     "AttackSkill.0": -1,
-    "AttackSkill.1": 174,  // FireBolt
+    "AttackSkill.1": 174,  // FireBolt (primary vs normal)
     "AttackSkill.2": -1,
-    "AttackSkill.3": 174,
+    "AttackSkill.3": 174,  // FireBolt (primary vs boss)
     "AttackSkill.4": -1,
     "AttackSkill.5": 0,
     "AttackSkill.6": 0,
     "LowManaSkill.0": 0,
     "LowManaSkill.1": 0,
-    "DodgeHP": 50,
+    "DodgeHP": 50,       // start kiting at 50% HP
     "MaxAttackCount": 200,
-  },
-
-  "sorc-blizzard-farmer": {
-    _config: "sorceress",
-    // Scripts: Hell farming loop
-    "Scripts.Mephisto": true,
-    "Mephisto.MoatTrick": false,
-    "Mephisto.KillCouncil": false,
-    "Mephisto.TakeRedPortal": true,
-    "Scripts.AncientTunnels": true,
-    "AncientTunnels.OpenChest": true,
-    "Scripts.Pindleskin": true,
-    "Pindleskin.KillNihlathak": true,
-    "Scripts.Baal": true,
-    // Survival — experienced sorc, tighter thresholds
-    "LifeChicken": 25,
-    "ManaChicken": 0,
-    "MercChicken": 0,
-    "TownHP": 0,
-    "HealHP": 45,
-    "UseHP": 70,
-    "UseRejuvHP": 35,
-    "UseMercHP": 70,
-    "HPBuffer": 2,
-    // Combat — Blizzard primary, Nova fallback
-    "AttackSkill.0": -1,
-    "AttackSkill.1": 285,  // Blizzard
-    "AttackSkill.2": 257,  // Nova
-    "AttackSkill.3": 285,
-    "AttackSkill.4": 257,
-    "AttackSkill.5": 257,
-    "AttackSkill.6": 0,
-    "LowManaSkill.0": -1,
-    "LowManaSkill.1": -1,
-    "DodgeHP": 40,
-    "MaxAttackCount": 300,
-  },
-
-  "sorc-meph-runner": {
-    _config: "sorceress",
-    "Scripts.Mephisto": true,
-    "Mephisto.MoatTrick": true,
-    "Mephisto.KillCouncil": false,
-    "Mephisto.TakeRedPortal": true,
-    "LifeChicken": 30,
-    "ManaChicken": 0,
-    "MercChicken": 0,
-    "TownHP": 0,
-    "HealHP": 50,
-    "UseHP": 75,
-    "UseRejuvHP": 40,
-    "UseMercHP": 75,
-    "HPBuffer": 2,
-    "AttackSkill.0": -1,
-    "AttackSkill.1": 285,
-    "AttackSkill.2": 257,
-    "AttackSkill.3": 285,
-    "AttackSkill.4": 257,
-    "AttackSkill.5": 0,
-    "AttackSkill.6": 0,
-    "LowManaSkill.0": -1,
-    "LowManaSkill.1": -1,
-    "DodgeHP": 40,
-    "MaxAttackCount": 300,
   },
 
   "clear-all": {},  // no keys = all inputs reset to defaults by applyPreset
