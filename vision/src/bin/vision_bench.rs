@@ -26,7 +26,7 @@ fn main() {
     println!("║       KZB Vision Pipeline — CPU Benchmark             ║");
     println!("╠═══════════════════════════════════════════════════════╣");
     println!("║  Platform : CPU-only pixel analysis (no GPU compute)  ║");
-    println!("║  Frame    : 800×600 synthetic game scene              ║");
+    println!("║  Frame    : 1280×720 synthetic game scene             ║");
     println!("║  Duration : {} seconds                                 ║", duration_secs);
     println!("║  Output   : {}  ║", &out_path[..out_path.len().min(40)]);
     println!("╚═══════════════════════════════════════════════════════╝\n");
@@ -171,7 +171,7 @@ fn write_json(
   "generated": "{}",
   "cpu_only": true,
   "build": "{}",
-  "frame_size": "800x600",
+  "frame_size": "1280x720",
   "hz": {:.1},
   "frame_us": {:.2},
   "frame_ms": {:.3},
