@@ -590,6 +590,7 @@ mod tests {
         let mut state = vision::FrameState::default();
         state.hp_pct = 20;
         state.in_combat = true;
+        state.in_town = false;
         state.enemy_count = 5;
         buffer.push(state);
 
