@@ -56,7 +56,7 @@ Requires **Rust toolchain** (from https://rustup.rs/):
 cd C:\Users\YourName\Downloads\KZB
 
 # Build vision agent
-cd botter
+cd vision
 cargo build --release
 # Output: target\release\kzb_vision_agent.exe (3-5 minutes)
 
@@ -185,7 +185,7 @@ Edit the config for your build:
 notepad C:\ProgramData\DisplayCalibration\config.yaml
 
 # Or copy a pre-made config:
-copy C:\Users\YourName\Downloads\KZB\botter\configs\sorceress_blizzard.yaml `
+copy C:\Users\YourName\Downloads\KZB\vision\configs\sorceress_blizzard.yaml `
      C:\ProgramData\DisplayCalibration\config.yaml
 ```
 
@@ -312,7 +312,7 @@ Set-ItemProperty -Path $regPath -Name "(Default)" -Value $manifestPath
 
 ```powershell
 mkdir "C:\ProgramData\DisplayCalibration\configs" -ErrorAction SilentlyContinue
-copy "C:\Users\YourName\Downloads\KZB\botter\configs\*.yaml" `
+copy "C:\Users\YourName\Downloads\KZB\vision\configs\*.yaml" `
       "C:\ProgramData\DisplayCalibration\configs\"
 ```
 
@@ -547,7 +547,7 @@ Registry (HKCU):
 
 Bot searches for config in this order:
 1. Command-line argument: `d2_vision_agent.exe my_config.yaml`
-2. Environment variable: `$env:D2R_CONFIG = "C:\path\to\config.yaml"`
+2. Environment variable: `$env:KZB_CONFIG = "C:\path\to\config.yaml"`
 3. Default: `C:\ProgramData\DisplayCalibration\config.yaml`
 
 ---

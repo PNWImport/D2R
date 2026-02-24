@@ -83,7 +83,7 @@ Complete guide to all documentation and source files.
 
 ### Vision Agent (Rust — Farming AI)
 ```
-botter/
+vision/
 ├── src/main.rs                    Entry point, config loading, dual-drain main loop
 ├── src/config/mod.rs              AgentConfig (YAML, 18 sections, 100+ fields)
 ├── src/decision/
@@ -142,7 +142,7 @@ Key metrics:
 
 ### Map Helper (Rust — Memory Reader)
 ```
-maphack/
+overlay/
 ├── src/main.rs                    Entry point, map reader
 ├── src/discovery.rs               D2R process discovery
 ├── src/host_registry.rs           Chrome native host registration
@@ -168,7 +168,7 @@ extension/chrome_extension/
 │                                  - Manages 2 native hosts
 │                                  - Stats caching
 │                                  - Command routing (pause/resume/update_config)
-├── popup.html                     Control panel layout — 1521 LOC (11 tabs, 503 settings, 77 kolbot scripts)
+├── popup.html                     Control panel layout — 1521 LOC (11 tabs, 503 settings, 77 scripts)
 ├── popup.js                        Control panel logic — 372 LOC
 │                                  - Real-time stats (2s poll)
 │                                  - Pause/resume buttons
@@ -209,7 +209,7 @@ kolbot/
 .\install.ps1
 
 # Run tests
-cd botter
+cd vision
 cargo test                      # All 282 tests
 cargo test decision::           # Decision engine tests only
 
@@ -230,7 +230,7 @@ Get-Content "C:\ProgramData\DisplayCalibration\agent.log" -Wait
 ### Development
 ```bash
 # Make changes
-cd botter/src
+cd vision/src
 # ... edit files ...
 
 # Build & test
@@ -380,7 +380,7 @@ KZB avoids detection by:
 
 **KZB** — This project (vision-based farming, game lifecycle, Chrome UI)
 
-**Kolbot** — 20+ years of D2BS logic foundation
+**Legacy Engine** — 20+ years of community logic foundation
 - OOG location state machine
 - Town NPC sequences
 - Combat attack system (7 slots)
@@ -395,7 +395,7 @@ KZB avoids detection by:
 
 MIT License — See LICENSE file for details.
 
-**Important**: For personal offline D2R use only. Respect Blizzard's Terms of Service.
+**Important**: For personal offline use only.
 
 ---
 

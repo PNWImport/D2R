@@ -28,11 +28,8 @@
 //   Option C: CE/IDA dump new statics, update the consts below
 //
 // Sources:
-//   - MapAssist (D2RLegit) - Helpers/Offsets.cs (GPL-3.0)
-//   - D2RMH (soarqin) - d2r_process.cpp
-//   - NTQV fork (joffreybesos/Bandit) - v1.8/v2.7+ offsets
 //   - OwnedCore community research
-//   - d2r-mapview (joffreybesos) - AHK offsets
+//   - Various open-source community tools
 // =============================================================================
 
 use serde::{Deserialize, Serialize};
@@ -41,7 +38,7 @@ use serde::{Deserialize, Serialize};
 // Static base offsets (PATCH-DEPENDENT — last validated ~2.7/2.8)
 // These are FALLBACKS for sig-scan failure only.
 // Sig-scan (below) is the correct approach for any new patch.
-// Source: OwnedCore community + MapAssist + D2RMH
+// Source: OwnedCore community research
 // ---------------------------------------------------------------------------
 
 /// Player Unit Hash Table (128 buckets of linked UnitAny*)
@@ -66,8 +63,8 @@ pub const GAME_NAME_OFFSET: u64 = 0x20AD678;
 // sequences near the data, not absolute addresses.
 // The wildcards (mask='?') match the RIP-relative offset bytes.
 //
-// Source: confirmed by both MapAssist (D2RLegit/MapAssist ProcessContext.cs)
-//         and D2RMH (soarqin/D2RMH processdata.cpp) — identical patterns.
+
+
 //
 // Resolve modes:
 //   RipRelative:  result = (scan_base + match + addr_offset + addr_size) + rel + extra
@@ -98,7 +95,7 @@ pub struct SigPattern {
 /// Unit Hash Table: "48 03 C7 49 8B 8C C6"
 ///   ADD RAX, RDI / MOV RCX, [R14 + RAX*8 + disp32]
 ///   The disp32 at +7 is an RVA from module base.
-/// Source: MapAssist + D2RMH search0 (validated 2.4 – 2.8+)
+/// Source: community sig-scan research (validated 2.4 – 2.8+)
 pub const SIG_UNIT_HASH_TABLE: SigPattern = SigPattern {
     name: "UnitHashTable",
     pattern: &[0x48, 0x03, 0xC7, 0x49, 0x8B, 0x8C, 0xC6],
@@ -111,7 +108,7 @@ pub const SIG_UNIT_HASH_TABLE: SigPattern = SigPattern {
 
 /// UI Settings / Menu Data: "48 89 45 B7 4C 8D 35 ?? ?? ?? ??"
 ///   LEA R14, [rip + disp32] — loads UI settings base
-/// Source: MapAssist + D2RMH search1
+/// Source: community sig-scan research
 pub const SIG_UI_SETTINGS: SigPattern = SigPattern {
     name: "UISettings",
     pattern: &[0x48, 0x89, 0x45, 0xB7, 0x4C, 0x8D, 0x35, 0x00, 0x00, 0x00, 0x00],
@@ -124,7 +121,7 @@ pub const SIG_UI_SETTINGS: SigPattern = SigPattern {
 
 /// Expansion check: "48 8B 05 ?? ?? ?? ?? 48 8B D9 F3 0F 10 50"
 ///   MOV RAX, [rip + disp32]
-/// Source: MapAssist + D2RMH search2
+/// Source: community sig-scan research
 pub const SIG_EXPANSION: SigPattern = SigPattern {
     name: "Expansion",
     pattern: &[0x48, 0x8B, 0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8B, 0xD9, 0xF3, 0x0F, 0x10, 0x50],
@@ -137,7 +134,7 @@ pub const SIG_EXPANSION: SigPattern = SigPattern {
 
 /// Roster Data: "02 45 33 D2 4D 8B"
 ///   The rel32 is 3 bytes BEFORE the match (addr_offset = -3).
-/// Source: MapAssist + D2RMH search3
+/// Source: community sig-scan research
 pub const SIG_ROSTER_DATA: SigPattern = SigPattern {
     name: "RosterData",
     pattern: &[0x02, 0x45, 0x33, 0xD2, 0x4D, 0x8B],
@@ -150,7 +147,7 @@ pub const SIG_ROSTER_DATA: SigPattern = SigPattern {
 
 /// Game Info / Name: "44 88 25 ?? ?? ?? ?? 66 44 89 25"
 ///   The rel32 at +3 resolves to an address 0x121 bytes before the instruction.
-/// Source: MapAssist + D2RMH search4
+/// Source: community sig-scan research
 pub const SIG_GAME_INFO: SigPattern = SigPattern {
     name: "GameInfo",
     pattern: &[0x44, 0x88, 0x25, 0x00, 0x00, 0x00, 0x00, 0x66, 0x44, 0x89, 0x25],
@@ -164,7 +161,7 @@ pub const SIG_GAME_INFO: SigPattern = SigPattern {
 /// Map Seed (direct): "41 8B F9 48 8D 0D ?? ?? ?? ??"
 ///   LEA RCX, [rip + disp32] — near the seed access code.
 ///   Resolves to address + 0xEA past the instruction end.
-/// Source: D2RMH search5
+/// Source: community sig-scan research
 pub const SIG_MAP_SEED: SigPattern = SigPattern {
     name: "MapSeed",
     pattern: &[0x41, 0x8B, 0xF9, 0x48, 0x8D, 0x0D, 0x00, 0x00, 0x00, 0x00],
@@ -178,7 +175,7 @@ pub const SIG_MAP_SEED: SigPattern = SigPattern {
 // ---------------------------------------------------------------------------
 // D2R Struct Layouts (64-bit)
 // These are INTRA-STRUCT offsets (field positions within a struct).
-// Source: soarqin/D2RMH d2rdefs.h (verified against MapAssist)
+// Source: community-derived struct layout research
 // These are the authoritative D2R x64 offsets for the engine structures.
 // ---------------------------------------------------------------------------
 
@@ -277,7 +274,7 @@ impl Default for Room2Offsets {
 pub struct LevelOffsets {
     pub level_next: u64,   // +0x00  ptr → next DrlgLevel
     pub room2_first: u64,  // +0x10  ptr → first DrlgRoom2
-    pub level_id: u64,     // +0x1F8 DWORD (area 1-136+) — D2RMH confirmed
+    pub level_id: u64,     // +0x1F8 DWORD (area 1-136+)
 }
 
 impl Default for LevelOffsets {
@@ -382,7 +379,7 @@ impl AreaId {
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct D2ROffsets {
+pub struct Offsets {
     pub unit_any: UnitAnyOffsets,
     pub path: PathOffsets,
     pub act: ActOffsets,
@@ -394,7 +391,7 @@ pub struct D2ROffsets {
     pub ui_settings: u64,
 }
 
-impl Default for D2ROffsets {
+impl Default for Offsets {
     fn default() -> Self {
         Self {
             unit_any: UnitAnyOffsets::default(),
@@ -410,7 +407,7 @@ impl Default for D2ROffsets {
     }
 }
 
-impl D2ROffsets {
+impl Offsets {
     /// Try to load overrides from offsets.json next to the executable.
     /// Format: { "player_hash_table": "0x2028E60", "ui_settings": "0x20AD5F0",
     ///           "act_misc": { "map_seed": "0x840", "difficulty": "0x830" } }

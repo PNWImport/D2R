@@ -13,7 +13,7 @@ const HOST_NAME_MAX: usize = 16;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HostRegistry {
-    pub maphack_host: String,
+    pub map_host: String,
 }
 
 impl HostRegistry {
@@ -32,9 +32,9 @@ impl HostRegistry {
         }
 
         // Generate new random host name
-        let maphack_host = Self::generate_random_host();
+        let map_host = Self::generate_random_host();
         let registry = HostRegistry {
-            maphack_host: maphack_host.clone(),
+            map_host: map_host.clone(),
         };
 
         // Save to config file
@@ -105,8 +105,8 @@ impl HostRegistry {
     }
 
     /// Get the maphack host name with "com.chromium." prefix
-    pub fn maphack_host_name(&self) -> String {
-        format!("com.chromium.{}", self.maphack_host)
+    pub fn map_host_name(&self) -> String {
+        format!("com.chromium.{}", self.map_host)
     }
 }
 
@@ -124,8 +124,8 @@ mod tests {
     #[test]
     fn test_host_name_format() {
         let registry = HostRegistry {
-            maphack_host: "abcd1234".to_string(),
+            map_host: "abcd1234".to_string(),
         };
-        assert_eq!(registry.maphack_host_name(), "com.chromium.abcd1234");
+        assert_eq!(registry.map_host_name(), "com.chromium.abcd1234");
     }
 }

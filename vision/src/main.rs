@@ -55,7 +55,7 @@ async fn main() {
     tracing::info!("Using native host: {}", host_name);
 
     // ─── Load Config ───────────────────────────────────────────
-    // Priority: CLI arg > D2R_CONFIG env var > config.yaml in data dir
+    // Priority: CLI arg > KZB_CONFIG env var > config.yaml in data dir
     let config_path = resolve_config_path();
     let config = if config_path.exists() {
         match AgentConfig::load(&config_path) {
@@ -473,7 +473,7 @@ async fn main() {
 }
 
 /// Resolve which config YAML to load.
-/// Priority: CLI arg (first arg) > D2R_CONFIG env var > data_dir/config.yaml
+/// Priority: CLI arg (first arg) > KZB_CONFIG env var > data_dir/config.yaml
 fn resolve_config_path() -> PathBuf {
     // Check CLI args: kzb_vision_agent.exe path/to/paladin_hammerdin.yaml
     let args: Vec<String> = std::env::args().collect();
@@ -496,8 +496,8 @@ fn resolve_config_path() -> PathBuf {
         }
     }
 
-    // Check D2R_CONFIG env var
-    if let Ok(env_path) = std::env::var("D2R_CONFIG") {
+    // Check KZB_CONFIG env var
+    if let Ok(env_path) = std::env::var("KZB_CONFIG") {
         let p = PathBuf::from(&env_path);
         if p.exists() {
             return p;

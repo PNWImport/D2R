@@ -201,7 +201,7 @@ Complete version history of KZB, a production game farming automation suite buil
 ## [1.4.0] — 2026-02-23
 
 ### Chrome Extension GUI Rebuild
-- Rebuilt popup.html to full 11-tab GUI with all 503 kolbot settings and 77 scripts
+- Rebuilt popup.html to full 11-tab GUI with all 503 settings and 77 scripts
 - popup.html: 1,521 LOC with Act-based script organization, sub-options, inventory grid
 - popup.js: 372 LOC with chrome API guard, debounced save, sub-options toggle
 - popup.css: 615 LOC with dark game theme, responsive tab bar, class sections
@@ -218,7 +218,7 @@ Complete version history of KZB, a production game farming automation suite buil
 
 ### KZB v1.0: Complete Farming Automation Suite (Rust + Chrome)
 
-#### Rust Vision Agent (`botter/`)
+#### Rust Vision Agent (`vision/`)
 - **Frame capture** (DXGI Desktop Duplication)
   - 25 Hz continuous capture with skip/burst mode
   - Lock-free sharded buffer (16 shards, ~192 bytes, zero contention)
@@ -231,7 +231,7 @@ Complete version history of KZB, a production game farming automation suite buil
   - Buff tracking: 16 bitfield for active buff indicators
   - Merc HP reading, belt potion detection, inventory status
 
-- **Decision engine** (full kolbot port)
+- **Decision engine** (full port)
   - 7 attack skill slots (preattack, boss/mob/immune, timed/untimed)
   - Priority-based decision system (survival → combat → loot)
   - Survival: HP/mana/merc chicken, rejuv, potions, TP retreat
@@ -275,7 +275,7 @@ Complete version history of KZB, a production game farming automation suite buil
   - 8 stress tests (10s sustained loop, 1M frame writes, 10k input commands)
   - **Total: 282/282 passing**
 
-#### Rust Map Helper (`maphack/`)
+#### Rust Map Helper (`overlay/`)
 - Memory-based game map reader
 - Tile and object parsing
 - Overlay rendering to Chrome content script
@@ -442,7 +442,7 @@ Complete version history of KZB, a production game farming automation suite buil
 
 | Metric | Value |
 |--------|-------|
-| Rust LOC | ~11,400 (botter ~8,400 + maphack ~3,000) |
+| Rust LOC | ~11,400 (botter ~8,400 + overlay ~3,000) |
 | JavaScript/CSS/HTML LOC | ~3,100 |
 | YAML configs | 8 character presets |
 | Test count | 294 (136+150+8) |
@@ -463,7 +463,7 @@ Complete version history of KZB, a production game farming automation suite buil
 ## Contributors
 
 - **Rust vision agent**: Built from scratch using DXGI, Windows API, pixel heuristics
-- **Kolbot legacy**: 20+ years of combat/town/loot logic (D2BS JavaScript → Rust)
+- **Core logic**: 20+ years of community combat/town/loot logic (JavaScript → Rust)
 - **Game research**: Community offsets, spell effects, item classification
 
 ---

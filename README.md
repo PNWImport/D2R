@@ -16,8 +16,8 @@
 
 | Component | Language | Purpose |
 |-----------|----------|---------|
-| **Vision Agent** (`botter/`) | Rust | Frame capture, enemy/loot detection, decision engine, game lifecycle |
-| **Map Helper** (`maphack/`) | Rust | Game memory reading, map data, overlay rendering |
+| **Vision Agent** (`vision/`) | Rust | Frame capture, enemy/loot detection, decision engine, game lifecycle |
+| **Map Helper** (`overlay/`) | Rust | Game memory reading, map data, overlay rendering |
 | **Chrome Extension** | JavaScript | Control panel UI, real-time stats, pause/resume, config selector |
 
 ---
@@ -153,7 +153,7 @@ Open this file in Chrome (or serve with `python3 -m http.server 8090`) to get a 
 Wire this to a live `vision_bench` run for real measured numbers:
 
 ```bash
-# Inside botter/
+# Inside vision/
 cargo run --bin vision_bench --release 30 ../extension/vision_bench_out.json
 # Then open vision_perf.html — it polls the JSON every 600 ms
 ```
@@ -172,7 +172,7 @@ cargo run --bin vision_bench --release 30 ../extension/vision_bench_out.json
 
 ## 🏗️ Architecture
 
-### Vision Agent (`botter/` — 8,400+ LOC)
+### Vision Agent (`vision/` — 8,400+ LOC)
 ```
 src/
 ├── main.rs                          Entry point, config loading, dual-drain main loop
@@ -203,7 +203,7 @@ Key Design:
 ✓ Full test coverage (decision logic, game lifecycle, vision pipeline)
 ```
 
-### Map Helper (`maphack/`)
+### Map Helper (`overlay/`)
 ```
 src/
 ├── main.rs                          Entry point, map reader
@@ -374,7 +374,7 @@ farming:                                      # Farming sequence
 ## ⚠️ Known Limitations
 
 - **Fixed resolution**: Hardcoded 800x600 scaling (adjustable via math)
-- **Game offsets**: If patches change memory layout, maphack needs offset update
+- **Game offsets**: If patches change memory layout, overlay needs offset update
 - **No advanced pathfinding**: Uses vision-detected obstacles, not A* on full map
 - **Windows-only stealth**: Stealth features are Windows-specific
 
@@ -401,8 +401,8 @@ farming:                                      # Farming sequence
 - Chrome control panel (native messaging)
 - Complete test suite (unit, integration, stress)
 
-### Kolbot (Foundation)
-- 20+ years of D2BS JavaScript bot logic
+### Legacy Engine (Foundation)
+- 20+ years of community JavaScript logic
 - OOG location state machine architecture
 - Town NPC sequences and coordinates
 - Combat attack skill system (7 slots)

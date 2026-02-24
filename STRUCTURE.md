@@ -21,7 +21,7 @@ KZB/
 │   ├── kzb_header.webp       ← Project header image
 │   └── .gitkeep
 │
-├── botter/                   ← Vision Agent (Rust, ~8400 LOC, farming AI)
+├── vision/                   ← Vision Agent (Rust, ~8400 LOC, farming AI)
 │   ├── Cargo.toml            ← Rust project config
 │   ├── Cargo.lock            ← Dependency lock file
 │   ├── build.rs              ← Build script
@@ -79,7 +79,7 @@ KZB/
 │   └── benches/
 │       └── shard_bench.rs    ← Shard buffer benchmarks
 │
-├── maphack/                  ← Map Helper (Rust, ~3000 LOC, memory-based map reader)
+├── overlay/                  ← Map Helper (Rust, ~3000 LOC, memory-based map reader)
 │   ├── Cargo.toml            ← Rust project config
 │   ├── Cargo.lock            ← Dependency lock file
 │   ├── offsets.json.example  ← Example memory offsets file
@@ -109,13 +109,13 @@ KZB/
 │   └── chrome_extension/
 │       ├── manifest.json     ← Extension metadata & permissions (v1.4.0)
 │       ├── background.js     ← Service worker (native host bridge, 375 LOC)
-│       ├── popup.html        ← Control panel UI (1521 LOC, 11 tabs, 503 settings, 77 kolbot scripts)
+│       ├── popup.html        ← Control panel UI (1521 LOC, 11 tabs, 503 settings, 77 scripts)
 │       ├── popup.js          ← Control panel logic (372 LOC)
 │       ├── popup.css         ← Control panel dark theme (615 LOC)
 │       ├── map_content.js    ← Content script (map overlay injection, 260 LOC)
 │       └── kzb_header.webp   ← Extension header image
 │
-└── kolbot/                   ← Complete D2 Bot ecosystem (D2BS + SoloPlay levelbot)
+└── kolbot/                   ← Legacy engine + scripts
     ├── D2Bot.exe             ← Manager executable (4.5 MB)
     ├── setup.bat             ← Batch setup wrapper
     ├── update.bat            ← Update & submodule init script
@@ -139,9 +139,9 @@ KZB/
     ├── logs/                 ← Runtime logs directory
     │   └── .gitkeep
     │
-    ├── d2bs/                 ← D2BS Bot Engine (~35 MB)
-    │   ├── D2BS.dll          ← D2BS native engine DLL
-    │   ├── HISTORY.txt       ← D2BS version history
+    ├── d2bs/                 ← Script engine (~35 MB)
+    │   ├── D2BS.dll          ← Native engine DLL
+    │   ├── HISTORY.txt       ← Version history
     │   ├── LICENSE.rtf       ← License (RTF format)
     │   ├── LICENSE.txt       ← License (text format)
     │   ├── api.html          ← API reference (TiddlyWiki)
@@ -294,7 +294,7 @@ KZB/
 ## Key Files & Their Purpose
 
 ### Core Entry Points
-- **`botter/src/main.rs`** -- Vision agent main loop
+- **`vision/src/main.rs`** -- Vision agent main loop
   - Argument parsing (config path selection)
   - DXGI capture initialization
   - Frame loop (25 Hz tick) with dual tick drain
@@ -302,7 +302,7 @@ KZB/
   - Direct JSON deserialization (`serde_json::from_value`)
   - Signal handling (graceful shutdown)
 
-- **`maphack/src/main.rs`** -- Map helper main loop
+- **`overlay/src/main.rs`** -- Map helper main loop
   - D2R process discovery and memory reading
   - Map data parsing and generation
   - Native messaging host connection
@@ -329,86 +329,86 @@ KZB/
   - Coordinates multi-phase leveling (Normal -> Nightmare -> Hell)
 
 ### Decision & Logic
-- **`botter/src/decision/engine.rs`**
+- **`vision/src/decision/engine.rs`**
   - Priority-based decision system
   - Survival checks via ThresholdBins (O(1) flat field reads, no config traversal)
   - Combat logic (dodge, static field, attack slots)
   - Attack target derivation (Boss/Champion/Normal/Immune)
   - Humanization (delays, variance, missed clicks)
 
-- **`botter/src/decision/game_manager.rs`**
+- **`vision/src/decision/game_manager.rs`**
   - 7-phase state machine (OutOfGame -> Farming -> Exit)
   - Town automation (NPC sequences)
   - Game lifecycle (exit, inter-game delays)
   - Per-act NPC coordinates
   - QuadCache warm/reload integration
 
-- **`botter/src/decision/quad_cache.rs`** — **QuadCache four-lane acceleration**
+- **`vision/src/decision/quad_cache.rs`** — **QuadCache four-lane acceleration**
   - Lane 2: PreparedRun indexed at startup (farm scripts, act derivation, boss detection)
   - Lane 3: ThresholdBins — 12 survival fields flattened for O(1) reads
   - Lane 4: HotKey (HpBin × combat × loot) hit counters + SpanFeatures for LLM
   - ~22 KB total footprint, all agent-private heap
   - `warm()` at startup (~5μs), `reload_thresholds()` / `rewarm_runs()` on config change
 
-- **`botter/src/decision/progression.rs`**
+- **`vision/src/decision/progression.rs`**
   - Quest state tracking and difficulty progression
   - Script sequence with area/quest/boss steps
   - Visual cue detection for script advancement
 
-- **`botter/src/decision/script_executor.rs`**
+- **`vision/src/decision/script_executor.rs`**
   - Script step execution engine
   - Visual cue verification before step completion
 
 ### Vision & Capture
-- **`botter/src/vision/capture.rs`**
+- **`vision/src/vision/capture.rs`**
   - Frame extraction from DXGI screenshot
   - Enemy detection (nearest, health %, type)
   - Loot detection (item quality, position)
   - Buff/debuff detection (visual indicators)
   - Merc HP, belt potions, inventory status
 
-- **`botter/src/vision/shard_buffer.rs`**
+- **`vision/src/vision/shard_buffer.rs`**
   - Lock-free 16-shard FrameState buffer
   - Producer (capture thread) -> Consumer (decision thread)
   - ABA-protected concurrent reads
 
 ### Configuration
-- **`botter/src/config/mod.rs`**
+- **`vision/src/config/mod.rs`**
   - AgentConfig struct with 18 sections
   - Serde YAML serialization/deserialization
   - serde(default) for backward-compatibility
   - 8 pre-configured character YAMLs
 
 ### Stealth & Input
-- **`botter/src/stealth/thread_input.rs`**
+- **`vision/src/stealth/thread_input.rs`**
   - Thread-rotated 4-worker input pool
   - Per-thread jitter on SendInput calls
   - Round-robin dispatch
 
-- **`botter/src/stealth/capture_timing.rs`**
+- **`vision/src/stealth/capture_timing.rs`**
   - 25 Hz frame capture timing
   - Skip/burst mode for dynamic frame rate
   - Timing jitter
 
-- **`botter/src/stealth/process_identity.rs`**
+- **`vision/src/stealth/process_identity.rs`**
   - PEB disguise (Windows, reports as NetworkService)
   - Command-line spoofing
 
-- **`botter/src/stealth/syscall_cadence.rs`**
+- **`vision/src/stealth/syscall_cadence.rs`**
   - Decoy syscall injection
   - Breaks statistical fingerprinting
 
-- **`botter/src/stealth/handle_table.rs`**
+- **`vision/src/stealth/handle_table.rs`**
   - Pseudo-handle obfuscation
 
-- **`botter/src/input/mod.rs`**
+- **`vision/src/input/mod.rs`**
   - Input trait definition and types
 
-- **`botter/src/input/simulator.rs`**
+- **`vision/src/input/simulator.rs`**
   - Simulation stubs for Linux-based testing/development
 
 ### Native Messaging
-- **`botter/src/native_messaging/mod.rs`**
+- **`vision/src/native_messaging/mod.rs`**
   - Chrome native messaging protocol (4-byte LE length + JSON)
   - Commands: pause, resume, get_stats, update_config, shutdown
   - Stats struct (SharedAgentStats with atomics)
@@ -485,18 +485,18 @@ KZB/
   - Item quality and type filtering
 
 ### Testing
-- **`botter/tests/stress.rs`**
+- **`vision/tests/stress.rs`**
   - 8 stress tests
   - 10s sustained loops, lock-free buffer stress
   - Thread pool throughput testing
 
-- **`botter/benches/shard_bench.rs`**
+- **`vision/benches/shard_bench.rs`**
   - Shard buffer performance benchmarks
 
-- **`maphack/tests/protocol_test.py`**
+- **`overlay/tests/protocol_test.py`**
   - Protocol integration tests (Python)
 
-- **`maphack/tests/verify.py`**
+- **`overlay/tests/verify.py`**
   - Maphack verification tests (Python)
 
 - **Unit tests** (scattered throughout src/)
@@ -551,7 +551,7 @@ AgentConfig (root)
 
 ```bash
 # Build
-cd botter
+cd vision
 cargo build --release              # Vision agent
 cd ../maphack
 cargo build --release              # Map helper
@@ -618,8 +618,8 @@ All hardcoded at 800x600 base resolution (scales with math):
 
 | Component | Language | LOC | Files |
 |-----------|----------|-----|-------|
-| botter | Rust | ~8,400 | 15 |
-| maphack | Rust | ~3,000 | 10 |
+| vision | Rust | ~8,400 | 15 |
+| overlay | Rust | ~3,000 | 10 |
 | **Total Rust** | | **~11,400** | **25** |
 | extension | JS/CSS/HTML | ~3,100 | 11 |
 | kolbot core | JavaScript | ~2,000 | 30+ |
@@ -638,7 +638,7 @@ All hardcoded at 800x600 base resolution (scales with math):
 
 ## Development Workflow
 
-1. **Make changes** to Rust code in `botter/src/` or `maphack/src/`
+1. **Make changes** to Rust code in `vision/src/` or `overlay/src/`
 2. **Run tests**: `cargo test` (all 282 tests should pass)
 3. **Check lints**: `cargo clippy`
 4. **Format code**: `cargo fmt`
@@ -693,22 +693,22 @@ All hardcoded at 800x600 base resolution (scales with math):
 ## Common Tasks
 
 ### Add a new config section
-1. Define struct in `botter/src/config/mod.rs`
+1. Define struct in `vision/src/config/mod.rs`
 2. Add `#[serde(default)]` for backward-compatibility
 3. Add to `AgentConfig` struct
 4. Implement `Default` trait
 5. Add tests for serialization round-trip
 
 ### Add a new decision check
-1. Implement logic in `botter/src/decision/engine.rs`
+1. Implement logic in `vision/src/decision/engine.rs`
 2. Call from `DecisionEngine::decide()` in priority order
 3. Return `Decision { action, delay, priority, reason }`
 4. Add test case with mock FrameState
 
 ### Add a new FrameState field
-1. Add field to `FrameState` struct in `botter/src/vision/shard_buffer.rs`
+1. Add field to `FrameState` struct in `vision/src/vision/shard_buffer.rs`
 2. Initialize in `FrameState::default()`
-3. Populate in vision pipeline (`botter/src/vision/capture.rs`)
+3. Populate in vision pipeline (`vision/src/vision/capture.rs`)
 4. Update FrameState size test (must stay < 256 bytes)
 5. Use in decision engine as needed
 
@@ -762,7 +762,7 @@ All hardcoded at 800x600 base resolution (scales with math):
 
 ## Useful References
 
-- **D2R Memory Offsets**: See `maphack/src/offsets.rs` and `maphack/offsets.json.example`
+- **D2R Memory Offsets**: See `overlay/src/offsets.rs` and `overlay/offsets.json.example`
 - **Kolbot Docs**: `kolbot/d2bs/api.html`
 - **D2 Forums**: Community reverse-engineering threads
 - **Chrome Native Messaging**: [Google Docs](https://developer.chrome.com/docs/extensions/mv3/nativeMessaging/)

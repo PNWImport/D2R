@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 /// Complete agent configuration. Loaded from YAML, hot-reloadable.
-/// Full port of kolbot Config + AutoSkill + AutoStat + Cubing + Runewords + Scripts.
+/// Full vision agent configuration: survival, combat, loot, farming, leveling.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct AgentConfig {
     pub character_class: String,
@@ -39,7 +39,7 @@ pub struct AgentConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SURVIVAL — kolbot Config.LifeChicken / UseHP / UseMP etc.
+// SURVIVAL
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -61,7 +61,7 @@ pub struct SurvivalConfig {
     pub mana_potion_cooldown_ms: u64,
     pub rejuv_cooldown_ms: u64,
     pub min_belt_column: [u8; 4],
-    pub belt_column: Vec<String>, // kolbot: Config.BeltColumn = ["hp","hp","mp","rv"]
+    pub belt_column: Vec<String>, // Column layout: ["hp","hp","mp","rv"]
     pub hp_buffer: u8,            // Config.HPBuffer
     pub mp_buffer: u8,            // Config.MPBuffer
     pub rejuv_buffer: u8,         // Config.RejuvBuffer
@@ -95,7 +95,7 @@ impl Default for SurvivalConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// COMBAT — kolbot Config.AttackSkill[0-6] + LowManaSkill + more
+// COMBAT
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -112,7 +112,7 @@ pub struct CombatConfig {
     pub cast_interval_ms: u64,
     pub max_attack_count: u32,
     pub use_merc_stomp: bool,
-    // Full kolbot attack skill slots (hotkey equivalents)
+    // All attack skill slots (hotkey equivalents)
     #[serde(default)]
     pub attack_slots: AttackSlots,
     #[serde(default)]
@@ -137,7 +137,7 @@ pub struct CombatConfig {
     pub custom_attack: HashMap<String, [Option<char>; 2]>, // Config.CustomAttack
 }
 
-/// All 7 attack skill slots from kolbot, mapped to hotkeys
+/// All 7 attack skill slots, mapped to hotkeys
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct AttackSlots {
     pub preattack: Option<char>,      // AttackSkill[0]
@@ -186,7 +186,7 @@ impl Default for CombatConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LOOT — kolbot Pickit + Item settings
+// LOOT
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -243,7 +243,7 @@ impl Default for LootConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// TOWN — kolbot Town settings
+// TOWN
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -329,7 +329,7 @@ impl Default for StashRules {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// BUFFS — kolbot Precast system
+// BUFFS
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -341,14 +341,14 @@ pub struct BuffConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FARMING — kolbot Scripts.* sequence (which runs to execute)
+// FARMING — run sequence
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct FarmingConfig {
     /// Ordered list of farming runs. Each run is an area/boss name.
     /// Agent executes in order, loops back to start.
-    /// Names match kolbot script names: "Mephisto", "Baal", "Pit", etc.
+    /// Run names: "Mephisto", "Baal", "Pit", etc.
     pub sequence: Vec<FarmRun>,
     #[serde(default)]
     pub min_game_time_secs: u32, // Config.MinGameTime
@@ -376,7 +376,7 @@ impl Default for FarmRun {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LEVELING — kolbot AutoSkill + AutoStat
+// LEVELING
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -386,7 +386,7 @@ pub struct LevelingConfig {
 }
 
 /// AutoSkill — spend skill points in order
-/// Format matches kolbot: [[skill_name, max_points, satisfy], ...]
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct AutoSkillConfig {
     pub enabled: bool,
@@ -409,7 +409,7 @@ fn default_true() -> bool {
 }
 
 /// AutoStat — spend stat points in order
-/// Format matches kolbot: [[stat_type, target], ...]
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct AutoStatConfig {
     pub enabled: bool,
@@ -434,7 +434,7 @@ pub enum StatTarget {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CUBING — kolbot Config.Recipes
+// CUBING
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -452,7 +452,7 @@ pub struct CubeRecipe {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// RUNEWORDS — kolbot Config.Runewords
+// RUNEWORDS
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -472,7 +472,7 @@ pub struct RunewordEntry {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// GAMBLING — kolbot Config.Gamble*
+// GAMBLING
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -487,7 +487,7 @@ pub struct GamblingConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CLASS-SPECIFIC — kolbot per-class settings
+// CLASS-SPECIFIC
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -588,7 +588,7 @@ pub struct ClassSpecificConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MONSTER SKIP — kolbot Config.SkipImmune / SkipEnchant / SkipAura
+// MONSTER SKIP
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -600,7 +600,7 @@ pub struct MonsterSkipConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CLEAR — kolbot Config.ClearType / ClearPath
+// CLEAR
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -621,7 +621,7 @@ impl Default for ClearConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MERC — kolbot Config.UseMerc / MercWatch
+// MERC
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -640,7 +640,7 @@ impl Default for MercConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// INVENTORY — kolbot Config.Inventory lock grid
+// INVENTORY
 // ═══════════════════════════════════════════════════════════════
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -793,7 +793,7 @@ mod tests {
     }
 
     #[test]
-    fn test_kolbot_defaults_match() {
+    fn test_defaults_match() {
         let config = AgentConfig::default();
         assert_eq!(config.survival.hp_potion_pct, 75);
         assert_eq!(config.survival.hp_rejuv_pct, 40);

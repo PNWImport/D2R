@@ -210,7 +210,7 @@ combat:
 
 ## Pre-Made Configs
 
-**Included character configs** (in `botter/configs/`):
+**Included character configs** (in `vision/configs/`):
 
 1. `sorceress_blizzard.yaml` — Blizzard/Orb, pure damage
 2. `sorceress_meteorb.yaml` — Meteor/Orb, dual element

@@ -22,7 +22,7 @@
 - **Problem**: Banner only appears AFTER Diablo dies, not after seals
 - **Impact**: Bot burns 20s timeout per Diablo run unnecessarily
 - **Fix**: Removed premature wait; banner detection now occurs after kill
-- **File**: `botter/src/decision/progression.rs` lines 2519-2534
+- **File**: `vision/src/decision/progression.rs` lines 2519-2534
 
 #### Bug 2: Action Enum Misuse
 - **Issue**: `jittered_click()` used `Action::PickupLoot` for all generic clicking (NPCs, seal levers, waypoints, etc.)
@@ -30,24 +30,24 @@
 - **Fix**: Added `Action::Click{x,y}` variant with proper dispatch in main.rs and logger.rs
 - **Impact**: Clean action semantics; accurate stat tracking
 - **Files**:
-  - `botter/src/decision/engine.rs` (added variant)
-  - `botter/src/main.rs` (dispatch handler)
-  - `botter/src/decision/script_executor.rs` (updated jittered_click)
-  - `botter/src/training/logger.rs` (updated formatter)
+  - `vision/src/decision/engine.rs` (added variant)
+  - `vision/src/main.rs` (dispatch handler)
+  - `vision/src/decision/script_executor.rs` (updated jittered_click)
+  - `vision/src/training/logger.rs` (updated formatter)
 
 #### Bug 3: Waypoint Tracking Incomplete
 - **Issue**: `on_waypoint_obtained()` only handled ~10 of 30+ waypoint areas
 - **Problem**: Waypoint cache would never populate from visual detection; Acts 2-5 ignored
 - **Fix**: Added all 30+ waypoint area mappings (Acts 1-5 complete)
 - **Impact**: Waypoint detection now persists to quest state for all areas
-- **File**: `botter/src/decision/progression.rs` lines 1231-1271
+- **File**: `vision/src/decision/progression.rs` lines 1231-1271
 
 ### 3. Process Identity Stealth Enhancement
 - **Issue**: Always used same `ChromeDisguise::UtilityNetwork` per launch
 - **Problem**: Repeated identity could be fingerprinted across game sessions
 - **Fix**: Random `ChromeDisguise` selection at startup (Renderer, UtilityAudio, UtilityNetwork, GpuProcess)
 - **Impact**: Each process launch presents a different PEB identity
-- **File**: `botter/src/main.rs` lines 96-120
+- **File**: `vision/src/main.rs` lines 96-120
 
 ### 4. Documentation & Analysis
 - **ISSUES_BACKLOG.md**: Technical debt tracking (cubing mechanics, waypoint detector, etc.)

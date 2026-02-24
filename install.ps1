@@ -405,13 +405,13 @@ if (-not (Test-Path $VisionInstallPath)) {
     New-Item -ItemType Directory -Path $VisionInstallPath -Force | Out-Null
 }
 
-$visionBin = Join-Path $ScriptDir "botter\target\release\kzb_vision_agent.exe"
+$visionBin = Join-Path $ScriptDir "vision\target\release\kzb_vision_agent.exe"
 if (Test-Path $visionBin) {
     Copy-Item $visionBin "$VisionInstallPath\$VisionExe" -Force
     Write-Step "Installed $VisionExe -> $VisionInstallPath"
 } else {
     Write-Err "$VisionExe binary not found at: $visionBin"
-    Write-Warn "Run without -SkipBuild or build manually: cd botter && cargo build --release"
+    Write-Warn "Run without -SkipBuild or build manually: cd vision && cargo build --release"
 }
 
 # Write manifests to user-writable location (no admin needed)
@@ -431,13 +431,13 @@ if (-not (Test-Path $MapInstallPath)) {
     New-Item -ItemType Directory -Path $MapInstallPath -Force | Out-Null
 }
 
-$mapBin = Join-Path $ScriptDir "maphack\target\release\chrome_map_helper.exe"
+$mapBin = Join-Path $ScriptDir "overlay\target\release\chrome_map_helper.exe"
 if (Test-Path $mapBin) {
     Copy-Item $mapBin "$MapInstallPath\$MapExe" -Force
     Write-Step "Installed $MapExe -> $MapInstallPath"
 } else {
     Write-Err "$MapExe binary not found at: $mapBin"
-    Write-Warn "Run without -SkipBuild or build manually: cd maphack && cargo build --release"
+    Write-Warn "Run without -SkipBuild or build manually: cd overlay && cargo build --release"
 }
 
 $mapManifest = "$ManifestPath\map_manifest.json"
@@ -454,7 +454,7 @@ if (-not (Test-Path $configDir)) {
     New-Item -ItemType Directory -Path $configDir -Force | Out-Null
 }
 
-$sourceConfigs = Join-Path $ScriptDir "botter\configs"
+$sourceConfigs = Join-Path $ScriptDir "vision\configs"
 if (Test-Path $sourceConfigs) {
     Get-ChildItem "$sourceConfigs\*.yaml" | ForEach-Object {
         Copy-Item $_.FullName $configDir -Force

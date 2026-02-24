@@ -109,7 +109,7 @@ fn main() {
             std::process::exit(1);
         }
     };
-    let host_name = registry.maphack_host_name();
+    let host_name = registry.map_host_name();
     eprintln!("[map_helper] Using native host: {}", host_name);
 
     // Apply PEB disguise FIRST — before any other work
@@ -158,7 +158,7 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
                 "pid": std::process::id(),
                 "ext_version": version,
                 "attached": state.reader.is_attached(),
-                "offsets_version": "MapAssist-compat-2026",
+                "offsets_version": "kzb-compat-2026",
             }));
         }
 
@@ -311,10 +311,10 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
         }
 
         InboundCommand::GetOffsets => {
-            let off = offsets::D2ROffsets::default();
+            let off = offsets::Offsets::default();
             let _ = send_response("offsets", json!({
                 "offsets": off,
-                "version": "MapAssist-compat-2026",
+                "version": "kzb-compat-2026",
                 "note": "Static fallback offsets. Sig-scan overrides on attach.",
             }));
         }

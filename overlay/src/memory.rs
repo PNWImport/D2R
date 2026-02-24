@@ -4,7 +4,7 @@
 // cfg(windows) = real ReadProcessMemory, sig-scan, the works
 // cfg(not(windows)) = simulated state for dev/test (this Linux box)
 //
-// Pointer chains (from open-source map assist tools — D2RMH / MapAssist):
+// Pointer chains:
 //   Seed:     PlayerUnit → pAct(+0x20) → pActMisc(+0x78) → dwMapSeed(+0x840)
 //   Diff:     ... → pActMisc(+0x78) → dwDifficulty(+0x830)
 //   Position: PlayerUnit → pPath(+0x38) → xPos(+0x02), yPos(+0x06)
@@ -76,7 +76,7 @@ mod platform {
     const LIST_MODULES_64BIT: DWORD = 0x02;
 
     pub struct ProcessReader {
-        offsets: D2ROffsets,
+        offsets: Offsets,
         handle: HANDLE,
         base: u64,
         pid: u32,
@@ -86,7 +86,7 @@ mod platform {
 
     impl ProcessReader {
         pub fn new() -> Self {
-            let mut offsets = D2ROffsets::default();
+            let mut offsets = Offsets::default();
             offsets.load_overrides();
             Self {
                 offsets,
@@ -469,13 +469,13 @@ mod platform {
 
     #[allow(dead_code)]
     pub struct ProcessReader {
-        offsets: D2ROffsets,
+        offsets: Offsets,
         attached: bool,
     }
 
     impl ProcessReader {
         pub fn new() -> Self {
-            let mut offsets = D2ROffsets::default();
+            let mut offsets = Offsets::default();
             offsets.load_overrides();
             Self { offsets, attached: false }
         }

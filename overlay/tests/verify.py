@@ -131,7 +131,7 @@ def run_tests(binary_path: str) -> list:
         and r.get("type") == "map_helper"
         and "version" in r
         and "pid" in r
-        and r.get("offsets_version") == "MapAssist-compat-2024"
+        and r.get("offsets_version") == "kzb-compat-2026"
     )
     results.append(TestResult(
         "Handshake",

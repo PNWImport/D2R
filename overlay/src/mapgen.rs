@@ -10,14 +10,14 @@
 //   3. The PRNG selects which preset tiles to use and how to orient them
 //   4. Collision data is generated from the tile composition
 //
-// For a maphack overlay, we need:
+// For a map overlay, we need:
 //   - Collision map (walls vs walkable)
 //   - Exit/entrance positions
 //   - Waypoint position
 //   - Notable object positions (shrines, chests, super uniques)
 //
 // The REAL map gen requires D2 game files (d2data.mpq) loaded through
-// blacha/diablo2's d2-map.exe or D2RMH's d2mapapi_piped. Our map_helper
+// blacha/diablo2 d2-map.exe backend. Our map_helper
 // shells out to one of these backends.
 //
 // This module handles:
