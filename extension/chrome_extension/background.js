@@ -55,6 +55,10 @@ function connectToAgent() {
   }
 }
 
+// Latest FrameState from the vision agent, kept fresh by the debug relay poll.
+// Fields mirror FrameState in botter/src/vision/shard_buffer.rs.
+let lastFrameState = null;
+
 function handleAgentMessage(msg) {
   // Silent handling — no UI, no notifications, no storage writes.
   switch (msg.cmd) {
@@ -64,6 +68,9 @@ function handleAgentMessage(msg) {
     case "buffer_stats":  break;
     case "ack":           break;
     case "error":         break;
+    case "frame_state":
+      if (msg.available !== false) lastFrameState = msg;
+      break;
     default:              break;
   }
 }
@@ -179,23 +186,32 @@ function stopMapPolling() {
 
 function startDebugStatRelay() {
   stopDebugStatRelay();
-  debugRelayInterval = setInterval(async () => {
-    if (!debugOverlayEnabled || !mapPort || !agentPort) return;
-    // Ask the vision agent for current stats; use lastAgentStats if cached.
-    const stats = lastAgentStats;
-    if (!stats) return;
+  debugRelayInterval = setInterval(() => {
+    if (!debugOverlayEnabled || !mapPort) return;
+
+    // Request a fresh FrameState from the vision agent on every tick.
+    // handleAgentMessage captures the response into lastFrameState.
+    if (agentPort) agentPort.postMessage({ cmd: "get_frame_state" });
+
+    // Forward whatever we have (may be one tick stale — fine at 100 ms).
+    const s = lastFrameState;
+    if (!s) return;
+
+    // Derive in_game: frame is active, not stuck at menu or loading screen
+    const in_game = !s.at_menu && !s.loading_screen && (s.frame_width > 0);
+
     mapPort.postMessage({
       cmd: "update_debug_state",
-      hp_pct:              stats.hp_pct              ?? 100,
-      mp_pct:              stats.mp_pct              ?? 100,
-      merc_hp_pct:         stats.merc_hp_pct         ?? 100,
-      enemy_count:         stats.enemy_count         ?? 0,
-      nearest_enemy_x:     stats.nearest_enemy_x     ?? 640,
-      nearest_enemy_y:     stats.nearest_enemy_y     ?? 360,
-      nearest_enemy_hp_pct: stats.nearest_enemy_hp_pct ?? 0,
-      chicken_hp_pct:      stats.chicken_hp_pct      ?? 0,
-      area_name:           stats.area_name           ?? "",
-      in_game:             stats.in_game             ?? false,
+      hp_pct:               s.hp_pct               ?? 100,
+      mp_pct:               s.mana_pct             ?? 100,   // FrameState uses mana_pct
+      merc_hp_pct:          s.merc_hp_pct           ?? 100,
+      enemy_count:          s.enemy_count           ?? 0,
+      nearest_enemy_x:      s.nearest_enemy_x       ?? 640,
+      nearest_enemy_y:      s.nearest_enemy_y       ?? 360,
+      nearest_enemy_hp_pct: s.nearest_enemy_hp_pct  ?? 0,
+      chicken_hp_pct:       0,  // comes from config, not frame — overlay shows threshold line separately
+      area_name:            s.area_name             ?? "",
+      in_game,
     });
   }, 100);
 }

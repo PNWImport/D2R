@@ -268,6 +268,40 @@ impl NativeMessagingHost {
                 }
             }
 
+            // Returns the most recent FrameState for the debug overlay relay.
+            // The map host cannot read this directly (different process), so the
+            // extension relays it via update_debug_state every 100 ms when the
+            // debug overlay is active.
+            "get_frame_state" => {
+                match self.frame_buffer.latest() {
+                    Some(s) => Some(json!({
+                        "cmd": "frame_state",
+                        "hp_pct":               s.hp_pct,
+                        "mana_pct":             s.mana_pct,
+                        "merc_hp_pct":          s.merc_hp_pct,
+                        "merc_alive":           s.merc_alive,
+                        "enemy_count":          s.enemy_count,
+                        "in_combat":            s.in_combat,
+                        "nearest_enemy_x":      s.nearest_enemy_x,
+                        "nearest_enemy_y":      s.nearest_enemy_y,
+                        "nearest_enemy_hp_pct": s.nearest_enemy_hp_pct,
+                        "in_town":              s.in_town,
+                        "at_menu":              s.at_menu,
+                        "loading_screen":       s.loading_screen,
+                        "area_name":            s.area_name_str(),
+                        "char_screen_x":        s.char_screen_x,
+                        "char_screen_y":        s.char_screen_y,
+                        "frame_width":          s.frame_width,
+                        "frame_height":         s.frame_height,
+                        "tick":                 s.tick,
+                    })),
+                    None => Some(json!({
+                        "cmd": "frame_state",
+                        "available": false,
+                    })),
+                }
+            }
+
             _ => Some(json!({
                 "cmd": "error",
                 "message": "unknown_command",
