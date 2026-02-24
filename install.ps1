@@ -58,21 +58,32 @@ if ($osType -ne "windows") {
     exit 1
 }
 
-# ---- Early Admin Check ----
+# ---- Early Admin Check (with UAC self-elevation) ----
 # Writing to C:\ProgramData and HKLM registry requires Administrator.
-# Fail fast with a clear message instead of dying mid-install.
+# If not elevated, prompt the user via UAC and re-launch this script.
 $isAdmin = ([Security.Principal.WindowsPrincipal] `
     [Security.Principal.WindowsIdentity]::GetCurrent() `
 ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if (-not $isAdmin -and -not $ExtensionOnly) {
-    if ($env:D2R_FORCE_INSTALL -eq "1") {
-        Write-Host "[!] WARNING: Running without Administrator. Some steps may fail." -ForegroundColor Yellow
-    } else {
-        Write-Host "[-] This installer requires Administrator privileges." -ForegroundColor Red
+    Write-Host "[!] Administrator privileges required. Requesting elevation..." -ForegroundColor Yellow
+
+    # Rebuild the argument list so the elevated instance keeps all flags
+    $relaunchArgs = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$PSCommandPath`"")
+    if ($ExtensionId)          { $relaunchArgs += "-ExtensionId `"$ExtensionId`"" }
+    if ($SkipBuild)            { $relaunchArgs += "-SkipBuild" }
+    if ($SkipNetworkOptimize)  { $relaunchArgs += "-SkipNetworkOptimize" }
+    if ($Uninstall)            { $relaunchArgs += "-Uninstall" }
+
+    try {
+        Start-Process powershell -Verb RunAs -ArgumentList $relaunchArgs
+        Write-Host "    Elevated window opened. You can close this one." -ForegroundColor Gray
+        exit 0
+    } catch {
+        # User declined UAC or RunAs failed
+        Write-Host "[-] UAC elevation was declined or failed." -ForegroundColor Red
         Write-Host "    Right-click PowerShell -> 'Run as Administrator'" -ForegroundColor Yellow
-        Write-Host "    Then re-run: .\install.ps1 $($args -join ' ')" -ForegroundColor Cyan
-        Write-Host "    Or set D2R_FORCE_INSTALL=1 to try anyway (may fail on ProgramData writes)" -ForegroundColor Gray
+        Write-Host "    Then re-run: .\install.ps1" -ForegroundColor Cyan
         exit 1
     }
 }
@@ -308,11 +319,35 @@ if (-not $SkipBuild) {
     Write-Warn "Skipping build (--SkipBuild)"
 }
 
-# ---- Step 2: Resolve extension ID (fully automatic) ----
-if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
-    Write-Host ""
-    Write-Host "Detecting extension ID..." -ForegroundColor Yellow
+# ---- Step 2: Install Chrome Extension ----
+Write-Host ""
+Write-Host "Installing Chrome Extension..." -ForegroundColor Yellow
 
+$extPath = Join-Path $ScriptDir "extension\chrome_extension"
+if (-not (Test-Path "$extPath\manifest.json")) {
+    Write-Err "Extension not found at: $extPath"
+    exit 1
+}
+Write-Step "Extension source: $extPath"
+
+# Find Chrome executable
+$chromeExe = $null
+foreach ($p in @(
+    "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
+    "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
+    "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
+)) {
+    if (Test-Path $p) { $chromeExe = $p; break }
+}
+if (-not $chromeExe) {
+    $chromeExe = (Get-Command chrome -ErrorAction SilentlyContinue).Source
+}
+
+# ---- Step 3: Detect Extension ID ----
+Write-Host ""
+Write-Host "Detecting extension ID..." -ForegroundColor Yellow
+
+if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
     # First, try auto-detect from Chrome Preferences
     $detected = Find-ExtensionId
     if ($detected) {
@@ -320,34 +355,13 @@ if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
         $masked = $ExtensionId.Substring(0, 4) + ("*" * 24) + $ExtensionId.Substring(28, 4)
         Write-Step "Auto-detected extension ID: $masked"
     } else {
-        # Extension not loaded yet — load it, then re-detect
-        $extPath = Join-Path $ScriptDir "extension\chrome_extension"
-        if (-not (Test-Path "$extPath\manifest.json")) {
-            Write-Err "Extension not found at: $extPath"
-            exit 1
-        }
-        Write-Warn "Extension not found in Chrome. Loading it now..."
-        Write-Info "Opening Chrome with the extension loaded..."
-
-        # Launch Chrome with --load-extension to auto-install in dev mode
-        $chromePaths = @(
-            "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
-            "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
-            "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
-        )
-        $chromeExe = $null
-        foreach ($p in $chromePaths) {
-            if (Test-Path $p) { $chromeExe = $p; break }
-        }
-        if (-not $chromeExe) {
-            $chromeExe = (Get-Command chrome -ErrorAction SilentlyContinue).Source
-        }
+        # Extension not loaded yet — load it via --load-extension, then re-detect
         if ($chromeExe) {
+            Write-Warn "Extension not found in Chrome. Loading it now..."
             Start-Process $chromeExe -ArgumentList "--load-extension=`"$extPath`"" 2>$null
             Write-Info "Waiting for Chrome to register the extension..."
             # Poll for up to 15 seconds
-            $maxWait = 15
-            for ($i = 0; $i -lt $maxWait; $i++) {
+            for ($i = 0; $i -lt 15; $i++) {
                 Start-Sleep -Seconds 1
                 $detected = Find-ExtensionId
                 if ($detected) {
@@ -373,14 +387,17 @@ if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
             }
         }
     }
+} else {
+    Write-Step "Using provided extension ID"
 }
+
 # Mask the ID in output for privacy
 $maskedId = if ($ExtensionId.Length -ge 32) {
     $ExtensionId.Substring(0, 4) + ("*" * 24) + $ExtensionId.Substring(28, 4)
 } else { $ExtensionId }
-Write-Step "Using extension ID: $maskedId"
+Write-Step "Extension ID: $maskedId"
 
-# ---- Step 3: Install Vision Agent (copy binary + register) ----
+# ---- Step 4: Install Vision Agent (copy binary + register) ----
 Write-Host ""
 Write-Host "Installing Vision Agent..." -ForegroundColor Yellow
 
@@ -406,7 +423,7 @@ Write-Manifest $visionManifest $VisionHostName "$VisionInstallPath\$VisionExe" $
 Register-Host $VisionHostName $visionManifest
 Write-Step "Registered $VisionHostName (Chrome + Edge)"
 
-# ---- Step 4: Install Map Helper (copy binary + register) ----
+# ---- Step 5: Install Map Helper (copy binary + register) ----
 Write-Host ""
 Write-Host "Installing Map Helper..." -ForegroundColor Yellow
 
@@ -428,7 +445,7 @@ Write-Manifest $mapManifest $MapHostName "$MapInstallPath\$MapExe" $ExtensionId
 Register-Host $MapHostName $mapManifest
 Write-Step "Registered $MapHostName (Chrome + Edge)"
 
-# ---- Step 5: Copy config templates ----
+# ---- Step 6: Copy config templates ----
 Write-Host ""
 Write-Host "Setting up configs..." -ForegroundColor Yellow
 
@@ -448,7 +465,7 @@ if (Test-Path $sourceConfigs) {
     Write-Warn "No config directory found at $sourceConfigs"
 }
 
-# ---- Step 6: Network Latency Optimization (Leatrix-style) ----
+# ---- Step 7: Network Latency Optimization (Leatrix-style) ----
 # Disables Nagle's algorithm (TcpNoDelay) and forced ACK batching (TcpAckFrequency)
 # on all network interfaces. Same principle as the classic Leatrix Latency Fix:
 #   - Nagle's algorithm batches small TCP packets → adds 40-200ms delay
@@ -518,32 +535,50 @@ if (-not $SkipNetworkOptimize) {
     Write-Info "Skipping network optimization (SkipNetworkOptimize flag set)"
 }
 
-# ---- Step 7: Verify ----
+# ---- Step 8: Verify ----
 Write-Host ""
 Write-Banner "Installation Complete"
 
-Write-Host "Registered Native Messaging Hosts:" -ForegroundColor White
-$hosts = @(
-    @{ Name = $VisionHostName; Label = "Vision Agent" },
-    @{ Name = $MapHostName;    Label = "Map Helper"   }
-)
-foreach ($h in $hosts) {
-    $reg = Get-ItemProperty "HKCU:\Software\Google\Chrome\NativeMessagingHosts\$($h.Name)" -ErrorAction SilentlyContinue
-    if ($reg) {
-        Write-Host "  [OK] $($h.Label) ($($h.Name))" -ForegroundColor Green
-    } else {
-        Write-Host "  [--] $($h.Label) ($($h.Name)) - NOT FOUND" -ForegroundColor Red
-    }
+Write-Host "Installed Components:" -ForegroundColor White
+Write-Host ""
+
+# 1) Chrome Extension
+Write-Host "  Chrome Extension (KZB Control Panel v1.7.0):" -ForegroundColor White
+if ($ExtensionId -and $ExtensionId -ne "EXTENSION_ID_HERE") {
+    Write-Host "    [OK] Loaded in Chrome — ID: $maskedId" -ForegroundColor Green
+} else {
+    Write-Host "    [!!] Extension ID is placeholder — update with real ID" -ForegroundColor Yellow
+}
+Write-Host "    Path: $extPath" -ForegroundColor Gray
+
+# 2) Vision Agent
+Write-Host ""
+Write-Host "  Vision Agent ($VisionHostName):" -ForegroundColor White
+$visionReg = Get-ItemProperty "HKCU:\Software\Google\Chrome\NativeMessagingHosts\$VisionHostName" -ErrorAction SilentlyContinue
+if ($visionReg) {
+    Write-Host "    [OK] Registered (Chrome + Edge)" -ForegroundColor Green
+} else {
+    Write-Host "    [--] NOT FOUND in registry" -ForegroundColor Red
+}
+if (Test-Path "$VisionInstallPath\$VisionExe") {
+    Write-Host "    Binary: $VisionInstallPath\$VisionExe" -ForegroundColor Gray
+} else {
+    Write-Host "    [--] Binary missing: $VisionInstallPath\$VisionExe" -ForegroundColor Red
 }
 
+# 3) Map Helper
 Write-Host ""
-Write-Host "Extension:" -ForegroundColor White
-$extPath = Join-Path $ScriptDir "extension\chrome_extension"
-Write-Host "  Path: $extPath" -ForegroundColor Gray
-if ($ExtensionId -eq "EXTENSION_ID_HERE") {
-    Write-Host "  [!!] Extension ID is placeholder - update with real ID" -ForegroundColor Yellow
+Write-Host "  Map Helper ($MapHostName):" -ForegroundColor White
+$mapReg = Get-ItemProperty "HKCU:\Software\Google\Chrome\NativeMessagingHosts\$MapHostName" -ErrorAction SilentlyContinue
+if ($mapReg) {
+    Write-Host "    [OK] Registered (Chrome + Edge)" -ForegroundColor Green
 } else {
-    Write-Host "  [OK] Extension ID: $maskedId" -ForegroundColor Green
+    Write-Host "    [--] NOT FOUND in registry" -ForegroundColor Red
+}
+if (Test-Path "$MapInstallPath\$MapExe") {
+    Write-Host "    Binary: $MapInstallPath\$MapExe" -ForegroundColor Gray
+} else {
+    Write-Host "    [--] Binary missing: $MapInstallPath\$MapExe" -ForegroundColor Red
 }
 
 Write-Host ""
