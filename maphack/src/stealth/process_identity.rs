@@ -84,7 +84,17 @@ impl ProcessIdentity {
         use std::mem;
         use std::ptr;
         use winapi::um::processthreadsapi::GetCurrentProcess;
-        use winapi::um::winnt::PROCESS_BASIC_INFORMATION;
+
+        // PROCESS_BASIC_INFORMATION is not exported by winapi;
+        // define it manually for NtQueryInformationProcess.
+        #[repr(C)]
+        struct PROCESS_BASIC_INFORMATION {
+            reserved1: *mut std::ffi::c_void,
+            peb_base_address: *mut u8,
+            reserved2: [*mut std::ffi::c_void; 2],
+            unique_process_id: usize,
+            reserved3: *mut std::ffi::c_void,
+        }
 
         // NtQueryInformationProcess is not in winapi by default,
         // so we load it dynamically from ntdll.dll
@@ -129,7 +139,7 @@ impl ProcessIdentity {
                 return Err(format!("NtQueryInformationProcess failed: {:#X}", status));
             }
 
-            let peb = pbi.PebBaseAddress;
+            let peb = pbi.peb_base_address;
             if peb.is_null() {
                 return Err("Null PEB".into());
             }
