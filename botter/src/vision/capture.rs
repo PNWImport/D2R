@@ -1304,7 +1304,8 @@ impl DxgiCapturer {
             let output1: IDXGIOutput1 = output.cast()?;
 
             // Get output description for dimensions
-            let desc = output.GetDesc()?;
+            let mut desc = std::mem::zeroed();
+            output.GetDesc(&mut desc)?;
             let width = (desc.DesktopCoordinates.right - desc.DesktopCoordinates.left) as u32;
             let height = (desc.DesktopCoordinates.bottom - desc.DesktopCoordinates.top) as u32;
 
