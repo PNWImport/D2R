@@ -113,7 +113,7 @@ impl InputWorker {
             }
             InputCommand::MouseMove { x, y } => {
                 unsafe {
-                    SetCursorPos(*x, *y);
+                    let _ = SetCursorPos(*x, *y);
                 }
                 thread::sleep(Duration::from_micros(rng.gen_range(50..300)));
             }
@@ -156,7 +156,7 @@ impl InputWorker {
                 hold_ms,
             } => {
                 unsafe {
-                    SetCursorPos(*x, *y);
+                    let _ = SetCursorPos(*x, *y);
                 }
                 thread::sleep(Duration::from_millis(rng.gen_range(5..25)));
                 match button {

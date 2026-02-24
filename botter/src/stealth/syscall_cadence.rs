@@ -317,7 +317,7 @@ impl SyscallCadence {
                 #[cfg(windows)]
                 unsafe {
                     let mut counter: i64 = 0;
-                    windows::Win32::System::Performance::QueryPerformanceCounter(&mut counter);
+                    let _ = windows::Win32::System::Performance::QueryPerformanceCounter(&mut counter);
                 }
                 #[cfg(not(windows))]
                 {

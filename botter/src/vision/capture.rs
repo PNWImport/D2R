@@ -1343,8 +1343,9 @@ impl DxgiCapturer {
             let staging = match &self.staging {
                 Some(s) => s.clone(),
                 None => {
-                    let mut desc = D3D11_TEXTURE2D_DESC::default();
-                    texture.GetDesc(&mut desc);
+                    let mut desc = std::mem::MaybeUninit::uninit();
+                    texture.GetDesc(desc.as_mut_ptr());
+                    let mut desc = desc.assume_init();
                     desc.Usage = D3D11_USAGE_STAGING;
                     desc.BindFlags = 0;
                     desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ.0 as u32;
