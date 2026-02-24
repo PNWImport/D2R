@@ -1,0 +1,178 @@
+# Whirlwind Barbarian — Full Config
+
+character_class: Barbarian
+build: whirlwind
+
+survival:
+  chicken_hp_pct: 25
+  mana_chicken_pct: 0
+  merc_chicken_pct: 0
+  hp_potion_pct: 75
+  hp_rejuv_pct: 40
+  mana_potion_pct: 30
+  mana_rejuv_pct: 0
+  tp_retreat_pct: 30
+  merc_hp_pct: 75
+  hp_potion_cooldown_ms: 1000
+  mana_potion_cooldown_ms: 1000
+  rejuv_cooldown_ms: 300
+  belt_column: ["hp", "hp", "mp", "rv"]
+  min_belt_column: [3, 3, 3, 0]
+
+combat:
+  primary_skill_key: "f"                 # Whirlwind
+  secondary_skill_key: "g"               # Berserk (magic damage vs phys immune)
+  mobility_skill_key: null               # No tele unless Enigma
+  preattack_key: "d"                     # Battle Cry
+  immunity_fallback_key: "g"             # Berserk
+  boss_priority: true
+  kite_threshold: 15                     # Barb is melee, high threshold
+  cast_interval_ms: 100                  # WW is fast
+  max_attack_count: 300
+  use_merc_stomp: true
+  no_tele: true
+  dodge: false
+  attack_slots:
+    preattack: "d"                       # Battle Cry
+    boss_primary: "f"                    # Whirlwind
+    boss_untimed: null
+    mob_primary: "f"                     # Whirlwind
+    mob_untimed: null
+    immune_primary: "g"                  # Berserk
+    immune_untimed: null
+  static_field: null
+
+buffs:
+  - { name: "Battle Command",  hotkey: "q", visual_check: false, duration_secs: 180 }
+  - { name: "Battle Orders",   hotkey: "w", visual_check: false, duration_secs: 180 }
+  - { name: "Shout",           hotkey: "e", visual_check: false, duration_secs: 180 }
+
+class_specific:
+  find_item: true
+  find_item_switch: true
+  use_warcries: true
+
+farming:
+  min_game_time_secs: 60
+  sequence:
+    - { name: Travincal, enabled: true }
+    - { name: Pit, enabled: true }
+    - { name: Eldritch, enabled: true, options: { kill_shenk: true, kill_dac_farren: true } }
+    - { name: Pindleskin, enabled: true, options: { kill_nihlathak: false } }
+    - { name: Diablo, enabled: false }
+    - { name: Baal, enabled: false }
+    - { name: Mephisto, enabled: false }
+    - { name: Cows, enabled: false }
+
+leveling:
+  auto_skill:
+    enabled: true
+    save: 0
+    build:
+      - { skill: "Bash",              hotkey: null, max_points: 1,  satisfy: true  }
+      - { skill: "Double Swing",      hotkey: null, max_points: 1,  satisfy: true  }
+      - { skill: "Howl",              hotkey: null, max_points: 1,  satisfy: true  }
+      - { skill: "Shout",             hotkey: "e",  max_points: 1,  satisfy: true  }
+      - { skill: "Stun",              hotkey: null, max_points: 1,  satisfy: true  }
+      - { skill: "Concentrate",       hotkey: null, max_points: 1,  satisfy: true  }
+      - { skill: "Battle Orders",     hotkey: "w",  max_points: 1,  satisfy: true  }
+      - { skill: "Battle Command",    hotkey: "q",  max_points: 1,  satisfy: true  }
+      - { skill: "Whirlwind",         hotkey: "f",  max_points: 20, satisfy: true  }
+      - { skill: "Sword Mastery",     hotkey: null, max_points: 20, satisfy: true  }
+      - { skill: "Battle Orders",     hotkey: "w",  max_points: 20, satisfy: true  }
+      - { skill: "Shout",             hotkey: "e",  max_points: 20, satisfy: true  }
+      - { skill: "Berserk",           hotkey: "g",  max_points: 1,  satisfy: true  }
+      - { skill: "Natural Resistance", hotkey: null, max_points: 10, satisfy: true  }
+      - { skill: "Increased Speed",   hotkey: null, max_points: 5,  satisfy: true  }
+      - { skill: "Find Item",         hotkey: null, max_points: 1,  satisfy: true  }
+  auto_stat:
+    enabled: true
+    save: 0
+    build:
+      - { stat: "strength",  target: 150 }
+      - { stat: "dexterity", target: 136 }
+      - { stat: "vitality",  target: "all" }
+
+cubing:
+  enabled: false
+  recipes:
+    - { recipe_type: "rune", item: "Pul Rune" }
+
+runewords:
+  enabled: true
+  make:
+    - { name: "Grief",         base: "Phase Blade" }
+    - { name: "CallToArms",    base: "Flail" }
+    - { name: "Insight",       base: "Thresher", ethereal: "eth" }
+  keep_rules:
+    - "[type] == sword # [plusmaxdamage] >= 390"
+
+gambling:
+  enabled: false
+  gold_start: 1000000
+  gold_stop: 500000
+  items: ["Amulet", "Ring", "Circlet"]
+
+monster_skip:
+  skip_immune: ["physical"]
+  skip_enchant: []
+  skip_aura: []
+  skip_exception: []
+
+clear:
+  clear_type: "all"
+  clear_path: "skip_normal"
+  clear_range: 30
+
+merc: { use_merc: true, merc_watch: false }
+
+inventory:
+  grid:
+    - [0,0,0,0,0,0,0,0,0,0]
+    - [0,0,0,0,0,0,0,0,0,0]
+    - [0,0,0,0,0,0,0,0,0,0]
+    - [0,0,0,0,0,0,0,0,0,0]
+
+loot:
+  always_pick: ["unique", "set", "rune"]
+  conditional_pick: ["rare_ring", "rare_amulet"]
+  magic_pick_types: ["grand_charm", "small_charm"]
+  gold_threshold: 5000
+  prioritize_runes_uniques: true
+  max_pickup_distance: 400
+  pick_range: 40
+  stash_gold: 100000
+
+town:
+  heal_hp_pct: 50
+  repair_pct: 40
+  go_to_town_triggers: { belt_potions_below: 2, inventory_slots_below: 4, merc_dead: true, durability_low: true }
+  task_order: [revive_merc, heal, repair, identify, stash, buy_potions]
+  stash_rules:
+    always_stash: ["unique", "set", "rune"]
+    id_then_evaluate: ["rare_ring", "rare_amulet"]
+    always_sell: ["magic_non_charm"]
+
+humanization:
+  reaction_mean_ms: 250.0
+  reaction_stddev_ms: 80.0
+  survival_max_delay_ms: 120
+  potion_threshold_variance: 6
+  skill_miss_rate: 0.02
+  aim_variance_px: 22
+  path_deviate_rate: 0.06
+  path_deviate_px: 30
+  idle_pause_rate: 0.015
+  aggression_drift_per_hour: 0.06
+  caution_drift_per_hour: 0.02
+
+session:
+  max_daily_hours: 8.0
+  session_min_minutes: 60
+  session_max_minutes: 180
+  break_min_minutes: 30
+  break_max_minutes: 120
+  allowed_start_hour: 9
+  allowed_end_hour: 23
+  short_break_rate: 0.12
+  long_break_rate: 0.04

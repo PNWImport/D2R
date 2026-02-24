@@ -1,6 +1,6 @@
 # Build artifacts
-botter/target/
-maphack/target/
+vision/target/
+overlay/target/
 *.exe
 *.dll
 # Kolbot ships pre-built binaries (required to run)
@@ -29,5 +29,5 @@ extracted/
 
 # Runtime data
 *.yaml
-!botter/configs/*.yaml
-!botter/deploy/default_config.yaml
+!vision/configs/*.yaml
+!vision/deploy/default_config.yaml
