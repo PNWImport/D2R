@@ -54,7 +54,7 @@ if ($isWSL) {
 if ($osType -ne "windows") {
     Write-Host "[-] Unsupported OS: $osType" -ForegroundColor Red
     Write-Host "    This installer requires native Windows (registry, ProgramData, Chrome)." -ForegroundColor Yellow
-    Write-Host "    The Rust crates (botter, maphack) also require Windows APIs (DXGI, Win32)." -ForegroundColor Gray
+    Write-Host "    The Rust crates (vision, overlay) also require Windows APIs (DXGI, Win32)." -ForegroundColor Gray
     exit 1
 }
 
@@ -299,7 +299,7 @@ if (-not $SkipBuild) {
     # NOTE: cargo writes progress to stderr. Run through cmd /c so PowerShell
     # does not wrap every "Compiling ..." line as a NativeCommandError.
     Write-Host "  Building vision agent..." -ForegroundColor Gray
-    Push-Location (Join-Path $ScriptDir "botter")
+    Push-Location (Join-Path $ScriptDir "vision")
     try {
         $env:CARGO_TERM_COLOR = "never"
         cmd /c "cargo build --release 2>&1"
@@ -309,7 +309,7 @@ if (-not $SkipBuild) {
 
     # Build map helper
     Write-Host "  Building map helper..." -ForegroundColor Gray
-    Push-Location (Join-Path $ScriptDir "maphack")
+    Push-Location (Join-Path $ScriptDir "overlay")
     try {
         cmd /c "cargo build --release 2>&1"
         if ($LASTEXITCODE -ne 0) { Write-Err "Map helper build failed!"; exit 1 }

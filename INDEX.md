@@ -49,21 +49,22 @@ Complete guide to all documentation and source files.
    - Dual tick drain architecture explained
    - Best for: Understanding performance optimizations
 
-7. **[CACHE_WALKTHROUGH_ACT1.md](CACHE_WALKTHROUGH_ACT1.md)** (10 min)
+7. **[ISSUES_BACKLOG.md](ISSUES_BACKLOG.md)** (5 min)
+   - Technical debt tracking (cubing, waypoint detector, etc.)
+   - Best for: Known gaps and future work
+
+### Reference Archives (`docs/`)
+8. **[docs/CACHE_WALKTHROUGH_ACT1.md](docs/CACHE_WALKTHROUGH_ACT1.md)** (10 min)
    - Frame-by-frame Act 1 Level 8 run with QuadCache hit analysis
    - Lane 3/4 performance per frame
    - Best for: Understanding QuadCache in practice
 
-8. **[ISSUES_BACKLOG.md](ISSUES_BACKLOG.md)** (5 min)
-   - Technical debt tracking (cubing, waypoint detector, etc.)
-   - Best for: Known gaps and future work
-
-9. **[SESSION_SUMMARY.md](SESSION_SUMMARY.md)** (5 min)
+9. **[docs/SESSION_SUMMARY.md](docs/SESSION_SUMMARY.md)** (5 min)
    - Install check + walkthrough session log
    - Bugfixes: Diablo seal, Action::Click, waypoint tracking
    - Best for: Recent session history
 
-10. **[CPU_PROOF_SESSION.md](CPU_PROOF_SESSION.md)** (5 min)
+10. **[docs/CPU_PROOF_SESSION.md](docs/CPU_PROOF_SESSION.md)** (5 min)
     - CPU proof demo design rationale
     - Hz simulation strategy, video recording instructions
     - Best for: Understanding the CPU-only proof demo

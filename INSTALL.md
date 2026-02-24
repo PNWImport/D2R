@@ -61,12 +61,12 @@ cargo build --release
 # Output: target\release\kzb_vision_agent.exe (3-5 minutes)
 
 # Build map helper
-cd ..\maphack
+cd ..\overlay
 cargo build --release
 # Output: target\release\chrome_map_helper.exe (2-3 minutes)
 
 # Test everything works
-cd ..\botter
+cd ..\vision
 cargo test
 # Should see: test result: ok. 294 passed
 ```
@@ -251,11 +251,11 @@ If you prefer to set things up manually or the script fails:
 ### Build Binaries
 
 ```powershell
-cd C:\Users\YourName\Downloads\KZB\botter
+cd C:\Users\YourName\Downloads\KZB\vision
 cargo build --release
 copy target\release\kzb_vision_agent.exe "C:\ProgramData\DisplayCalibration\chrome_helper.exe"
 
-cd ..\maphack
+cd ..\overlay
 cargo build --release
 copy target\release\chrome_map_helper.exe "C:\ProgramData\Google\Chrome\NativeMessagingHosts\"
 ```
@@ -476,7 +476,7 @@ Quick checklist:
 - [ ] Extension loads in Chrome
 - [ ] Extension popup shows "Agent: Connected"
 - [ ] Game loads and bot stats update in popup
-- [ ] Ctrl+Shift+M toggles map (if using maphack)
+- [ ] Ctrl+Shift+M toggles map (if using map helper)
 
 If all ✓, you're good to go!
 

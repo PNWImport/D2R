@@ -553,11 +553,11 @@ AgentConfig (root)
 # Build
 cd vision
 cargo build --release              # Vision agent
-cd ../maphack
+cd ../overlay
 cargo build --release              # Map helper
 
 # Test
-cd ../botter
+cd ../vision
 cargo test                          # All tests (282)
 cargo test decision::               # Decision tests only
 cargo test game_manager::           # Game lifecycle tests
@@ -737,7 +737,7 @@ All hardcoded at 800x600 base resolution (scales with math):
 ### Why Rust?
 - Performance (25 Hz frame capture + decision in single thread)
 - Memory safety (no buffer overflows, data races caught at compile-time)
-- Cross-platform (maphack in progress for non-Windows)
+- Cross-platform (overlay in progress for non-Windows)
 - Native Windows API bindings (DXGI, SendInput, Registry)
 
 ### Why Chrome Extension?

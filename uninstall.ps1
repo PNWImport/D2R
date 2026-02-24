@@ -28,6 +28,8 @@ $ErrorActionPreference = "Stop"
 $VisionInstallPath = "$env:ProgramData\DisplayCalibration"
 $MapInstallPath    = "$env:ProgramData\Google\Chrome\NativeMessagingHosts"
 $ManifestPath      = "$env:USERPROFILE\KZB\native-hosts"
+$KzbUserDir        = "$env:USERPROFILE\KZB"
+$KzbDataDir        = "$env:ProgramData\KZB"
 $VisionExe         = "chrome_helper.exe"
 $MapExe            = "chrome_map_helper.exe"
 $VisionHostName    = "com.chromium.display.calibration"
@@ -215,6 +217,35 @@ if (-not $DryRun -and (Test-Path $ManifestPath)) {
     $remaining = Get-ChildItem $ManifestPath -ErrorAction SilentlyContinue
     if (-not $remaining) {
         Remove-ItemSafe $ManifestPath
+    }
+}
+
+# Remove parent KZB user dir if empty
+if (-not $DryRun -and (Test-Path $KzbUserDir)) {
+    $remaining = Get-ChildItem $KzbUserDir -ErrorAction SilentlyContinue
+    if (-not $remaining) {
+        Remove-ItemSafe $KzbUserDir
+    }
+}
+
+# =============================================
+# 5b. Remove runtime host registry (hosts.json)
+# =============================================
+# host_registry.rs in both agents writes $env:ProgramData\KZB\hosts.json
+# at first launch to persist the randomised native messaging host names.
+Write-Host ""
+Write-Host "Removing runtime host registry..." -ForegroundColor Yellow
+
+Remove-ItemSafe "$KzbDataDir\hosts.json"
+
+# Remove KZB data dir if empty
+if (-not $DryRun -and (Test-Path $KzbDataDir)) {
+    $remaining = Get-ChildItem $KzbDataDir -ErrorAction SilentlyContinue
+    if (-not $remaining) {
+        Remove-ItemSafe $KzbDataDir
+    } else {
+        Write-Info "Left non-empty directory: $KzbDataDir"
+        $remaining | ForEach-Object { Write-Info "  $_" }
     }
 }
 

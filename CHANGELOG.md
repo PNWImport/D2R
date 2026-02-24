@@ -119,10 +119,10 @@ Complete version history of KZB, a production game farming automation suite buil
 - Session simulation: 33% hit rate (realistic pattern recurrence)
 
 #### Documentation
-- **CACHE_WALKTHROUGH_ACT1.md**: Frame-by-frame Act 1 Level 8 run with QuadCache hit analysis
+- **docs/CACHE_WALKTHROUGH_ACT1.md**: Frame-by-frame Act 1 Level 8 run with QuadCache hit analysis
 - **ISSUES_BACKLOG.md**: Technical debt tracking (cubing, waypoint detector, etc.)
-- **SESSION_SUMMARY.md**: Install check + walkthrough session documentation
-- **CPU_PROOF_SESSION.md**: CPU proof demo design rationale + recording instructions
+- **docs/SESSION_SUMMARY.md**: Install check + walkthrough session documentation
+- **docs/CPU_PROOF_SESSION.md**: CPU proof demo design rationale + recording instructions
 - Updated README.md with CPU-Only Proof section, vision pipeline details
 - Updated INDEX.md documentation table
 
@@ -442,7 +442,7 @@ Complete version history of KZB, a production game farming automation suite buil
 
 | Metric | Value |
 |--------|-------|
-| Rust LOC | ~11,400 (botter ~8,400 + overlay ~3,000) |
+| Rust LOC | ~11,400 (vision ~8,400 + overlay ~3,000) |
 | JavaScript/CSS/HTML LOC | ~3,100 |
 | YAML configs | 8 character presets |
 | Test count | 294 (136+150+8) |

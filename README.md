@@ -367,7 +367,7 @@ farming:                                      # Farming sequence
 - ✅ **QuadCache Acceleration** — Four-lane O(1) decision cache (~22 KB)
 - ✅ **Vision Pipeline Benchmarks** — `vision_bench` binary + CPU proof demo page
 - ✅ **Full Test Suite** — 294 tests (unit, integration, stress)
-- ✅ **10 Documentation Files** — INDEX, QUICKSTART, INSTALL, STRUCTURE, CHANGELOG, LATENCY_ANALYSIS, CACHE_WALKTHROUGH, ISSUES_BACKLOG, SESSION_SUMMARY, CPU_PROOF_SESSION
+- ✅ **10 Documentation Files** — INDEX, QUICKSTART, INSTALL, STRUCTURE, CHANGELOG, LATENCY_ANALYSIS, ISSUES_BACKLOG + 3 archived in `docs/`
 
 ---
 
