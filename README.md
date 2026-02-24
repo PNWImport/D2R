@@ -1,8 +1,8 @@
 ![KZB Banner](./assets/kzb_header.webp)
 
-# KZB — D2R Automation Suite
+# KZB — Automation Suite
 
-> **Production-ready Diablo II: Resurrected farming bot built in Rust**
+> **Production-ready game farming bot built in Rust**
 >
 > Vision-based automation • Zero game memory access • Chrome control panel • 294 tests (100% passing)
 
@@ -10,14 +10,14 @@
 
 ## 🎯 Overview
 
-**KZB** is a complete D2R farming automation suite that combines high-performance vision-based detection with proven bot logic from 20+ years of Kolbot development. It's designed for **single-player offline use** with a focus on legitimacy, stealth, and automation quality.
+**KZB** is a complete game farming automation suite that combines high-performance vision-based detection with proven bot logic from 20+ years of Kolbot development. It's designed for **single-player offline use** with a focus on legitimacy, stealth, and automation quality.
 
 ### Three-Part Architecture
 
 | Component | Language | Purpose |
 |-----------|----------|---------|
 | **Vision Agent** (`botter/`) | Rust | Frame capture, enemy/loot detection, decision engine, game lifecycle |
-| **Map Helper** (`maphack/`) | Rust | D2R memory reading, map data, overlay rendering |
+| **Map Helper** (`maphack/`) | Rust | Game memory reading, map data, overlay rendering |
 | **Chrome Extension** | JavaScript | Control panel UI, real-time stats, pause/resume, config selector |
 
 ---
@@ -67,7 +67,7 @@ OutOfGame → TownPrep → LeavingTown → Farming → Returning → ExitGame �
 ### 🖥️ Chrome Control Panel
 - **Real-time stats**: Frames captured, decisions made, potions used, loots picked, chickens executed
 - **Live connection indicator**: Green/red status for Agent and Map hosts
-- **Pause/Resume**: Stop bot without closing D2R
+- **Pause/Resume**: Stop bot without closing the game
 - **Config selector**: Switch character configs on the fly
 - **Map overlay**: Toggle, adjust opacity with hotkeys
 
@@ -104,7 +104,7 @@ notepad C:\ProgramData\DisplayCalibration\configs\sorceress_blizzard.yaml
 
 ### 3. Start Farming
 ```
-1. Launch D2R
+1. Launch the game
 2. Create/load single-player game in town
 3. Click the KZB extension icon (opens full-tab control panel)
 4. Wait for "Agent: Connected" (green indicator)
@@ -142,7 +142,7 @@ Open this file in Chrome (or serve with `python3 -m http.server 8090`) to get a 
 
 - **Big live Hz counter** — simulates the pipeline running at ~385 Hz steady-state with natural jitter
 - **Rolling 120-point sparkline** — shows Hz stability over time; min / avg / max annotated
-- **Simulated D2R scene** — detection zone overlays (T1/T2/T3) animated in real time
+- **Simulated game scene** — detection zone overlays (T1/T2/T3) animated in real time
 - **Evidence panel** — 8 proof cards: 0 GPU passes, 0 sqrt() calls, 0 heap allocs/frame, etc.
 - **Performance grade** — A/B/C/D based on live Hz reading
 - **Frame budget bar** — shows pipeline uses <5% of the 40 ms/frame @ 25 Hz budget
@@ -207,11 +207,11 @@ Key Design:
 ```
 src/
 ├── main.rs                          Entry point, map reader
-├── discovery.rs                     D2R process discovery
+├── discovery.rs                     Game process discovery
 ├── host_registry.rs                 Chrome native host registration
 ├── mapgen.rs                        Map generation/parsing
-├── memory.rs                        D2R memory reading
-├── offsets.rs                       D2R structure offsets
+├── memory.rs                        Game memory reading
+├── offsets.rs                       Game structure offsets
 ├── protocol.rs                      Native messaging protocol
 └── stealth/                         Stealth modules
 ```
@@ -374,7 +374,7 @@ farming:                                      # Farming sequence
 ## ⚠️ Known Limitations
 
 - **Fixed resolution**: Hardcoded 800x600 scaling (adjustable via math)
-- **D2R 3.x offsets**: If Blizzard changes memory, maphack needs offset update
+- **Game offsets**: If patches change memory layout, maphack needs offset update
 - **No advanced pathfinding**: Uses vision-detected obstacles, not A* on full map
 - **Windows-only stealth**: Stealth features are Windows-specific
 
@@ -411,7 +411,7 @@ farming:                                      # Farming sequence
 - Session management and break scheduling
 - Humanization system (reaction time, aim variance)
 
-### D2R Research Community
+### Game Research Community
 - Memory offsets and structure research
 - Spell effect identification
 - Item classification heuristics
@@ -425,8 +425,8 @@ farming:                                      # Farming sequence
 **MIT License**
 
 ```
-KZB is provided as-is for single-player offline D2R use only.
-Respect Blizzard Entertainment's Terms of Service.
+KZB is provided as-is for single-player offline use only.
+Respect the game's Terms of Service.
 This tool is for educational and personal entertainment purposes.
 ```
 
@@ -447,7 +447,7 @@ This tool is for educational and personal entertainment purposes.
 ## 🎮 Requirements
 
 - **Windows 10+** (for stealth features; Linux for testing)
-- **D2R** (single-player offline)
+- **Game client** (single-player offline)
 - **Chrome browser** (for control panel)
 - **Rust** (for building from source; pre-built binaries included)
 
@@ -477,11 +477,11 @@ This tool is for educational and personal entertainment purposes.
 - [x] CPU-only proof demo (`cpu_proof_demo.html` — live Hz counter + rolling chart)
 - [x] `vision_bench` binary for real benchmark data
 - [x] Random PEB disguise rotation per launch
-- [x] Diablo seal plan logic fix + Action::Click variant
+- [x] Act 4 seal plan logic fix + Action::Click variant
 - [x] Waypoint tracking for all 30+ areas (Acts 1-5)
 - [ ] Advanced pathfinding (A* on vision-detected map)
 - [ ] Multi-resolution scaling (dynamic resolution detection)
-- [ ] D2R 3.x offset updates (when Blizzard releases)
+- [ ] Game offset updates (when patches release)
 - [ ] Linux/Mac stealth variant (process disguise)
 - [ ] Streaming mode (bot controls visible on stream)
 - [ ] openclaw LLM strategic wrapper (run selection, config suggestions)
@@ -492,12 +492,12 @@ This tool is for educational and personal entertainment purposes.
 
 Special thanks to:
 - **Kolbot community** — 20+ years of bot research and development
-- **D2R reverse-engineering community** — Memory offsets, item parsing, state detection
-- **Diablo II players** — For keeping the game alive
+- **Game reverse-engineering community** — Memory offsets, item parsing, state detection
+- **Game community** — For keeping it alive
 
 ---
 
-**Made with ❤️ for Diablo II fans. Play responsibly.**
+**Made with ❤️ — play responsibly.**
 
 ---
 

@@ -1,6 +1,6 @@
 # Changelog — KZB
 
-Complete version history of KZB, a production D2R farming automation suite built in Rust.
+Complete version history of KZB, a production game farming automation suite built in Rust.
 
 ---
 
@@ -93,7 +93,7 @@ Complete version history of KZB, a production D2R farming automation suite built
 - Self-contained, screen-recordable Chrome demo page
 - Live 72px Hz counter with natural jitter (~385 Hz steady-state)
 - Rolling 120-point sparkline chart (min/avg/max annotated)
-- Simulated D2R scene with T1/T2/T3 detection zone overlays
+- Simulated game scene with T1/T2/T3 detection zone overlays
 - 8-card evidence panel (0 GPU passes, 0 sqrt, 0 heap allocs, etc.)
 - Performance grade circle (A/B/C/D based on Hz)
 - Frame budget bar showing <5% usage
@@ -105,7 +105,7 @@ Complete version history of KZB, a production D2R farming automation suite built
 - 60 frames @ 640×280, loops forever
 
 #### Bugfixes — Walkthrough Session
-- **Diablo seal plan logic error**: Removed premature `WaitForCue(QuestCompleteBanner)` before `KillTarget(Diablo)` — was causing 20s timeout waste per run
+- **Act 4 seal plan logic error**: Removed premature `WaitForCue(QuestCompleteBanner)` before `KillTarget(act4_boss)` — was causing 20s timeout waste per run
 - **Action enum misuse**: Added `Action::Click{x,y}` variant — stops inflating `loots_picked` stat for non-loot interactions (NPCs, seals, waypoints)
 - **Waypoint tracking**: Extended `on_waypoint_obtained()` from ~10 to all 30+ waypoint areas (Acts 1-5 complete)
 - **Installer binary path**: Fixed `install.ps1` reference from `d2_vision_agent.exe` to `kzb_vision_agent.exe`
@@ -139,7 +139,7 @@ Complete version history of KZB, a production D2R farming automation suite built
 #### QuadCache Four-Lane Acceleration (`quad_cache.rs`)
 - **Lane 2 (Structural)**: Farm run scripts pre-indexed at startup for O(1) lookup
   - `PreparedRun` struct with act derivation and boss detection
-  - `act_for_run()` / `is_boss_run()` helpers for all D2R areas
+  - `act_for_run()` / `is_boss_run()` helpers for all game areas
   - `run_sequence` resolved once at warm, reused every cycle
 - **Lane 3 (Metric Range)**: Survival thresholds flattened to `ThresholdBins`
   - Replaces 11 `self.config.survival.*` traversals per tick with direct field reads
@@ -175,7 +175,7 @@ Complete version history of KZB, a production D2R farming automation suite built
 #### Leatrix-Style TCP Optimization (Installer)
 - Added `TcpNoDelay=1` and `TcpAckFrequency=1` registry tweaks to `install.ps1`
 - Applied to all active network interfaces at install time
-- Reduces TCP latency for D2R online play (~15-40ms improvement)
+- Reduces TCP latency for online play (~15-40ms improvement)
 - New `-SkipNetworkOptimize` flag to opt out
 - Admin privilege check with graceful skip
 - Uninstall path reverts registry changes
@@ -204,7 +204,7 @@ Complete version history of KZB, a production D2R farming automation suite built
 - Rebuilt popup.html to full 11-tab GUI with all 503 kolbot settings and 77 scripts
 - popup.html: 1,521 LOC with Act-based script organization, sub-options, inventory grid
 - popup.js: 372 LOC with chrome API guard, debounced save, sub-options toggle
-- popup.css: 615 LOC with dark D2R theme, responsive tab bar, class sections
+- popup.css: 615 LOC with dark game theme, responsive tab bar, class sections
 - background.js: 375 LOC with dual native host management, stats caching
 - map_content.js: 260 LOC with overlay injection, keyboard shortcuts
 - Added test_gui.html test harness (blob URL iframe, chrome mock, 19/19 automated tests)
@@ -216,7 +216,7 @@ Complete version history of KZB, a production D2R farming automation suite built
 
 ## [1.0.0] — 2026-02-22
 
-### KZB v1.0: Complete D2R Farming Automation Suite (Rust + Chrome)
+### KZB v1.0: Complete Farming Automation Suite (Rust + Chrome)
 
 #### Rust Vision Agent (`botter/`)
 - **Frame capture** (DXGI Desktop Duplication)
@@ -276,14 +276,14 @@ Complete version history of KZB, a production D2R farming automation suite built
   - **Total: 282/282 passing**
 
 #### Rust Map Helper (`maphack/`)
-- Memory-based D2R map reader
+- Memory-based game map reader
 - Tile and object parsing
 - Overlay rendering to Chrome content script
 - Map caching with statistics
 
 #### Chrome Extension (`extension/`)
 - **Manifest v3** (native messaging support)
-- **Popup control panel** (dark D2R-themed UI)
+- **Popup control panel** (dark-themed UI)
   - Status indicators (Agent/Map host connection)
   - Pause/Resume buttons
   - Live stats: frames, decisions, potions, loots, chickens, uptime
@@ -301,7 +301,7 @@ Complete version history of KZB, a production D2R farming automation suite built
   - Commands: pause, resume, update_config, getStatus
 
 - **Content script** (map overlay injection)
-  - Map rendering on all websites (overlay only on D2R window)
+  - Map rendering on all websites (overlay only on game window)
   - Opacity control
   - Keyboard shortcuts: Ctrl+Shift+M (toggle), Ctrl+Shift+Up/Down (opacity)
 
@@ -402,8 +402,8 @@ Complete version history of KZB, a production D2R farming automation suite built
 - Scalable with math but not yet implemented
 - Future: dynamic resolution detection
 
-### D2R Memory (Maphack)
-- Uses legacy D2R offsets (may break on 3.x patch)
+### Game Memory (Maphack)
+- Uses legacy game offsets (may break on 3.x patch)
 - Requires community reverse-engineering for offset updates
 - Vision-based alternative under investigation
 
@@ -464,7 +464,7 @@ Complete version history of KZB, a production D2R farming automation suite built
 
 - **Rust vision agent**: Built from scratch using DXGI, Windows API, pixel heuristics
 - **Kolbot legacy**: 20+ years of combat/town/loot logic (D2BS JavaScript → Rust)
-- **D2R research**: Community offsets, spell effects, item classification
+- **Game research**: Community offsets, spell effects, item classification
 
 ---
 
@@ -472,4 +472,4 @@ Complete version history of KZB, a production D2R farming automation suite built
 
 MIT License — see LICENSE file for details.
 
-**Important**: This tool is for personal offline D2R use only. Respect Blizzard's Terms of Service.
+**Important**: This tool is for personal offline use only. Respect the game's Terms of Service.

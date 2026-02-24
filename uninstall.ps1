@@ -1,5 +1,5 @@
 # =============================================================================
-# D2R Suite - Uninstaller / Cleanup
+# KZB Suite - Uninstaller / Cleanup
 # =============================================================================
 # Removes everything installed by install.ps1:
 #   - Native messaging host binaries + manifests
@@ -27,7 +27,7 @@ $ErrorActionPreference = "Stop"
 # ---- Paths (must match install.ps1 defaults) ----
 $VisionInstallPath = "$env:ProgramData\DisplayCalibration"
 $MapInstallPath    = "$env:ProgramData\Google\Chrome\NativeMessagingHosts"
-$ManifestPath      = "$env:USERPROFILE\D2R\native-hosts"
+$ManifestPath      = "$env:USERPROFILE\KZB\native-hosts"
 $VisionExe         = "chrome_helper.exe"
 $MapExe            = "chrome_map_helper.exe"
 $VisionHostName    = "com.chromium.display.calibration"
@@ -122,7 +122,7 @@ if ($DryRun) {
     Write-Host "*** DRY RUN — nothing will be changed ***" -ForegroundColor Magenta
 }
 
-Write-Banner "D2R Suite - Uninstaller"
+Write-Banner "KZB Suite - Uninstaller"
 
 # =============================================
 # 1. Kill running processes

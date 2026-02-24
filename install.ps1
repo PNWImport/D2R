@@ -1,5 +1,5 @@
 # =============================================================================
-# D2R Suite - Unified Installer
+# KZB Suite - Unified Installer
 # =============================================================================
 # Builds + installs both native messaging hosts and Chrome extension
 #   - Vision Agent  → com.chromium.display.calibration (chrome_helper.exe)
@@ -18,7 +18,7 @@ param(
     [string]$ExtensionId = "",
     [string]$VisionInstallPath = "$env:ProgramData\DisplayCalibration",
     [string]$MapInstallPath = "$env:ProgramData\Google\Chrome\NativeMessagingHosts",
-    [string]$ManifestPath = "$env:USERPROFILE\D2R\native-hosts",
+    [string]$ManifestPath = "$env:USERPROFILE\KZB\native-hosts",
     [switch]$Uninstall,
     [switch]$SkipBuild,
     [switch]$ExtensionOnly,
@@ -198,7 +198,7 @@ function Write-Manifest($path, $hostName, $exePath, $extId) {
 # UNINSTALL
 # =============================================
 if ($Uninstall) {
-    Write-Banner "D2R Suite - Uninstaller"
+    Write-Banner "KZB Suite - Uninstaller"
 
     # Vision agent
     Write-Host "Removing Vision Agent..." -ForegroundColor Yellow
@@ -283,7 +283,7 @@ if ($ExtensionOnly) {
 # =============================================
 # FULL INSTALL
 # =============================================
-Write-Banner "D2R Suite - Unified Installer"
+Write-Banner "KZB Suite - Unified Installer"
 
 # ---- Step 1: Build binaries (longest step — do first) ----
 if (-not $SkipBuild) {
@@ -470,7 +470,7 @@ if (Test-Path $sourceConfigs) {
 # on all network interfaces. Same principle as the classic Leatrix Latency Fix:
 #   - Nagle's algorithm batches small TCP packets → adds 40-200ms delay
 #   - ACK frequency batching delays acknowledgements → adds 200ms round-trip
-#   - For D2R online play, these tweaks can reduce rubberbanding/input lag
+#   - For online play, these tweaks can reduce rubberbanding/input lag
 #   - For offline/single-player: no effect (no TCP traffic), but harmless
 #
 # Requires Administrator privileges to write to HKLM.
@@ -511,7 +511,7 @@ if (-not $SkipNetworkOptimize) {
 
             # TcpNoDelay = 1: Disable Nagle's algorithm
             # Sends TCP packets immediately instead of batching small writes.
-            # Effect: ~40-200ms reduction on small packet games (D2R uses small state packets)
+            # Effect: ~40-200ms reduction on small packet games (game uses small state packets)
             Set-ItemProperty -Path $ifacePath -Name "TcpNoDelay" -Value 1 -Type DWord -Force
 
             # TcpAckFrequency = 1: Acknowledge every TCP packet immediately
@@ -620,6 +620,6 @@ Write-Host "Quick Start:" -ForegroundColor Yellow
 Write-Host "  1. Click the KZB extension icon in Chrome toolbar" -ForegroundColor White
 Write-Host "     (Opens as a full-screen control panel tab)" -ForegroundColor Gray
 Write-Host "  2. Select your character config" -ForegroundColor White
-Write-Host "  3. Launch D2R and start a game" -ForegroundColor White
+Write-Host "  3. Launch the game and start a session" -ForegroundColor White
 Write-Host "  4. The extension connects automatically" -ForegroundColor White
 Write-Host ""

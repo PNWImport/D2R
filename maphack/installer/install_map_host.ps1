@@ -1,5 +1,5 @@
 # =============================================================================
-# D2R Map Helper - Chrome Native Messaging Host Installer
+# KZB Map Helper - Chrome Native Messaging Host Installer
 # =============================================================================
 # Same disguise trick as the vision agent:
 #   - Installs alongside chrome_helper.exe
@@ -24,7 +24,7 @@ function Write-Status($color, $msg) {
 
 # ---- Uninstall ----
 if ($Uninstall) {
-    Write-Status Cyan "Uninstalling D2R Map Helper..."
+    Write-Status Cyan "Uninstalling KZB Map Helper..."
     
     @(
         "HKCU:\Software\Google\Chrome\NativeMessagingHosts\$HostName",
@@ -46,7 +46,7 @@ if ($Uninstall) {
 
 # ---- Install ----
 Write-Status Cyan "==========================================="
-Write-Status Cyan " D2R Map Helper Installer"
+Write-Status Cyan " KZB Map Helper Installer"
 Write-Status Cyan "==========================================="
 Write-Status Yellow "Host Name: $HostName"
 Write-Status Yellow "Install To: $HostPath"

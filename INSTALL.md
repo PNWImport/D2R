@@ -1,4 +1,4 @@
-# Installation Guide — D2R Automation Suite
+# Installation Guide — KZB
 
 Step-by-step setup for Windows 10/11 with Chrome/Edge.
 
@@ -9,7 +9,7 @@ Step-by-step setup for Windows 10/11 with Chrome/Edge.
 ### Prerequisites
 - ✅ Windows 10/11
 - ✅ Chrome or Edge browser
-- ✅ D2R installed and working (offline/single-player)
+- ✅ Game client installed and working (offline/single-player)
 - ✅ PowerShell 5.0+ (built-in on Windows 10+)
 
 ### Option 1: Automated — 1-Click (Recommended)
@@ -19,7 +19,7 @@ Step-by-step setup for Windows 10/11 with Chrome/Edge.
 #    The installer needs admin for ProgramData writes and network optimization.
 
 # 2. Navigate to repo root
-cd C:\Users\YourName\Downloads\D2R
+cd C:\Users\YourName\Downloads\KZB
 
 # 3. Run the unified installer
 .\install.ps1
@@ -53,7 +53,7 @@ Requires **Rust toolchain** (from https://rustup.rs/):
 
 ```powershell
 # Open PowerShell as Administrator
-cd C:\Users\YourName\Downloads\D2R
+cd C:\Users\YourName\Downloads\KZB
 
 # Build vision agent
 cd botter
@@ -77,7 +77,7 @@ cargo test
 1. Open chrome://extensions
 2. Enable "Developer mode" (top-right toggle)
 3. Click "Load unpacked"
-4. Select: C:\Users\YourName\Downloads\D2R\extension\chrome_extension\
+4. Select: C:\Users\YourName\Downloads\KZB\extension\chrome_extension\
 5. Note the Extension ID (blue, under the extension name)
    Example: "abcdefghijklmnopqrstuvwxyz123456"
 ```
@@ -87,7 +87,7 @@ cargo test
 **As Administrator, in PowerShell:**
 
 ```powershell
-cd C:\Users\YourName\Downloads\D2R
+cd C:\Users\YourName\Downloads\KZB
 
 # Run installer — extension ID is auto-detected from Chrome
 .\install.ps1
@@ -99,7 +99,7 @@ cd C:\Users\YourName\Downloads\D2R
 # ✓ Install native messaging host binaries:
 #   - chrome_helper.exe    → C:\ProgramData\DisplayCalibration\
 #   - chrome_map_helper.exe → C:\ProgramData\Google\Chrome\NativeMessagingHosts\
-# ✓ Write JSON manifests to %USERPROFILE%\D2R\native-hosts\
+# ✓ Write JSON manifests to %USERPROFILE%\KZB\native-hosts\
 # ✓ Register hosts in HKCU registry (Chrome + Edge)
 # ✓ Copy config templates to C:\ProgramData\DisplayCalibration\configs\
 # ✓ Apply Leatrix TCP optimization (TcpNoDelay, TcpAckFrequency)
@@ -124,32 +124,32 @@ Get-ItemProperty "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.chromium
 
 ### Step 4: OpenClaw Gateway Setup (WSL)
 
-If you're running OpenClaw as your AI backend, set up a dedicated instance for D2R.
+If you're running OpenClaw as your AI backend, set up a dedicated instance for KZB.
 This keeps it isolated from any existing OpenClaw installation.
 
 **Clone and install (Linux filesystem for performance):**
 
 ```bash
 # In WSL terminal
-gh repo clone openclaw/openclaw ~/D2R-openclaw
-cd ~/D2R-openclaw
+gh repo clone openclaw/openclaw ~/kzb-openclaw
+cd ~/kzb-openclaw
 pnpm install
 ```
 
 **Start the gateway on port 18791:**
 
 ```bash
-node openclaw.mjs --profile d2r gateway --bind loopback --port 18791
+node openclaw.mjs --profile kzb gateway --bind loopback --port 18791
 ```
 
-> The `--profile d2r` flag isolates all config under `~/.openclaw-d2r/`
+> The `--profile kzb` flag isolates all config under `~/.openclaw-kzb/`
 > so it won't conflict with an existing OpenClaw on port 18789.
 
 **Connect the browser (first time only):**
 
 ```bash
 # Get the tokenized dashboard URL
-node openclaw.mjs --profile d2r dashboard --no-open
+node openclaw.mjs --profile kzb dashboard --no-open
 # Open the printed URL in Chrome to sync the token
 ```
 
@@ -157,22 +157,22 @@ node openclaw.mjs --profile d2r dashboard --no-open
 
 ```bash
 # After opening the dashboard URL, approve the browser pairing:
-node openclaw.mjs --profile d2r devices list
-node openclaw.mjs --profile d2r devices approve <requestId>
+node openclaw.mjs --profile kzb devices list
+node openclaw.mjs --profile kzb devices approve <requestId>
 ```
 
 **Copy API auth from existing installation (if you already have OpenClaw configured):**
 
 ```bash
 cp ~/.openclaw/agents/main/agent/auth-profiles.json \
-   ~/.openclaw-d2r/agents/dev/agent/auth-profiles.json
+   ~/.openclaw-kzb/agents/dev/agent/auth-profiles.json
 ```
 
 **Troubleshooting token mismatch:**
-- Always start the gateway with `--profile d2r` (not `OPENCLAW_CONFIG_HOME`)
+- Always start the gateway with `--profile kzb` (not `OPENCLAW_CONFIG_HOME`)
 - If the browser shows "token mismatch", re-open the `dashboard --no-open` URL
 - If the CLI shows "token mismatch", check that `gateway.remote.token` matches
-  `gateway.auth.token` in `~/.openclaw-d2r/openclaw.json`
+  `gateway.auth.token` in `~/.openclaw-kzb/openclaw.json`
 
 ---
 
@@ -185,7 +185,7 @@ Edit the config for your build:
 notepad C:\ProgramData\DisplayCalibration\config.yaml
 
 # Or copy a pre-made config:
-copy C:\Users\YourName\Downloads\D2R\botter\configs\sorceress_blizzard.yaml `
+copy C:\Users\YourName\Downloads\KZB\botter\configs\sorceress_blizzard.yaml `
      C:\ProgramData\DisplayCalibration\config.yaml
 ```
 
@@ -233,7 +233,7 @@ farming:
 ### Step 6: Launch the Bot
 
 ```
-1. Start D2R
+1. Start the game
 2. Create or load a single-player game (any act, any difficulty)
 3. Character should be in town
 4. Click the extension icon (top-right, puzzle piece)
@@ -251,7 +251,7 @@ If you prefer to set things up manually or the script fails:
 ### Build Binaries
 
 ```powershell
-cd C:\Users\YourName\Downloads\D2R\botter
+cd C:\Users\YourName\Downloads\KZB\botter
 cargo build --release
 copy target\release\kzb_vision_agent.exe "C:\ProgramData\DisplayCalibration\chrome_helper.exe"
 
@@ -265,7 +265,7 @@ copy target\release\chrome_map_helper.exe "C:\ProgramData\Google\Chrome\NativeMe
 **For Vision Agent**, in PowerShell:
 
 ```powershell
-$manifestPath = "$env:USERPROFILE\D2R\native-hosts\native_host_manifest.json"
+$manifestPath = "$env:USERPROFILE\KZB\native-hosts\native_host_manifest.json"
 $regPath = "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.display.calibration"
 New-Item -Path $regPath -Force -ErrorAction SilentlyContinue | Out-Null
 Set-ItemProperty -Path $regPath -Name "(Default)" -Value $manifestPath
@@ -274,7 +274,7 @@ Set-ItemProperty -Path $regPath -Name "(Default)" -Value $manifestPath
 **For Map Helper:**
 
 ```powershell
-$manifestPath = "$env:USERPROFILE\D2R\native-hosts\map_manifest.json"
+$manifestPath = "$env:USERPROFILE\KZB\native-hosts\map_manifest.json"
 $regPath = "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.canvas.accessibility"
 New-Item -Path $regPath -Force -ErrorAction SilentlyContinue | Out-Null
 Set-ItemProperty -Path $regPath -Name "(Default)" -Value $manifestPath
@@ -282,7 +282,7 @@ Set-ItemProperty -Path $regPath -Name "(Default)" -Value $manifestPath
 
 ### Create Native Host Manifests
 
-**File: `%USERPROFILE%\D2R\native-hosts\native_host_manifest.json`**
+**File: `%USERPROFILE%\KZB\native-hosts\native_host_manifest.json`**
 
 ```json
 {
@@ -294,7 +294,7 @@ Set-ItemProperty -Path $regPath -Name "(Default)" -Value $manifestPath
 }
 ```
 
-**File: `%USERPROFILE%\D2R\native-hosts\map_manifest.json`**
+**File: `%USERPROFILE%\KZB\native-hosts\map_manifest.json`**
 
 ```json
 {
@@ -312,7 +312,7 @@ Set-ItemProperty -Path $regPath -Name "(Default)" -Value $manifestPath
 
 ```powershell
 mkdir "C:\ProgramData\DisplayCalibration\configs" -ErrorAction SilentlyContinue
-copy "C:\Users\YourName\Downloads\D2R\botter\configs\*.yaml" `
+copy "C:\Users\YourName\Downloads\KZB\botter\configs\*.yaml" `
       "C:\ProgramData\DisplayCalibration\configs\"
 ```
 
@@ -323,7 +323,7 @@ copy "C:\Users\YourName\Downloads\D2R\botter\configs\*.yaml" `
 ### Option 1: Automated
 
 ```powershell
-cd C:\Users\YourName\Downloads\D2R
+cd C:\Users\YourName\Downloads\KZB
 .\install.ps1 -Uninstall
 # Removes: registry entries, binaries, TCP optimizations
 # Keeps: configs (manual cleanup) and Chrome extension (manual removal)
@@ -371,7 +371,7 @@ Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfac
 
 2. Check manifest path is correct:
    ```powershell
-   Get-Content "$env:USERPROFILE\D2R\native-hosts\native_host_manifest.json"
+   Get-Content "$env:USERPROFILE\KZB\native-hosts\native_host_manifest.json"
    ```
 
 3. Check binary exists:
@@ -475,7 +475,7 @@ Quick checklist:
 - [ ] TCP optimization applied (TcpNoDelay=1, TcpAckFrequency=1)
 - [ ] Extension loads in Chrome
 - [ ] Extension popup shows "Agent: Connected"
-- [ ] D2R loads and bot stats update in popup
+- [ ] Game loads and bot stats update in popup
 - [ ] Ctrl+Shift+M toggles map (if using maphack)
 
 If all ✓, you're good to go!
@@ -527,8 +527,8 @@ Binaries:
   C:\ProgramData\Google\Chrome\NativeMessagingHosts\chrome_map_helper.exe  (map helper)
 
 Manifests:
-  %USERPROFILE%\D2R\native-hosts\native_host_manifest.json
-  %USERPROFILE%\D2R\native-hosts\map_manifest.json
+  %USERPROFILE%\KZB\native-hosts\native_host_manifest.json
+  %USERPROFILE%\KZB\native-hosts\map_manifest.json
 
 Configs:
   C:\ProgramData\DisplayCalibration\configs\
@@ -554,6 +554,6 @@ Bot searches for config in this order:
 
 ## Done!
 
-Your D2R bot is ready. Load a game and watch it farm! 🤖
+KZB is ready. Load a game and watch it farm! 🤖
 
 For detailed configuration options, see README.md > Configuration Guide.
