@@ -138,6 +138,10 @@ pub struct FrameState {
 
     // Image fingerprint
     pub phash: u64,
+
+    // Frame dimensions from the capture pipeline (populated each frame)
+    pub frame_width: u16,
+    pub frame_height: u16,
 }
 
 impl Default for FrameState {
@@ -185,6 +189,8 @@ impl Default for FrameState {
             phase_confidence: 0.0,
             capture_time_ns: 0,
             phash: 0,
+            frame_width: 800,
+            frame_height: 600,
         }
     }
 }

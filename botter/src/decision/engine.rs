@@ -151,7 +151,7 @@ impl DecisionEngine {
         }
 
         // Priority 1: CHICKEN (HP)
-        if state.hp_pct <= self.thresholds.chicken_hp && state.in_combat {
+        if state.hp_pct <= self.thresholds.chicken_hp && state.in_combat && !state.in_town {
             return Decision {
                 action: Action::ChickenQuit,
                 delay: Duration::ZERO,

@@ -71,6 +71,8 @@ pub struct CapturePipeline {
     buffer: Arc<ShardedFrameBuffer>,
     running: Arc<AtomicBool>,
     tick: u64,
+    /// Set to true after the config has been scaled to the actual frame resolution.
+    config_scaled: bool,
 }
 
 impl CapturePipeline {
@@ -80,11 +82,48 @@ impl CapturePipeline {
             buffer,
             running: Arc::new(AtomicBool::new(false)),
             tick: 0,
+            config_scaled: false,
         }
     }
 
     pub fn running_flag(&self) -> Arc<AtomicBool> {
         Arc::clone(&self.running)
+    }
+
+    /// Scale the capture config orb/char positions to match the actual frame resolution.
+    /// Called once on the first real frame. No-op if already at 800×600 base resolution.
+    fn scale_config_to_frame(&mut self, frame: &CapturedFrame) {
+        if self.config_scaled {
+            return;
+        }
+        self.config_scaled = true;
+
+        let scale_x = frame.width as f32 / 800.0;
+        let scale_y = frame.height as f32 / 600.0;
+
+        if (scale_x - 1.0).abs() < 0.01 && (scale_y - 1.0).abs() < 0.01 {
+            return; // Already at base 800×600, nothing to scale
+        }
+
+        let (hx, hy) = self.config.hp_orb_center;
+        self.config.hp_orb_center = ((hx as f32 * scale_x) as u32, (hy as f32 * scale_y) as u32);
+
+        let (mx, my) = self.config.mana_orb_center;
+        self.config.mana_orb_center = ((mx as f32 * scale_x) as u32, (my as f32 * scale_y) as u32);
+
+        let (cx, cy) = self.config.char_center;
+        self.config.char_center = ((cx as f32 * scale_x) as u16, (cy as f32 * scale_y) as u16);
+
+        self.config.orb_sample_radius =
+            (self.config.orb_sample_radius as f32 * scale_x.min(scale_y)) as u32;
+
+        tracing::info!(
+            "Capture config scaled to {}×{} (scale {:.2}×{:.2})",
+            frame.width,
+            frame.height,
+            scale_x,
+            scale_y
+        );
     }
 
     // ─── Public benchmark surface ─────────────────────────────────────────
@@ -93,7 +132,10 @@ impl CapturePipeline {
     /// Advances the internal tick counter (affects tiered detection logic).
     /// Exposed for `vision_bench` binary and integration tests.
     pub fn bench_extract(&mut self, frame: &CapturedFrame) -> FrameState {
-        let state = self.extract_frame_state(frame);
+        self.scale_config_to_frame(frame);
+        let mut state = self.extract_frame_state(frame);
+        state.frame_width = frame.width as u16;
+        state.frame_height = frame.height as u16;
         self.tick += 1;
         state
     }
@@ -224,7 +266,10 @@ impl CapturePipeline {
 
             match capture_result {
                 Ok(frame) => {
-                    let state = self.extract_frame_state(&frame);
+                    self.scale_config_to_frame(&frame);
+                    let mut state = self.extract_frame_state(&frame);
+                    state.frame_width = frame.width as u16;
+                    state.frame_height = frame.height as u16;
                     self.buffer.push(state);
                     self.tick += 1;
                 }

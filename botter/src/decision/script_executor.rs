@@ -25,6 +25,18 @@ use std::time::{Duration, Instant};
 // names listed vertically. Each act has a tab at the top.
 // ═══════════════════════════════════════════════════════════════
 
+/// Scale a base-800×600 X coordinate to the actual frame width.
+#[inline(always)]
+fn sx(v: i32, w: u16) -> i32 {
+    (v as f32 * w as f32 / 800.0) as i32
+}
+
+/// Scale a base-800×600 Y coordinate to the actual frame height.
+#[inline(always)]
+fn sy(v: i32, h: u16) -> i32 {
+    (v as f32 * h as f32 / 600.0) as i32
+}
+
 /// Waypoint panel act tab positions (top of WP panel)
 const WP_ACT_TABS: [(i32, i32); 5] = [
     (263, 80), // Act 1
@@ -410,7 +422,8 @@ impl ScriptExecutor {
             0 => {
                 // Phase 0: Walk toward the town WP object so we're in range to click it.
                 // Uses state.current_act to find the waypoint's position in this town.
-                let (wx, wy) = town_wp_object_position(state.current_act);
+                let (bwx, bwy) = town_wp_object_position(state.current_act);
+                let (wx, wy) = (sx(bwx, state.frame_width), sy(bwy, state.frame_height));
 
                 // If WP is already open, skip straight to tab selection
                 if state.waypoint_menu_open {
@@ -453,7 +466,8 @@ impl ScriptExecutor {
                     return self.execute_waypoint(state, destination);
                 }
 
-                let (wx, wy) = town_wp_object_position(state.current_act);
+                let (bwx, bwy) = town_wp_object_position(state.current_act);
+                let (wx, wy) = (sx(bwx, state.frame_width), sy(bwy, state.frame_height));
                 if self.sub_step_ticks % 20 == 1 {
                     // Click the WP every ~0.8s
                     Some(self.jittered_click(wx, wy, "wp: clicking waypoint object"))
@@ -467,7 +481,8 @@ impl ScriptExecutor {
                 if self.sub_step_ticks < 5 {
                     return Some(self.wait("wp: settling before tab click"));
                 }
-                let (tx, ty) = WP_ACT_TABS[self.wp_act_idx];
+                let (btx, bty) = WP_ACT_TABS[self.wp_act_idx];
+                let (tx, ty) = (sx(btx, state.frame_width), sy(bty, state.frame_height));
                 self.wp_phase = 3;
                 self.sub_step_ticks = 0;
                 Some(self.jittered_click(tx, ty, "wp: clicking act tab"))
@@ -477,7 +492,8 @@ impl ScriptExecutor {
                 if self.sub_step_ticks < 5 {
                     return Some(self.wait("wp: settling before entry click"));
                 }
-                let (ex, ey) = wp_entry_coords(self.wp_act_idx, self.wp_entry_idx);
+                let (bex, bey) = wp_entry_coords(self.wp_act_idx, self.wp_entry_idx);
+                let (ex, ey) = (sx(bex, state.frame_width), sy(bey, state.frame_height));
                 self.wp_phase = 4;
                 self.sub_step_ticks = 0;
                 Some(self.jittered_click(ex, ey, "wp: clicking destination entry"))
@@ -543,9 +559,9 @@ impl ScriptExecutor {
         let tx = (state.char_screen_x as f32 + angle.cos() * distance) as i32;
         let ty = (state.char_screen_y as f32 + angle.sin() * distance) as i32;
 
-        // Clamp to screen bounds
-        let tx = tx.clamp(50, 750);
-        let ty = ty.clamp(50, 550);
+        // Clamp to screen bounds (scaled to actual resolution)
+        let tx = tx.clamp(sx(50, state.frame_width), sx(750, state.frame_width));
+        let ty = ty.clamp(sy(50, state.frame_height), sy(550, state.frame_height));
 
         // If we're in combat, let engine handle it before walking
         if state.in_combat && state.enemy_count > 0 {
@@ -638,8 +654,8 @@ impl ScriptExecutor {
 
         Some(Decision {
             action: Action::MoveTo {
-                screen_x: tx.clamp(50, 750),
-                screen_y: ty.clamp(50, 550),
+                screen_x: tx.clamp(sx(50, state.frame_width), sx(750, state.frame_width)),
+                screen_y: ty.clamp(sy(50, state.frame_height), sy(550, state.frame_height)),
             },
             delay: Duration::from_millis(self.rng.gen_range(150..350)),
             priority: 6,
@@ -696,8 +712,8 @@ impl ScriptExecutor {
 
         Some(Decision {
             action: Action::MoveTo {
-                screen_x: tx.clamp(50, 750),
-                screen_y: ty.clamp(50, 550),
+                screen_x: tx.clamp(sx(50, state.frame_width), sx(750, state.frame_width)),
+                screen_y: ty.clamp(sy(50, state.frame_height), sy(550, state.frame_height)),
             },
             delay: Duration::from_millis(self.rng.gen_range(100..300)),
             priority: 6,
@@ -808,7 +824,8 @@ impl ScriptExecutor {
     /// that must be clicked — pressing Esc just dismisses without traveling.
     /// For regular NPCs (quest reward, Cain ID, etc.) Esc is fine.
     fn execute_talk_to_npc(&mut self, state: &FrameState, npc: &str, act: u8) -> Option<Decision> {
-        let npc_pos = npc_position(npc, act);
+        let (bx, by) = npc_position(npc, act);
+        let npc_pos = (sx(bx, state.frame_width), sy(by, state.frame_height));
         let travel = is_travel_npc(npc);
 
         match self.sub_step {
@@ -842,7 +859,8 @@ impl ScriptExecutor {
                     if travel {
                         // Travel NPCs: click the "Travel to <next act>" button.
                         // The travel button sits in the lower half of the dialog box.
-                        let (bx, by) = travel_button_position();
+                        let (tbx, tby) = travel_button_position();
+                        let (bx, by) = (sx(tbx, state.frame_width), sy(tby, state.frame_height));
                         return Some(Decision {
                             action: Action::Click {
                                 screen_x: bx + self.rng.gen_range(-10..10),
@@ -1038,25 +1056,27 @@ impl ScriptExecutor {
 fn object_click_position(name: &str, state: &FrameState) -> (i32, i32) {
     let cx = state.char_screen_x as i32;
     let cy = state.char_screen_y as i32;
+    let w = state.frame_width;
+    let h = state.frame_height;
 
     match name {
         // Waypoints are usually clicked slightly above character
-        "waypoint" => (cx, cy - 30),
+        "waypoint" => (cx, cy - sy(30, h)),
 
         // Stash: to the right in most acts
-        "Stash" => (cx + 60, cy - 20),
+        "Stash" => (cx + sx(60, w), cy - sy(20, h)),
 
         // Horadric Cube: open inventory first, cube is in the inventory grid
-        "Horadric Cube" => (cx + 120, cy + 60),
+        "Horadric Cube" => (cx + sx(120, w), cy + sy(60, h)),
 
         // Cairn Stones in Stony Field: spread around character
-        "Cairn Stone" => (cx + 40, cy - 50),
+        "Cairn Stone" => (cx + sx(40, w), cy - sy(50, h)),
 
         // Tree of Inifuss: slightly off-center
-        "Tree of Inifuss" => (cx + 30, cy - 40),
+        "Tree of Inifuss" => (cx + sx(30, w), cy - sy(40, h)),
 
         // Cain's Gibbet (cage in Tristram)
-        "Cain's Gibbet" => (cx, cy - 40),
+        "Cain's Gibbet" => (cx, cy - sy(40, h)),
 
         // Chest objects: click near center
         "Horadric Cube Chest"
@@ -1064,34 +1084,34 @@ fn object_click_position(name: &str, state: &FrameState) -> (i32, i32) {
         | "Khalim's Heart Chest"
         | "Khalim's Brain Chest"
         | "Staff of Kings Chest"
-        | "Super Chest" => (cx + 20, cy - 25),
+        | "Super Chest" => (cx + sx(20, w), cy - sy(25, h)),
 
         // Quest objects
-        "Horadric Malus" => (cx + 15, cy - 30),
-        "Tainted Sun Altar" => (cx, cy - 35),
-        "Lam Esen's Tome" => (cx + 10, cy - 30),
-        "Horadric Staff Orifice" => (cx, cy - 40),
-        "Compelling Orb" => (cx, cy - 40),
-        "Hellforge" => (cx + 20, cy - 30),
-        "Altar of the Heavens" => (cx, cy - 45),
+        "Horadric Malus" => (cx + sx(15, w), cy - sy(30, h)),
+        "Tainted Sun Altar" => (cx, cy - sy(35, h)),
+        "Lam Esen's Tome" => (cx + sx(10, w), cy - sy(30, h)),
+        "Horadric Staff Orifice" => (cx, cy - sy(40, h)),
+        "Compelling Orb" => (cx, cy - sy(40, h)),
+        "Hellforge" => (cx + sx(20, w), cy - sy(30, h)),
+        "Altar of the Heavens" => (cx, cy - sy(45, h)),
 
         // Portals
-        "Red Portal" | "Anya Portal" => (cx, cy - 50),
+        "Red Portal" | "Anya Portal" => (cx, cy - sy(50, h)),
 
         // Seal levers in Chaos Sanctuary
-        "Vizier Seal" | "Seis Seal" | "Infector Seal" => (cx + 25, cy - 35),
+        "Vizier Seal" | "Seis Seal" | "Infector Seal" => (cx + sx(25, w), cy - sy(35, h)),
 
         // Wirt's Body in Tristram
-        "Wirt's Body" => (cx + 40, cy + 20),
+        "Wirt's Body" => (cx + sx(40, w), cy + sy(20, h)),
 
         // Prison doors in Frigid Highlands
-        "Prison Door" => (cx + 30, cy - 20),
+        "Prison Door" => (cx + sx(30, w), cy - sy(20, h)),
 
         // Frozen Anya
-        "Frozen Anya" => (cx, cy - 35),
+        "Frozen Anya" => (cx, cy - sy(35, h)),
 
         // Journal in Arcane Sanctuary
-        "Journal" => (cx + 10, cy - 30),
+        "Journal" => (cx + sx(10, w), cy - sy(30, h)),
 
         // Default: slightly above character
         _ => (cx, cy - 30),

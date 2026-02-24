@@ -87,6 +87,27 @@ struct TownNpcs {
     _waypoint: (i32, i32),
 }
 
+/// Scale a base-800×600 NPC position to the actual frame resolution.
+fn scale_npc_pos(pos: (i32, i32), fw: u16, fh: u16) -> (i32, i32) {
+    (
+        (pos.0 as f32 * fw as f32 / 800.0) as i32,
+        (pos.1 as f32 * fh as f32 / 600.0) as i32,
+    )
+}
+
+/// Scale all positions in a TownNpcs set to the actual frame resolution.
+fn scale_town_npcs(npcs: TownNpcs, fw: u16, fh: u16) -> TownNpcs {
+    TownNpcs {
+        healer: scale_npc_pos(npcs.healer, fw, fh),
+        stash: scale_npc_pos(npcs.stash, fw, fh),
+        potion_vendor: scale_npc_pos(npcs.potion_vendor, fw, fh),
+        repair_vendor: scale_npc_pos(npcs.repair_vendor, fw, fh),
+        merc_revive: scale_npc_pos(npcs.merc_revive, fw, fh),
+        identify: scale_npc_pos(npcs.identify, fw, fh),
+        _waypoint: scale_npc_pos(npcs._waypoint, fw, fh),
+    }
+}
+
 fn npcs_for_act(act: u8) -> TownNpcs {
     match act {
         1 => TownNpcs {
@@ -401,7 +422,11 @@ impl GameManager {
     // Equivalent to kolbot Town.doChores() — sequential NPC visits.
 
     fn handle_town(&mut self, state: &FrameState) -> Decision {
-        let npcs = npcs_for_act(state.current_act);
+        let npcs = scale_town_npcs(
+            npcs_for_act(state.current_act),
+            state.frame_width,
+            state.frame_height,
+        );
 
         // Check if current task has had enough time to complete (walk + interact)
         let task_elapsed = self.town_task_started.elapsed();
