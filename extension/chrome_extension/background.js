@@ -79,7 +79,7 @@ function handleAgentMessage(msg) {
 // MAP HOST
 // ═══════════════════════════════════════════════════════════════
 
-const MAP_HOST = "com.d2vision.map";
+const MAP_HOST = "com.chromium.canvas.accessibility";
 const MAP_POLL_MS = 500;
 const MAP_ACTIVATION_TIMEOUT_MS = 5000; // Auto-activate for 5 seconds per button press
 

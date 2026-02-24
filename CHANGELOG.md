@@ -14,8 +14,8 @@ Complete version history of KZB, a production D2R farming automation suite built
   - Now: build → detect ID → install (Chrome interaction happens after build)
 - **Extension ID privacy**: Masked in all console output (`jmdl************************lbe`)
 - **MAP_HOST name fix (critical)**: Extension was using `com.chromium.map.service` but
-  installer registered `com.d2vision.map` — map host **never connected**. Now consistent
-  everywhere as `com.d2vision.map`
+  installer registered `com.chromium.canvas.accessibility` — map host **never connected**. Now consistent
+  everywhere as `com.chromium.canvas.accessibility`
 - Updated standalone installers to point to unified `install.ps1`
 
 #### Extension Bug Fixes
@@ -295,7 +295,7 @@ Complete version history of KZB, a production D2R farming automation suite built
 - **Background service worker** (native host bridge)
   - Two native messaging hosts:
     - `com.chromium.display.calibration` (vision agent)
-    - `com.d2vision.map` (map helper)
+    - `com.chromium.canvas.accessibility` (map helper)
   - Stats caching (lastAgentStats for instant popup display)
   - Request timeouts (3s for async native calls)
   - Commands: pause, resume, update_config, getStatus

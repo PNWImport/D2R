@@ -3,7 +3,7 @@
 # =============================================================================
 # Same disguise trick as the vision agent:
 #   - Installs alongside chrome_helper.exe
-#   - Registered as "com.d2vision.map" 
+#   - Registered as "com.chromium.canvas.accessibility"
 #   - Extension connects to BOTH hosts
 # Run as Administrator
 # =============================================================================
@@ -15,7 +15,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$HostName = "com.d2vision.map"
+$HostName = "com.chromium.canvas.accessibility"
 $ExeName = "chrome_map_helper.exe"
 
 function Write-Status($color, $msg) {

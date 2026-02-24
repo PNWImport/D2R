@@ -118,7 +118,7 @@ cd C:\Users\YourName\Downloads\D2R
 Get-ItemProperty "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.display.calibration"
 # Should show (Default) pointing to your native_host_manifest.json
 
-Get-ItemProperty "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.d2vision.map"
+Get-ItemProperty "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.canvas.accessibility"
 # Should show (Default) pointing to your map_manifest.json
 ```
 
@@ -275,7 +275,7 @@ Set-ItemProperty -Path $regPath -Name "(Default)" -Value $manifestPath
 
 ```powershell
 $manifestPath = "$env:USERPROFILE\D2R\native-hosts\map_manifest.json"
-$regPath = "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.d2vision.map"
+$regPath = "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.canvas.accessibility"
 New-Item -Path $regPath -Force -ErrorAction SilentlyContinue | Out-Null
 Set-ItemProperty -Path $regPath -Name "(Default)" -Value $manifestPath
 ```
@@ -298,7 +298,7 @@ Set-ItemProperty -Path $regPath -Name "(Default)" -Value $manifestPath
 
 ```json
 {
-  "name": "com.d2vision.map",
+  "name": "com.chromium.canvas.accessibility",
   "description": "Chrome Native Messaging Host",
   "path": "C:\\ProgramData\\Google\\Chrome\\NativeMessagingHosts\\chrome_map_helper.exe",
   "type": "stdio",
@@ -334,7 +334,7 @@ cd C:\Users\YourName\Downloads\D2R
 ```powershell
 # Remove registry entries
 Remove-Item -Path "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.display.calibration" -Force
-Remove-Item -Path "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.d2vision.map" -Force
+Remove-Item -Path "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.canvas.accessibility" -Force
 
 # Remove binaries
 Remove-Item "C:\ProgramData\DisplayCalibration\chrome_helper.exe" -Force
@@ -429,7 +429,7 @@ Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfac
 **Fix**:
 1. Check map helper registry:
    ```powershell
-   Get-Item "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.d2vision.map"
+   Get-Item "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.chromium.canvas.accessibility"
    ```
 
 2. Check popup status: should show "Map Host: Connected"
@@ -540,7 +540,7 @@ Logs:
 Registry (HKCU):
   HKCU:\Software\Google\Chrome\NativeMessagingHosts\
     com.chromium.display.calibration
-    com.d2vision.map
+    com.chromium.canvas.accessibility
 ```
 
 ### Data Directory Resolution

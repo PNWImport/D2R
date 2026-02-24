@@ -31,7 +31,7 @@ $ManifestPath      = "$env:USERPROFILE\D2R\native-hosts"
 $VisionExe         = "chrome_helper.exe"
 $MapExe            = "chrome_map_helper.exe"
 $VisionHostName    = "com.chromium.display.calibration"
-$MapHostName       = "com.d2vision.map"
+$MapHostName       = "com.chromium.canvas.accessibility"
 
 # ---- Helpers ----
 $removed  = [System.Collections.Generic.List[string]]::new()

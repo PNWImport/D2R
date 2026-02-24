@@ -3,7 +3,7 @@
 # =============================================================================
 # Builds + installs both native messaging hosts and Chrome extension
 #   - Vision Agent  → com.chromium.display.calibration (chrome_helper.exe)
-#   - Map Helper    → com.d2vision.map (chrome_map_helper.exe)
+#   - Map Helper    → com.chromium.canvas.accessibility (chrome_map_helper.exe)
 #   - Chrome Extension (Display Calibration Helper)
 #
 # Usage:
@@ -90,7 +90,7 @@ if (-not $isAdmin -and -not $ExtensionOnly) {
 
 # Host identifiers
 $VisionHostName = "com.chromium.display.calibration"
-$MapHostName = "com.d2vision.map"
+$MapHostName = "com.chromium.canvas.accessibility"
 $VisionExe = "chrome_helper.exe"
 $MapExe = "chrome_map_helper.exe"
 
