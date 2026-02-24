@@ -24,11 +24,13 @@ mod protocol;
 mod discovery;
 mod stealth;
 mod host_registry;
+mod overlay_window;
 
 use protocol::*;
 use memory::{ProcessReader, GameState};
 use mapgen::MapGenerator;
 use stealth::{ChromeDisguise, ProcessIdentity, CadenceConfig, SyscallCadence, SyscallCategory};
+use overlay_window::{OverlayWindow, DebugState};
 use serde_json::json;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -44,6 +46,11 @@ struct MapHelperState {
     // Button-activated mode
     map_active: bool,
     map_active_until: Option<std::time::Instant>,
+    // Demo mode: return synthetic data without touching D2R memory.
+    // Lets you verify the Chrome canvas overlay renders before real offsets are ready.
+    demo_mode: bool,
+    // In-game debug overlay window (Win32 layered topmost — Windows only)
+    debug_overlay: Option<OverlayWindow>,
 }
 
 impl MapHelperState {
@@ -58,6 +65,8 @@ impl MapHelperState {
             poll_count: 0,
             map_active: true,
             map_active_until: None,
+            demo_mode: false,
+            debug_overlay: None,
         }
     }
 
@@ -179,6 +188,37 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
                 return Ok(());
             }
 
+            // Demo mode: return synthetic game state without reading D2R memory.
+            // Useful for verifying the Chrome canvas overlay while real offsets are broken.
+            if state.demo_mode {
+                let demo_seed: u32 = 0x1A2B3C4D;
+                let demo_area: u32 = 2; // Cold Plains (non-town, so map generates)
+                let demo_diff: u8 = 0;  // Normal
+                let md = state.generator.get_map(demo_seed, demo_area, demo_diff);
+                let _ = send_response("state", json!({
+                    "attached": true,
+                    "demo_mode": true,
+                    "game_state": {
+                        "in_game": true,
+                        "is_town": false,
+                        "map_seed": demo_seed,
+                        "area_id": demo_area,
+                        "difficulty": demo_diff,
+                        "player_x": 400,
+                        "player_y": 300,
+                    },
+                    "map": {
+                        "width": md.width, "height": md.height,
+                        "origin_x": md.origin_x, "origin_y": md.origin_y,
+                        "poi_count": md.pois.len(), "pois": md.pois,
+                        "collision_rows": md.collision_rows,
+                        "collision_row_count": md.collision_rows.len(),
+                    },
+                    "opacity": state.opacity,
+                }));
+                return Ok(());
+            }
+
             if !state.reader.is_attached()
                 && state.reader.attach().is_err()
             {
@@ -293,6 +333,45 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
             state.deactivate_map();
             eprintln!("[map_helper] Map deactivated");
             let _ = send_response("deactivate_ack", json!({ "deactivated": true }));
+        }
+
+        InboundCommand::SetDemoMode { enabled } => {
+            state.demo_mode = enabled;
+            eprintln!("[map_helper] Demo mode: {}", enabled);
+            let _ = send_response("demo_mode_ack", json!({ "demo_mode": enabled }));
+        }
+
+        InboundCommand::SetDebugOverlay { enabled } => {
+            if enabled && state.debug_overlay.is_none() {
+                state.debug_overlay = OverlayWindow::create();
+                let created = state.debug_overlay.is_some();
+                eprintln!("[map_helper] Debug overlay: created={}", created);
+                let _ = send_response("debug_overlay_ack", json!({ "enabled": true, "created": created }));
+            } else if !enabled {
+                if let Some(w) = state.debug_overlay.take() {
+                    w.destroy();
+                }
+                eprintln!("[map_helper] Debug overlay: destroyed");
+                let _ = send_response("debug_overlay_ack", json!({ "enabled": false, "created": false }));
+            } else {
+                // Already enabled
+                let _ = send_response("debug_overlay_ack", json!({ "enabled": true, "created": true }));
+            }
+        }
+
+        InboundCommand::UpdateDebugState {
+            hp_pct, mp_pct, merc_hp_pct, enemy_count,
+            nearest_enemy_x, nearest_enemy_y, nearest_enemy_hp_pct,
+            chicken_hp_pct, area_name, in_game,
+        } => {
+            if let Some(ref w) = state.debug_overlay {
+                w.update(DebugState {
+                    hp_pct, mp_pct, merc_hp_pct, enemy_count,
+                    nearest_enemy_x, nearest_enemy_y, nearest_enemy_hp_pct,
+                    chicken_hp_pct, area_name, in_game,
+                });
+            }
+            // No ack needed — high-frequency fire-and-forget command
         }
 
         InboundCommand::Kill { reason } => {

@@ -437,6 +437,28 @@ if (btnCacheStats) {
   });
 }
 
+// ── Demo Mode toggle ─────────────────────────────────────────────────────────
+const chkDemoMode = $("chk-demo-mode");
+const demoModeStatus = $("demo-mode-status");
+if (chkDemoMode) {
+  chkDemoMode.addEventListener("change", async () => {
+    const enabled = chkDemoMode.checked;
+    await send("setDemoMode", { enabled });
+    if (demoModeStatus) demoModeStatus.textContent = enabled ? "on" : "off";
+  });
+}
+
+// ── Debug Overlay toggle ─────────────────────────────────────────────────────
+const chkDebugOverlay = $("chk-debug-overlay");
+const debugOverlayStatus = $("debug-overlay-status");
+if (chkDebugOverlay) {
+  chkDebugOverlay.addEventListener("change", async () => {
+    const enabled = chkDebugOverlay.checked;
+    await send("setDebugOverlay", { enabled });
+    if (debugOverlayStatus) debugOverlayStatus.textContent = enabled ? "on" : "off";
+  });
+}
+
 // ─── Kolbot → Rust Config Translation ────────────────────────
 // The popup uses kolbot-style flat keys; the Rust agent expects the
 // nested AgentConfig structure. Fields already using dot-notation

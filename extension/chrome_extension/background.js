@@ -84,6 +84,9 @@ let mapOpacity = 180;
 let mapPollInterval = null;
 let mapReconnectTimer = null;
 let mapActivationTimer = null;
+// Debug overlay relay (Option B)
+let debugOverlayEnabled = false;
+let debugRelayInterval = null;
 
 function connectToMapHost() {
   try {
@@ -98,6 +101,7 @@ function connectToMapHost() {
   mapPort.onDisconnect.addListener(() => {
     mapPort = null;
     stopMapPolling();
+    stopDebugStatRelay();
     mapReconnectTimer = setTimeout(connectToMapHost, 5000);
   });
 
@@ -165,6 +169,41 @@ function stopMapPolling() {
   if (mapPollInterval) {
     clearInterval(mapPollInterval);
     mapPollInterval = null;
+  }
+}
+
+// ── Debug stat relay (Option B) ───────────────────────────────────────────────
+// When the in-game debug overlay is active, poll the vision agent for its
+// latest FrameState every 100 ms and forward it to the map host as
+// update_debug_state so the Win32 overlay window knows what to draw.
+
+function startDebugStatRelay() {
+  stopDebugStatRelay();
+  debugRelayInterval = setInterval(async () => {
+    if (!debugOverlayEnabled || !mapPort || !agentPort) return;
+    // Ask the vision agent for current stats; use lastAgentStats if cached.
+    const stats = lastAgentStats;
+    if (!stats) return;
+    mapPort.postMessage({
+      cmd: "update_debug_state",
+      hp_pct:              stats.hp_pct              ?? 100,
+      mp_pct:              stats.mp_pct              ?? 100,
+      merc_hp_pct:         stats.merc_hp_pct         ?? 100,
+      enemy_count:         stats.enemy_count         ?? 0,
+      nearest_enemy_x:     stats.nearest_enemy_x     ?? 640,
+      nearest_enemy_y:     stats.nearest_enemy_y     ?? 360,
+      nearest_enemy_hp_pct: stats.nearest_enemy_hp_pct ?? 0,
+      chicken_hp_pct:      stats.chicken_hp_pct      ?? 0,
+      area_name:           stats.area_name           ?? "",
+      in_game:             stats.in_game             ?? false,
+    });
+  }, 100);
+}
+
+function stopDebugStatRelay() {
+  if (debugRelayInterval) {
+    clearInterval(debugRelayInterval);
+    debugRelayInterval = null;
   }
 }
 
@@ -352,6 +391,29 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
       sendResponse({ active: mapActive });
       break;
 
+    // ── Demo Mode (Option A) ──────────────────────────────────────────────────
+    // Tells the map host to return synthetic game state instead of reading D2R
+    // memory. Lets you verify the Chrome canvas overlay before offsets are fixed.
+    case "setDemoMode":
+      if (mapPort) mapPort.postMessage({ cmd: "set_demo_mode", enabled: !!request.enabled });
+      sendResponse({ status: "requested" });
+      break;
+
+    // ── In-Game Debug Overlay (Option B) ─────────────────────────────────────
+    // Creates/destroys a Win32 layered topmost window drawn over D2R.
+    // When enabled, we also start relaying vision-agent FrameState to the map
+    // host every 100 ms so it knows what detections to render.
+    case "setDebugOverlay":
+      debugOverlayEnabled = !!request.enabled;
+      if (mapPort) mapPort.postMessage({ cmd: "set_debug_overlay", enabled: debugOverlayEnabled });
+      if (debugOverlayEnabled) {
+        startDebugStatRelay();
+      } else {
+        stopDebugStatRelay();
+      }
+      sendResponse({ status: "requested" });
+      break;
+
     default:
       sendResponse({ error: "unknown" });
   }
@@ -382,6 +444,7 @@ chrome.runtime.onSuspend && chrome.runtime.onSuspend.addListener(() => {
   if (mapReconnectTimer) clearTimeout(mapReconnectTimer);
   if (mapActivationTimer) clearTimeout(mapActivationTimer);
   stopMapPolling();
+  stopDebugStatRelay();
   if (agentPort) {
     try { agentPort.postMessage({ cmd: "shutdown" }); agentPort.disconnect(); } catch (_) {}
   }

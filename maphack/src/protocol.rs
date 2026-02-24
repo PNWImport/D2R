@@ -71,6 +71,34 @@ pub enum InboundCommand {
 
     #[serde(rename = "shutdown")]
     Shutdown,
+
+    /// Enable/disable demo mode — returns synthetic game state without touching D2R memory.
+    /// Useful for testing the Chrome canvas overlay before real offsets are ready.
+    #[serde(rename = "set_demo_mode")]
+    SetDemoMode { enabled: bool },
+
+    /// Enable/disable the in-game debug overlay window (Win32 layered topmost window).
+    /// On non-Windows this is a no-op acknowledged by the host.
+    #[serde(rename = "set_debug_overlay")]
+    SetDebugOverlay { enabled: bool },
+
+    /// Push current vision-agent detection state to the debug overlay for rendering.
+    /// Background.js relays FrameState data from the vision agent to the map host.
+    #[serde(rename = "update_debug_state")]
+    UpdateDebugState {
+        hp_pct: u8,
+        mp_pct: u8,
+        merc_hp_pct: u8,
+        enemy_count: u8,
+        nearest_enemy_x: u16,
+        nearest_enemy_y: u16,
+        nearest_enemy_hp_pct: u8,
+        chicken_hp_pct: u8,
+        #[serde(default)]
+        area_name: String,
+        #[serde(default)]
+        in_game: bool,
+    },
 }
 
 // ---------------------------------------------------------------------------
@@ -203,6 +231,24 @@ pub fn parse_command(value: &Value) -> Result<InboundCommand, String> {
             reason: value["reason"].as_str().map(|s| s.to_string()),
         }),
         Some("shutdown") => Ok(InboundCommand::Shutdown),
+        Some("set_demo_mode") => Ok(InboundCommand::SetDemoMode {
+            enabled: value["enabled"].as_bool().unwrap_or(false),
+        }),
+        Some("set_debug_overlay") => Ok(InboundCommand::SetDebugOverlay {
+            enabled: value["enabled"].as_bool().unwrap_or(false),
+        }),
+        Some("update_debug_state") => Ok(InboundCommand::UpdateDebugState {
+            hp_pct: value["hp_pct"].as_u64().unwrap_or(100) as u8,
+            mp_pct: value["mp_pct"].as_u64().unwrap_or(100) as u8,
+            merc_hp_pct: value["merc_hp_pct"].as_u64().unwrap_or(100) as u8,
+            enemy_count: value["enemy_count"].as_u64().unwrap_or(0) as u8,
+            nearest_enemy_x: value["nearest_enemy_x"].as_u64().unwrap_or(640) as u16,
+            nearest_enemy_y: value["nearest_enemy_y"].as_u64().unwrap_or(360) as u16,
+            nearest_enemy_hp_pct: value["nearest_enemy_hp_pct"].as_u64().unwrap_or(0) as u8,
+            chicken_hp_pct: value["chicken_hp_pct"].as_u64().unwrap_or(0) as u8,
+            area_name: value["area_name"].as_str().unwrap_or("").to_string(),
+            in_game: value["in_game"].as_bool().unwrap_or(false),
+        }),
         _ => Err(format!("Unknown command: {:?}", value["cmd"])),
     }
 }
