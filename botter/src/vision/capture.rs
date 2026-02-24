@@ -1303,14 +1303,14 @@ impl DxgiCapturer {
             let output: IDXGIOutput = adapter.EnumOutputs(0)?;
             let output1: IDXGIOutput1 = output.cast()?;
 
-            // Get output description for dimensions
-            let mut desc = std::mem::zeroed();
-            output.GetDesc(&mut desc)?;
-            let width = (desc.DesktopCoordinates.right - desc.DesktopCoordinates.left) as u32;
-            let height = (desc.DesktopCoordinates.bottom - desc.DesktopCoordinates.top) as u32;
-
             // Create duplication
             let duplication = output1.DuplicateOutput(&device)?;
+
+            // Get dimensions from duplication desc
+            let mut dup_desc = DXGI_OUTDUPL_DESC::default();
+            duplication.GetDesc(&mut dup_desc);
+            let width = dup_desc.ModeDesc.Width;
+            let height = dup_desc.ModeDesc.Height;
 
             Ok(Self {
                 device,
