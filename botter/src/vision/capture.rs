@@ -1273,6 +1273,7 @@ pub struct DxgiCapturer {
 #[cfg(windows)]
 impl DxgiCapturer {
     pub fn new() -> anyhow::Result<Self> {
+        use windows::core::Interface;
         use windows::Win32::Graphics::Direct3D::*;
         use windows::Win32::Graphics::Direct3D11::*;
         use windows::Win32::Graphics::Dxgi::*;
@@ -1322,6 +1323,7 @@ impl DxgiCapturer {
     }
 
     pub fn capture_frame(&mut self) -> anyhow::Result<CapturedFrame> {
+        use windows::core::Interface;
         use windows::Win32::Graphics::Direct3D11::*;
         use windows::Win32::Graphics::Dxgi::*;
 
@@ -1344,10 +1346,12 @@ impl DxgiCapturer {
                     let mut desc = D3D11_TEXTURE2D_DESC::default();
                     texture.GetDesc(&mut desc);
                     desc.Usage = D3D11_USAGE_STAGING;
-                    desc.BindFlags = D3D11_BIND_FLAG(0);
-                    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-                    desc.MiscFlags = D3D11_RESOURCE_MISC_FLAG(0);
-                    let s = self.device.CreateTexture2D(&desc, None)?;
+                    desc.BindFlags = 0;
+                    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ.0 as u32;
+                    desc.MiscFlags = 0;
+                    let mut staging_tex = None;
+                    self.device.CreateTexture2D(&desc, None, Some(&mut staging_tex))?;
+                    let s = staging_tex.ok_or_else(|| anyhow::anyhow!("CreateTexture2D returned None"))?;
                     self.staging = Some(s.clone());
                     s
                 }

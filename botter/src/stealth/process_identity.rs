@@ -138,29 +138,50 @@ impl ProcessIdentity {
     #[cfg(windows)]
     fn apply_peb_overwrite(&self) -> Result<(), ProcessIdentityError> {
         use std::mem;
-        use windows::Win32::Foundation::*;
-        use windows::Win32::System::Diagnostics::Debug::*;
         use windows::Win32::System::Threading::*;
+
+        // PROCESS_BASIC_INFORMATION is not exposed in windows 0.58;
+        // define it manually for NtQueryInformationProcess.
+        #[repr(C)]
+        struct ProcessBasicInformation {
+            reserved1: *mut std::ffi::c_void,
+            peb_base_address: *mut u8,
+            reserved2: [*mut std::ffi::c_void; 2],
+            unique_process_id: usize,
+            reserved3: *mut std::ffi::c_void,
+        }
+
+        // NtQueryInformationProcess from ntdll
+        #[link(name = "ntdll")]
+        extern "system" {
+            fn NtQueryInformationProcess(
+                process_handle: *mut std::ffi::c_void,
+                process_information_class: u32,
+                process_information: *mut std::ffi::c_void,
+                process_information_length: u32,
+                return_length: *mut u32,
+            ) -> i32;
+        }
 
         unsafe {
             // 1. Get PEB address via NtQueryInformationProcess
             let process = GetCurrentProcess();
-            let mut pbi: PROCESS_BASIC_INFORMATION = mem::zeroed();
+            let mut pbi: ProcessBasicInformation = mem::zeroed();
             let status = NtQueryInformationProcess(
-                process,
-                ProcessBasicInformation,
-                &mut pbi as *mut _ as *mut _,
-                mem::size_of::<PROCESS_BASIC_INFORMATION>() as u32,
+                process.0 as *mut std::ffi::c_void,
+                0, // ProcessBasicInformation
+                &mut pbi as *mut _ as *mut std::ffi::c_void,
+                mem::size_of::<ProcessBasicInformation>() as u32,
                 std::ptr::null_mut(),
             );
-            if status.is_err() {
+            if status != 0 {
                 return Err(ProcessIdentityError::PebWriteFailed(format!(
-                    "NtQueryInformationProcess failed: {:?}",
+                    "NtQueryInformationProcess failed: 0x{:08X}",
                     status
                 )));
             }
 
-            let peb = pbi.PebBaseAddress;
+            let peb = pbi.peb_base_address;
             if peb.is_null() {
                 return Err(ProcessIdentityError::PebWriteFailed("Null PEB".into()));
             }
