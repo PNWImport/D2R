@@ -38,20 +38,20 @@
 use serde::{Deserialize, Serialize};
 
 // ---------------------------------------------------------------------------
-// Static base offsets (PATCH-DEPENDENT — 2.x era, NOT valid for 3.x)
+// Static base offsets (PATCH-DEPENDENT — last validated ~2.7/2.8)
 // These are FALLBACKS for sig-scan failure only.
-// Community must provide updated values for D2R 3.x.
+// Sig-scan (below) is the correct approach for any new patch.
+// Source: OwnedCore community + MapAssist + D2RMH
 // ---------------------------------------------------------------------------
 
 /// Player Unit Hash Table (128 buckets of linked UnitAny*)
-/// 2.x: 0x2028E60 — will shift on 3.x
-/// Sig-scan pattern SIG_UNIT_HASH_TABLE should find the real address.
+/// Sig-scan SIG_UNIT_HASH_TABLE finds the live address; this is the fallback.
 pub const PLAYER_UNIT_HASH_TABLE: u64 = 0x2028E60;
 
 /// UI Settings base (menu state, automap toggle)
 pub const UI_SETTINGS_BASE: u64 = 0x20AD5F0;
 
-/// Expansion check (LoD vs Classic — possibly deprecated in 3.x)
+/// Expansion check (LoD vs Classic)
 pub const EXPANSION_CHECK: u64 = 0x20AD3B0;
 
 /// Roster data (party members)
@@ -65,72 +65,136 @@ pub const GAME_NAME_OFFSET: u64 = 0x20AD678;
 // These byte patterns survive most patches because they match instruction
 // sequences near the data, not absolute addresses.
 // The wildcards (mask='?') match the RIP-relative offset bytes.
+//
+// Source: confirmed by both MapAssist (D2RLegit/MapAssist ProcessContext.cs)
+//         and D2RMH (soarqin/D2RMH processdata.cpp) — identical patterns.
+//
+// Resolve modes:
+//   RipRelative:  result = (scan_base + match + addr_offset + addr_size) + rel + extra
+//   BaseRelative: result = scan_base + rel + extra  (val is RVA from module base)
 // ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ResolveMode {
+    /// Standard x64 RIP-relative addressing:
+    /// result = (instruction_end) + rel + extra
+    RipRelative,
+    /// Value is an offset from the module base:
+    /// result = scan_base + rel + extra
+    BaseRelative,
+}
 
 #[derive(Debug, Clone)]
 pub struct SigPattern {
     pub name: &'static str,
     pub pattern: &'static [u8],
     pub mask: &'static str,       // 'x' = match, '?' = wildcard
-    pub addr_offset: usize,       // byte offset to the RIP-relative i32
-    pub addr_size: usize,         // typically 4 (RIP-rel32)
+    pub addr_offset: i64,         // signed — byte offset to the i32 (can be negative)
+    pub addr_size: usize,         // typically 4 (i32)
     pub extra_offset: i64,        // additional offset after resolution
+    pub mode: ResolveMode,
 }
 
-/// Unit Hash Table: "48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 44 8B"
-/// LEA RCX, [rip+??] — loads address of the hash table
-/// Tested working on 2.4 through 2.8, likely survives 3.x
+/// Unit Hash Table: "48 03 C7 49 8B 8C C6"
+///   ADD RAX, RDI / MOV RCX, [R14 + RAX*8 + disp32]
+///   The disp32 at +7 is an RVA from module base.
+/// Source: MapAssist + D2RMH search0 (validated 2.4 – 2.8+)
 pub const SIG_UNIT_HASH_TABLE: SigPattern = SigPattern {
     name: "UnitHashTable",
-    pattern: &[0x48, 0x8D, 0x0D, 0x00, 0x00, 0x00, 0x00, 0xE8, 0x00, 0x00, 0x00, 0x00, 0x44, 0x8B],
-    mask: "xxx????x????xx",
+    pattern: &[0x48, 0x03, 0xC7, 0x49, 0x8B, 0x8C, 0xC6],
+    mask: "xxxxxxx",
+    addr_offset: 7,
+    addr_size: 4,
+    extra_offset: 0,
+    mode: ResolveMode::BaseRelative,
+};
+
+/// UI Settings / Menu Data: "48 89 45 B7 4C 8D 35 ?? ?? ?? ??"
+///   LEA R14, [rip + disp32] — loads UI settings base
+/// Source: MapAssist + D2RMH search1
+pub const SIG_UI_SETTINGS: SigPattern = SigPattern {
+    name: "UISettings",
+    pattern: &[0x48, 0x89, 0x45, 0xB7, 0x4C, 0x8D, 0x35, 0x00, 0x00, 0x00, 0x00],
+    mask: "xxxxxxx????",
+    addr_offset: 7,
+    addr_size: 4,
+    extra_offset: 0,
+    mode: ResolveMode::RipRelative,
+};
+
+/// Expansion check: "48 8B 05 ?? ?? ?? ?? 48 8B D9 F3 0F 10 50"
+///   MOV RAX, [rip + disp32]
+/// Source: MapAssist + D2RMH search2
+pub const SIG_EXPANSION: SigPattern = SigPattern {
+    name: "Expansion",
+    pattern: &[0x48, 0x8B, 0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8B, 0xD9, 0xF3, 0x0F, 0x10, 0x50],
+    mask: "xxx????xxxxxxx",
     addr_offset: 3,
     addr_size: 4,
     extra_offset: 0,
+    mode: ResolveMode::RipRelative,
 };
 
-/// UI Settings: "40 84 ED 0F 95 05 ?? ?? ?? ??"
-/// TEST BPL, BPL / SETNE [rip+??]
-pub const SIG_UI_SETTINGS: SigPattern = SigPattern {
-    name: "UISettings",
-    pattern: &[0x40, 0x84, 0xED, 0x0F, 0x95, 0x05, 0x00, 0x00, 0x00, 0x00],
+/// Roster Data: "02 45 33 D2 4D 8B"
+///   The rel32 is 3 bytes BEFORE the match (addr_offset = -3).
+/// Source: MapAssist + D2RMH search3
+pub const SIG_ROSTER_DATA: SigPattern = SigPattern {
+    name: "RosterData",
+    pattern: &[0x02, 0x45, 0x33, 0xD2, 0x4D, 0x8B],
+    mask: "xxxxxx",
+    addr_offset: -3,
+    addr_size: 4,
+    extra_offset: 0,
+    mode: ResolveMode::RipRelative,
+};
+
+/// Game Info / Name: "44 88 25 ?? ?? ?? ?? 66 44 89 25"
+///   The rel32 at +3 resolves to an address 0x121 bytes before the instruction.
+/// Source: MapAssist + D2RMH search4
+pub const SIG_GAME_INFO: SigPattern = SigPattern {
+    name: "GameInfo",
+    pattern: &[0x44, 0x88, 0x25, 0x00, 0x00, 0x00, 0x00, 0x66, 0x44, 0x89, 0x25],
+    mask: "xxx????xxxx",
+    addr_offset: 3,
+    addr_size: 4,
+    extra_offset: -0x128, // -(0x121 + 7)
+    mode: ResolveMode::RipRelative,
+};
+
+/// Map Seed (direct): "41 8B F9 48 8D 0D ?? ?? ?? ??"
+///   LEA RCX, [rip + disp32] — near the seed access code.
+///   Resolves to address + 0xEA past the instruction end.
+/// Source: D2RMH search5
+pub const SIG_MAP_SEED: SigPattern = SigPattern {
+    name: "MapSeed",
+    pattern: &[0x41, 0x8B, 0xF9, 0x48, 0x8D, 0x0D, 0x00, 0x00, 0x00, 0x00],
     mask: "xxxxxx????",
     addr_offset: 6,
     addr_size: 4,
-    extra_offset: 0,
-};
-
-/// Expansion: "48 8B 05 ?? ?? ?? ?? 48 8B D9 8B 40 5C"
-/// MOV RAX, [rip+??]
-pub const SIG_EXPANSION: SigPattern = SigPattern {
-    name: "Expansion",
-    pattern: &[0x48, 0x8B, 0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8B, 0xD9, 0x8B, 0x40, 0x5C],
-    mask: "xxx????xxxxxx",
-    addr_offset: 3,
-    addr_size: 4,
-    extra_offset: 0,
+    extra_offset: 0xE0, // 0xEA - (6 + 4) accounts for instruction width
+    mode: ResolveMode::RipRelative,
 };
 
 // ---------------------------------------------------------------------------
 // D2R Struct Layouts (64-bit)
 // These are INTRA-STRUCT offsets (field positions within a struct).
-// Much more stable across patches than static base addresses.
-// The D2 engine structures haven't changed fundamentally since D2R launch.
-// 3.x may add new fields but existing fields should stay at same offsets.
+// Source: soarqin/D2RMH d2rdefs.h (verified against MapAssist)
+// These are the authoritative D2R x64 offsets for the engine structures.
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnitAnyOffsets {
     pub unit_type: u64,        // +0x00  DWORD (0=Player,1=Monster,2=Object,3=Missile,4=Item,5=Tile)
-    pub class_id: u64,         // +0x04  DWORD (char class / monster ID)
+    pub class_id: u64,         // +0x04  DWORD (txtFileNo: char class / monster ID)
     pub unit_id: u64,          // +0x08  DWORD (instance ID)
     pub mode: u64,             // +0x0C  DWORD (animation state)
     pub union_ptr: u64,        // +0x10  ptr → PlayerData/MonsterData/ObjectData/ItemData
-    pub act_ptr: u64,          // +0x18  ptr → ActStruct
-    pub seed: u64,             // +0x20  seed data
-    pub path_ptr: u64,         // +0x38  ptr → PathStruct
+    pub act_ptr: u64,          // +0x20  ptr → DrlgAct  (NOT 0x18 — 0x18 is unk0)
+    pub seed: u64,             // +0x28  seed data
+    pub path_ptr: u64,         // +0x38  ptr → DynamicPath / StaticPath
     pub stat_list_ptr: u64,    // +0x88  ptr → StatList
     pub inventory_ptr: u64,    // +0x90  ptr → Inventory
+    pub skill_ptr: u64,        // +0xB8  ptr → Skill
     pub next_unit_ptr: u64,    // +0xE8  ptr → next UnitAny in hash chain
 }
 
@@ -138,24 +202,25 @@ impl Default for UnitAnyOffsets {
     fn default() -> Self {
         Self {
             unit_type: 0x00, class_id: 0x04, unit_id: 0x08, mode: 0x0C,
-            union_ptr: 0x10, act_ptr: 0x18, seed: 0x20, path_ptr: 0x38,
-            stat_list_ptr: 0x88, inventory_ptr: 0x90, next_unit_ptr: 0xE8,
+            union_ptr: 0x10, act_ptr: 0x20, seed: 0x28, path_ptr: 0x38,
+            stat_list_ptr: 0x88, inventory_ptr: 0x90, skill_ptr: 0xB8,
+            next_unit_ptr: 0xE8,
         }
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PathOffsets {
-    pub pos_x: u64,       // +0x02  WORD
-    pub pos_y: u64,       // +0x06  WORD
-    pub target_x: u64,    // +0x0A  WORD
-    pub target_y: u64,    // +0x0E  WORD
-    pub room_ptr: u64,    // +0x20  ptr → Room1
+    pub pos_x: u64,       // +0x02  WORD (DynamicPath.posX)
+    pub pos_y: u64,       // +0x06  WORD (DynamicPath.posY)
+    pub target_x: u64,    // +0x10  DWORD (DynamicPath.targetX)
+    pub target_y: u64,    // +0x14  DWORD (DynamicPath.targetY)
+    pub room_ptr: u64,    // +0x20  ptr → DrlgRoom1
 }
 
 impl Default for PathOffsets {
     fn default() -> Self {
-        Self { pos_x: 0x02, pos_y: 0x06, target_x: 0x0A, target_y: 0x0E, room_ptr: 0x20 }
+        Self { pos_x: 0x02, pos_y: 0x06, target_x: 0x10, target_y: 0x14, room_ptr: 0x20 }
     }
 }
 
@@ -182,41 +247,41 @@ impl Default for ActMiscOffsets {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Room1Offsets {
-    pub room_next: u64,    // +0x00
-    pub room_ex_ptr: u64,  // +0x18 ptr → Room2
-    pub unit_first: u64,   // +0x48
-    pub act_ptr: u64,      // +0x10
+    pub room_next: u64,    // +0xB0  ptr → next DrlgRoom1
+    pub room_ex_ptr: u64,  // +0x18  ptr → DrlgRoom2
+    pub unit_first: u64,   // +0xA8  ptr → first UnitAny in room
+    pub act_ptr: u64,      // +0x48  ptr → DrlgAct
 }
 
 impl Default for Room1Offsets {
-    fn default() -> Self { Self { room_next: 0x00, room_ex_ptr: 0x18, unit_first: 0x48, act_ptr: 0x10 } }
+    fn default() -> Self { Self { room_next: 0xB0, room_ex_ptr: 0x18, unit_first: 0xA8, act_ptr: 0x48 } }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Room2Offsets {
-    pub room2_next: u64,   // +0x00
-    pub level_ptr: u64,    // +0x90 ptr → Level
-    pub pos_x: u64,        // +0x00
-    pub pos_y: u64,        // +0x04
-    pub size_x: u64,       // +0x08
-    pub size_y: u64,       // +0x0C
+    pub room2_next: u64,   // +0x48  ptr → next DrlgRoom2
+    pub level_ptr: u64,    // +0x90  ptr → DrlgLevel
+    pub pos_x: u64,        // +0x60  DWORD (tile X)
+    pub pos_y: u64,        // +0x64  DWORD (tile Y)
+    pub size_x: u64,       // +0x68  DWORD (tile width)
+    pub size_y: u64,       // +0x6C  DWORD (tile height)
 }
 
 impl Default for Room2Offsets {
     fn default() -> Self {
-        Self { room2_next: 0x00, level_ptr: 0x90, pos_x: 0x00, pos_y: 0x04, size_x: 0x08, size_y: 0x0C }
+        Self { room2_next: 0x48, level_ptr: 0x90, pos_x: 0x60, pos_y: 0x64, size_x: 0x68, size_y: 0x6C }
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LevelOffsets {
-    pub level_next: u64,   // +0x00
-    pub room2_first: u64,  // +0x10
-    pub level_id: u64,     // +0x1D0 DWORD (area 1-136+)
+    pub level_next: u64,   // +0x00  ptr → next DrlgLevel
+    pub room2_first: u64,  // +0x10  ptr → first DrlgRoom2
+    pub level_id: u64,     // +0x1F8 DWORD (area 1-136+) — D2RMH confirmed
 }
 
 impl Default for LevelOffsets {
-    fn default() -> Self { Self { level_next: 0x00, room2_first: 0x10, level_id: 0x1D0 } }
+    fn default() -> Self { Self { level_next: 0x00, room2_first: 0x10, level_id: 0x1F8 } }
 }
 
 // ---------------------------------------------------------------------------

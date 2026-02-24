@@ -4,11 +4,11 @@
 // cfg(windows) = real ReadProcessMemory, sig-scan, the works
 // cfg(not(windows)) = simulated state for dev/test (this Linux box)
 //
-// Pointer chains (from open-source map assist tools):
-//   Seed:     PlayerUnit → pAct(+0x18) → pActMisc(+0x78) → dwMapSeed(+0x840)
+// Pointer chains (from open-source map assist tools — D2RMH / MapAssist):
+//   Seed:     PlayerUnit → pAct(+0x20) → pActMisc(+0x78) → dwMapSeed(+0x840)
 //   Diff:     ... → pActMisc(+0x78) → dwDifficulty(+0x830)
 //   Position: PlayerUnit → pPath(+0x38) → xPos(+0x02), yPos(+0x06)
-//   Area:     pPath → pRoom1(+0x20) → pRoom2(+0x18) → pLevel(+0x90) → dwLevelNo(+0x1D0)
+//   Area:     pPath → pRoom1(+0x20) → pRoom2(+0x18) → pLevel(+0x90) → dwLevelNo(+0x1F8)
 // =============================================================================
 
 use crate::offsets::*;
@@ -246,16 +246,44 @@ mod platform {
             let mut buf = vec![0u8; scan_size];
             let read = self.read_bytes(self.base, &mut buf)?;
             let data = &buf[..read];
+            let mut found = 0u32;
 
             if let Some(off) = sig_find(data, &SIG_UNIT_HASH_TABLE) {
-                let resolved = resolve_rip_from_buf(data, self.base, off, &SIG_UNIT_HASH_TABLE);
+                let resolved = resolve_sig(data, self.base, off, &SIG_UNIT_HASH_TABLE);
                 self.offsets.player_hash_table = resolved - self.base;
-                eprintln!("[map] sig UnitHashTable -> {:#X} (offset {:#X})", resolved, self.offsets.player_hash_table);
+                eprintln!("[map] sig UnitHashTable -> {:#X} (rva {:#X})", resolved, self.offsets.player_hash_table);
+                found += 1;
             }
             if let Some(off) = sig_find(data, &SIG_UI_SETTINGS) {
-                let resolved = resolve_rip_from_buf(data, self.base, off, &SIG_UI_SETTINGS);
+                let resolved = resolve_sig(data, self.base, off, &SIG_UI_SETTINGS);
                 self.offsets.ui_settings = resolved - self.base;
                 eprintln!("[map] sig UISettings -> {:#X}", resolved);
+                found += 1;
+            }
+            if let Some(off) = sig_find(data, &SIG_EXPANSION) {
+                let resolved = resolve_sig(data, self.base, off, &SIG_EXPANSION);
+                eprintln!("[map] sig Expansion -> {:#X}", resolved);
+                found += 1;
+            }
+            if let Some(off) = sig_find(data, &SIG_ROSTER_DATA) {
+                let resolved = resolve_sig(data, self.base, off, &SIG_ROSTER_DATA);
+                eprintln!("[map] sig RosterData -> {:#X}", resolved);
+                found += 1;
+            }
+            if let Some(off) = sig_find(data, &SIG_GAME_INFO) {
+                let resolved = resolve_sig(data, self.base, off, &SIG_GAME_INFO);
+                eprintln!("[map] sig GameInfo -> {:#X}", resolved);
+                found += 1;
+            }
+            if let Some(off) = sig_find(data, &SIG_MAP_SEED) {
+                let resolved = resolve_sig(data, self.base, off, &SIG_MAP_SEED);
+                eprintln!("[map] sig MapSeed -> {:#X}", resolved);
+                found += 1;
+            }
+
+            eprintln!("[map] sig-scan: {}/6 patterns matched", found);
+            if found == 0 {
+                return Err("No sig patterns matched".into());
             }
             Ok(())
         }
@@ -412,14 +440,23 @@ mod platform {
         None
     }
 
-    fn resolve_rip_from_buf(buf: &[u8], scan_base: u64, match_offset: usize, sig: &SigPattern) -> u64 {
-        // Read the 4-byte signed relative offset at the wildcard position
-        let o = match_offset + sig.addr_offset;
+    fn resolve_sig(buf: &[u8], scan_base: u64, match_offset: usize, sig: &SigPattern) -> u64 {
+        // addr_offset is signed (i64) — the i32 displacement can be before the match
+        let o = (match_offset as i64 + sig.addr_offset) as usize;
         let rel = i32::from_le_bytes([buf[o], buf[o+1], buf[o+2], buf[o+3]]);
-        // RIP-relative addressing: the offset is relative to the END of the
-        // immediate value (i.e., the byte after the 4 address bytes)
-        let rip = scan_base + (o + sig.addr_size) as u64;
-        (rip as i64 + rel as i64 + sig.extra_offset) as u64
+
+        match sig.mode {
+            ResolveMode::RipRelative => {
+                // Standard x64 RIP-relative: displacement is relative to the byte
+                // AFTER the 4-byte immediate (instruction end for the imm field).
+                let rip = scan_base + (o + sig.addr_size) as u64;
+                (rip as i64 + rel as i64 + sig.extra_offset) as u64
+            }
+            ResolveMode::BaseRelative => {
+                // Value is an RVA from module base.
+                (scan_base as i64 + rel as i64 + sig.extra_offset) as u64
+            }
+        }
     }
 }
 
