@@ -174,3 +174,10 @@ session:
   allowed_end_hour: 23
   short_break_rate: 0.12
   long_break_rate: 0.04
+
+game_display:
+  monster_hp_bars: true       # REQUIRED — enemy detection depends on red HP bars
+  monster_names: false         # OFF — extra text adds noise to loot/bar scans
+  item_labels_on_loot: true    # Hold Alt when looting (low clutter since loot only when enemies <= 2)
+  player_name: false           # OFF — noise pixels near character center
+  chat_enabled: false          # OFF — bottom-left text confuses loot label scan

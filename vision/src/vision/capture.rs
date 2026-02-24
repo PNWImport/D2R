@@ -5,6 +5,7 @@
 //!
 //! On non-Windows, provides a simulation stub for testing.
 
+use crate::config::GameDisplayConfig;
 use crate::vision::{FrameState, ItemQuality, LootLabel, ShardedFrameBuffer};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -102,16 +103,30 @@ pub struct CapturePipeline {
     tick: u64,
     /// Orb layout resolved from the first real frame's dimensions.
     orb_layout: Option<OrbLayout>,
+    /// Expected D2R display settings — logged at startup, used for validation.
+    display_config: GameDisplayConfig,
+    /// Whether the startup display check has already run.
+    display_checked: bool,
 }
 
 impl CapturePipeline {
     pub fn new(config: CaptureConfig, buffer: Arc<ShardedFrameBuffer>) -> Self {
+        Self::with_display_config(config, buffer, GameDisplayConfig::default())
+    }
+
+    pub fn with_display_config(
+        config: CaptureConfig,
+        buffer: Arc<ShardedFrameBuffer>,
+        display_config: GameDisplayConfig,
+    ) -> Self {
         Self {
             config,
             buffer,
             running: Arc::new(AtomicBool::new(false)),
             tick: 0,
             orb_layout: None,
+            display_config,
+            display_checked: false,
         }
     }
 
@@ -135,6 +150,105 @@ impl CapturePipeline {
         );
         self.orb_layout = Some(layout);
         layout
+    }
+
+    /// Log expected display settings and run a first-frame sanity check.
+    /// Called once when the first real frame arrives.
+    fn validate_display_settings(&mut self, frame: &CapturedFrame) {
+        if self.display_checked {
+            return;
+        }
+        self.display_checked = true;
+
+        let dc = &self.display_config;
+        tracing::info!("─── Game display settings (expected) ───");
+        tracing::info!("  Monster HP bars:      {} (REQUIRED for enemy detection)",
+            if dc.monster_hp_bars { "ON" } else { "OFF — WARNING: enemy detection will fail!" });
+        tracing::info!("  Monster names:         {}",
+            if dc.monster_names { "ON — may add loot/bar scan noise" } else { "OFF (clean)" });
+        tracing::info!("  Item labels on loot:   {}",
+            if dc.item_labels_on_loot { "ON (Alt-hold during loot)" } else { "OFF" });
+        tracing::info!("  Player name:           {}",
+            if dc.player_name { "ON — may add noise near char center" } else { "OFF (clean)" });
+        tracing::info!("  Chat:                  {}",
+            if dc.chat_enabled { "ON — may confuse bottom-left loot scan" } else { "OFF (clean)" });
+
+        if !dc.monster_hp_bars {
+            tracing::warn!(
+                "monster_hp_bars is OFF — enemy detection depends on visible red HP bars. \
+                 Enable 'Monster Health Bar' in D2R Options > Gameplay."
+            );
+        }
+
+        // First-frame heuristic: check for unexpected text noise near character center
+        // (player name would show up as colored pixels above the character sprite)
+        if !dc.player_name {
+            let char_x = self.config.char_center.0 as u32;
+            let char_y = self.config.char_center.1 as u32;
+            let name_y = char_y.saturating_sub(60); // player name sits ~60px above char
+            let mut bright_text_pixels = 0u32;
+
+            for dx in 0..80u32 {
+                let x = char_x.saturating_sub(40) + dx;
+                if x >= frame.width || name_y >= frame.height {
+                    continue;
+                }
+                let idx = (name_y * frame.stride + x * 4) as usize;
+                if idx + 2 >= frame.pixels.len() {
+                    continue;
+                }
+                let r = frame.pixels[idx + 2];
+                let g = frame.pixels[idx + 1];
+                let b = frame.pixels[idx];
+                // White/bright text (player name is typically white)
+                if r > 200 && g > 200 && b > 200 {
+                    bright_text_pixels += 1;
+                }
+            }
+
+            if bright_text_pixels > 15 {
+                tracing::warn!(
+                    "Detected {} bright pixels above character center — player name may be ON. \
+                     Disable 'Player Name' in D2R Options to reduce vision noise.",
+                    bright_text_pixels
+                );
+            }
+        }
+
+        // Check for chat text noise in bottom-left
+        if !dc.chat_enabled {
+            let chat_y = (frame.height as f32 * 0.82) as u32;
+            let chat_x_end = (frame.width as f32 * 0.30) as u32;
+            let mut text_pixels = 0u32;
+
+            for x in (10..chat_x_end).step_by(3) {
+                for dy in 0..30u32 {
+                    let y = chat_y + dy;
+                    if y >= frame.height {
+                        continue;
+                    }
+                    let idx = (y * frame.stride + x * 4) as usize;
+                    if idx + 2 >= frame.pixels.len() {
+                        continue;
+                    }
+                    let r = frame.pixels[idx + 2];
+                    let g = frame.pixels[idx + 1];
+                    let b = frame.pixels[idx];
+                    let brightness = (r as u32 + g as u32 + b as u32) / 3;
+                    if brightness > 160 {
+                        text_pixels += 1;
+                    }
+                }
+            }
+
+            if text_pixels > 50 {
+                tracing::warn!(
+                    "Detected {} bright pixels in chat region — chat may be visible. \
+                     Minimize or disable chat in D2R to reduce loot scan false positives.",
+                    text_pixels
+                );
+            }
+        }
     }
 
     // ─── Public benchmark surface ─────────────────────────────────────────
@@ -296,6 +410,7 @@ impl CapturePipeline {
             match capture_result {
                 Ok(frame) => {
                     let orb = self.resolve_orb_layout(&frame);
+                    self.validate_display_settings(&frame);
                     let mut state = self.extract_frame_state(&frame, orb);
                     state.frame_width = frame.width as u16;
                     state.frame_height = frame.height as u16;

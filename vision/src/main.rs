@@ -145,12 +145,17 @@ async fn main() {
     let capture_buffer = Arc::clone(&buffer);
     let _capture_stats = Arc::clone(&stats);
     let capture_shutdown = Arc::clone(&shutdown);
+    let capture_display_config = config.game_display.clone();
 
     let _capture_handle = std::thread::Builder::new()
         .name("capture".into())
         .spawn(move || {
             let cap_config = CaptureConfig::default();
-            let mut pipeline = CapturePipeline::new(cap_config, capture_buffer);
+            let mut pipeline = CapturePipeline::with_display_config(
+                cap_config,
+                capture_buffer,
+                capture_display_config,
+            );
             let running = pipeline.running_flag();
 
             // Link to global shutdown

@@ -36,6 +36,8 @@ pub struct AgentConfig {
     pub merc: MercConfig,
     #[serde(default)]
     pub inventory: InventoryConfig,
+    #[serde(default)]
+    pub game_display: GameDisplayConfig,
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -650,6 +652,47 @@ pub struct InventoryConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// GAME DISPLAY — expected D2R in-game Options for vision pipeline
+// ═══════════════════════════════════════════════════════════════
+
+/// Expected D2R in-game display settings for optimal vision detection.
+///
+/// These are NOT settings the bot can change programmatically — they document
+/// what the player should set in D2R Options before running the agent.
+/// The capture pipeline logs warnings at startup if visual checks suggest
+/// a mismatch.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
+pub struct GameDisplayConfig {
+    /// Monster HP bars must be ON — enemy detection depends on red health bars.
+    pub monster_hp_bars: bool,
+    /// Monster names should be OFF — extra text adds noise to loot label scan
+    /// and can overlap enemy bar width measurements (boss vs champion).
+    pub monster_names: bool,
+    /// Item labels (Alt key toggle): ON when looting. The decision engine only
+    /// loots when enemy_count <= 2, so clutter is low in those moments.
+    /// If true, the agent will hold Alt during loot scans.
+    pub item_labels_on_loot: bool,
+    /// Player name should be OFF — adds noise pixels near character center.
+    pub player_name: bool,
+    /// Chat should be OFF or minimized — text in bottom-left confuses
+    /// loot label scan at that screen region.
+    pub chat_enabled: bool,
+}
+
+impl Default for GameDisplayConfig {
+    fn default() -> Self {
+        Self {
+            monster_hp_bars: true,
+            monster_names: false,
+            item_labels_on_loot: true,
+            player_name: false,
+            chat_enabled: false,
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // HUMANIZATION
 // ═══════════════════════════════════════════════════════════════
 
@@ -757,6 +800,7 @@ impl Default for AgentConfig {
             clear: ClearConfig::default(),
             merc: MercConfig::default(),
             inventory: InventoryConfig::default(),
+            game_display: GameDisplayConfig::default(),
         }
     }
 }
@@ -813,6 +857,8 @@ mod tests {
         assert!(yaml.contains("leveling"));
         assert!(yaml.contains("cubing"));
         assert!(yaml.contains("runewords"));
+        assert!(yaml.contains("game_display"));
+        assert!(yaml.contains("monster_hp_bars"));
         assert!(yaml.contains("gambling"));
         assert!(yaml.contains("class_specific"));
         assert!(yaml.contains("monster_skip"));
