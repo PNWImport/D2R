@@ -380,6 +380,27 @@ impl GameManager {
         ""
     }
 
+    /// Ensure the minimap is open in "mini" mode before navigation.
+    ///
+    /// D2R Tab cycles: no map → mini map (top-right circle) → full-screen map.
+    /// Returns a Tab-key Decision if the minimap is not currently visible.
+    /// Returns None if minimap is already open — caller should proceed with navigation.
+    pub fn ensure_minimap_open(&self, frame: &crate::vision::FrameState) -> Option<Decision> {
+        if frame.minimap_visible {
+            return None; // Already open — caller proceeds
+        }
+        // Not visible: press Tab to cycle toward mini mode.
+        // One Tab toggles: off→mini, mini→full, full→off.
+        // We'll press Tab once and let the next frame's detect_minimap_visible()
+        // confirm which state we're in. The caller should check again next frame.
+        Some(Decision {
+            action: Action::RecastBuff { key: '\t' },
+            delay: std::time::Duration::from_millis(200),
+            priority: 1,
+            reason: "minimap: pressing Tab to open mini map",
+        })
+    }
+
     /// Navigate toward the minimap exit chevron (pure vision, no memory reads).
     ///
     /// The minimap center = player position. The exit marker offset tells us which
@@ -389,7 +410,7 @@ impl GameManager {
     /// Scale: minimap radius ≈ 95px shows ~240 tiles. Screen ≈ 40 tiles wide at
     /// 1280×720 → scale ≈ 80px/minimap-px. We use scale=20 (25% per step).
     pub fn navigate_toward_minimap_exit(&self, frame: &crate::vision::FrameState) -> Option<(i32, i32)> {
-        if !frame.minimap_has_exit { return None; }
+        if !frame.minimap_visible || !frame.minimap_has_exit { return None; }
 
         let fw = frame.frame_width  as f32;
         let fh = frame.frame_height as f32;
@@ -407,7 +428,7 @@ impl GameManager {
 
     /// Navigate toward the minimap waypoint marker (pure vision).
     pub fn navigate_toward_minimap_waypoint(&self, frame: &crate::vision::FrameState) -> Option<(i32, i32)> {
-        if !frame.minimap_has_waypoint { return None; }
+        if !frame.minimap_visible || !frame.minimap_has_waypoint { return None; }
 
         let fw = frame.frame_width  as f32;
         let fh = frame.frame_height as f32;

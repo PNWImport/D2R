@@ -131,6 +131,7 @@ pub struct FrameState {
     // D2R minimap (top-right HUD) shows exit chevrons in bright gold and
     // waypoints in cyan. Detecting their screen position gives direction
     // to navigate without touching D2R process memory at all.
+    pub minimap_visible:       bool, // minimap is in "mini" mode (top-right circle visible)
     pub minimap_has_exit:      bool,
     pub minimap_exit_screen_x: u16, // screen X of exit marker centroid
     pub minimap_exit_screen_y: u16, // screen Y of exit marker centroid
@@ -194,6 +195,7 @@ impl Default for FrameState {
             skill_screen_open: false,
             stat_screen_open: false,
             quest_log_open: false,
+            minimap_visible:       false,
             minimap_has_exit:      false,
             minimap_exit_screen_x: 0,
             minimap_exit_screen_y: 0,

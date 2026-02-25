@@ -250,3 +250,7 @@ Community sources for current offsets:
 | 2026-02-25 | Wire maphack→vision relay then REVERTED: RPM data in vision defeats detection avoidance |
 | 2026-02-25 | Add minimap exit/WP detection (pure DXGI pixel scan, gold/cyan centroids) |
 | 2026-02-25 | Add navigate_toward_minimap_exit/waypoint — screen-space nav from marker offset |
+| 2026-02-25 | Fix detect_minimap_markers: frame.data → frame.pixels, raw offset → stride-based |
+| 2026-02-25 | Add minimap_visible field + detect_minimap_visible() (dark-background pixel sampling) |
+| 2026-02-25 | Add ensure_minimap_open() — returns Tab-press Decision if minimap not in mini mode |
+| 2026-02-25 | Guard marker scan behind minimap_visible — skip gold/cyan scan when map is off |

@@ -500,29 +500,95 @@ impl CapturePipeline {
             // Experience bar: thin strip at very bottom of screen
             state.xp_bar_pct = self.read_xp_bar(frame);
 
+            // Minimap visibility: is the HUD minimap (top-right circle) showing?
+            // D2R Tab cycles: off → mini (top-right) → full-screen. Navigation
+            // only works in "mini" mode. Check before trying to read markers.
+            state.minimap_visible = self.detect_minimap_visible(frame);
+
             // Minimap exit/waypoint markers (top-right HUD) — pure pixel detection,
             // zero D2R memory reads. Exit = gold chevron. Waypoint = cyan dot.
-            let (exit_pos, wp_pos) = self.detect_minimap_markers(frame);
-            if let Some((ex, ey)) = exit_pos {
-                state.minimap_has_exit      = true;
-                state.minimap_exit_screen_x = ex as u16;
-                state.minimap_exit_screen_y = ey as u16;
+            // Only scan markers when the minimap is actually open.
+            if state.minimap_visible {
+                let (exit_pos, wp_pos) = self.detect_minimap_markers(frame);
+                if let Some((ex, ey)) = exit_pos {
+                    state.minimap_has_exit      = true;
+                    state.minimap_exit_screen_x = ex as u16;
+                    state.minimap_exit_screen_y = ey as u16;
+                } else {
+                    state.minimap_has_exit = false;
+                }
+                if let Some((wx, wy)) = wp_pos {
+                    state.minimap_has_waypoint  = true;
+                    state.minimap_wp_screen_x   = wx as u16;
+                    state.minimap_wp_screen_y   = wy as u16;
+                } else {
+                    state.minimap_has_waypoint = false;
+                }
             } else {
-                state.minimap_has_exit = false;
-            }
-            if let Some((wx, wy)) = wp_pos {
-                state.minimap_has_waypoint  = true;
-                state.minimap_wp_screen_x   = wx as u16;
-                state.minimap_wp_screen_y   = wy as u16;
-            } else {
-                state.minimap_has_waypoint = false;
+                state.minimap_has_exit      = false;
+                state.minimap_has_waypoint  = false;
             }
         }
 
         state
     }
 
-    // ─── Minimap Marker Detection ──────────────────────────────
+    // ─── Minimap Detection ─────────────────────────────────────
+
+    /// Detect whether the D2R minimap is currently in "mini" mode (top-right circle).
+    ///
+    /// D2R Tab cycles: no map → mini map (small circle, top-right) → full map (full screen).
+    /// Navigation marker detection only works correctly in mini mode.
+    ///
+    /// Strategy: the minimap circle has a very dark (near-black) background — distinct
+    /// from game-world terrain colors. We sample the inner portion of the expected
+    /// minimap circle. If >40% of sampled pixels are near-black, the minimap is open.
+    ///
+    /// This also catches full-map mode (which is dark too) — but in full-map mode the
+    /// game is effectively paused so navigation decisions won't be requested anyway.
+    fn detect_minimap_visible(&self, frame: &CapturedFrame) -> bool {
+        // Minimap center and inner sample radius (30% of full minimap radius)
+        let mm_cx = (frame.width  as f32 * 0.898) as u32;
+        let mm_cy = (frame.height as f32 * 0.159) as u32;
+        // Sample within inner 40% of the minimap radius to avoid the colored border ring
+        let sample_r = (frame.width as f32 * 0.074 * 0.40) as u32;
+        let sample_r2 = (sample_r * sample_r) as i64;
+
+        let x_start = mm_cx.saturating_sub(sample_r);
+        let x_end   = (mm_cx + sample_r).min(frame.width.saturating_sub(1));
+        let y_start = mm_cy.saturating_sub(sample_r);
+        let y_end   = (mm_cy + sample_r).min(frame.height.saturating_sub(1));
+
+        let mut dark = 0u32;
+        let mut total = 0u32;
+
+        let mut y = y_start;
+        while y <= y_end {
+            let mut x = x_start;
+            while x <= x_end {
+                let dx = x as i64 - mm_cx as i64;
+                let dy = y as i64 - mm_cy as i64;
+                if dx * dx + dy * dy <= sample_r2 {
+                    let offset = (y * frame.stride + x) as usize * 4;
+                    if offset + 2 < frame.pixels.len() {
+                        let b = frame.pixels[offset];
+                        let g = frame.pixels[offset + 1];
+                        let r = frame.pixels[offset + 2];
+                        total += 1;
+                        // Near-black: all channels below 30 — minimap dark background
+                        if r < 30 && g < 30 && b < 30 {
+                            dark += 1;
+                        }
+                    }
+                }
+                x += 3;
+            }
+            y += 3;
+        }
+
+        // Minimap visible if >40% of sampled inner pixels are dark
+        total > 0 && dark * 100 / total > 40
+    }
 
     /// Detect exit chevrons and waypoint markers on the D2R minimap (top-right HUD).
     ///
@@ -560,11 +626,11 @@ impl CapturePipeline {
                 let dx = x as i64 - mm_cx as i64;
                 let dy = y as i64 - mm_cy as i64;
                 if dx * dx + dy * dy <= mm_r2 {
-                    let offset = (y * frame.width + x) as usize * 4;
-                    if offset + 2 < frame.data.len() {
-                        let b = frame.data[offset];     // BGRA layout (DXGI default)
-                        let g = frame.data[offset + 1];
-                        let r = frame.data[offset + 2];
+                    let offset = (y * frame.stride + x) as usize * 4;
+                    if offset + 2 < frame.pixels.len() {
+                        let b = frame.pixels[offset];     // BGRA layout (DXGI default)
+                        let g = frame.pixels[offset + 1];
+                        let r = frame.pixels[offset + 2];
 
                         // Exit marker: gold/yellow chevron
                         if r > 210 && g > 160 && b < 90
