@@ -53,7 +53,7 @@ if ($isWSL) {
 
 if ($osType -ne "windows") {
     Write-Host "[-] Unsupported OS: $osType" -ForegroundColor Red
-    Write-Host "    This installer requires native Windows (registry, ProgramData, Chrome)." -ForegroundColor Yellow
+    Write-Host "    This installer requires native Windows [registry, ProgramData, Chrome]." -ForegroundColor Yellow
     Write-Host "    The Rust crates [vision, overlay] also require Windows APIs [DXGI, Win32]." -ForegroundColor Gray
     exit 1
 }
