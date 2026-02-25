@@ -333,18 +333,37 @@ impl GameManager {
 
         match self.phase {
             GamePhase::OutOfGame => {
-                // Transitioned into game (loading done, we see town)
-                if stable_in_town && !state.at_menu && !state.loading_screen {
-                    self.phase = GamePhase::TownPrep;
-                    self.last_phase_change = Instant::now();
-                    self.town_task = TownTask::Heal;
-                    self.game_start = Instant::now();
-                    self.game_count += 1;
-                    self.total_games += 1;
-                    self.runs_this_game = 0;
-                    self.run_index = 0;
-                    self.on_game_start_progression();
-                    tracing::info!("Game #{} started — entering town prep", self.game_count);
+                if !state.at_menu && !state.loading_screen {
+                    if stable_in_town {
+                        // Normal case: loaded into game, standing in town
+                        self.phase = GamePhase::TownPrep;
+                        self.last_phase_change = Instant::now();
+                        self.town_task = TownTask::Heal;
+                        self.game_start = Instant::now();
+                        self.game_count += 1;
+                        self.total_games += 1;
+                        self.runs_this_game = 0;
+                        self.run_index = 0;
+                        self.on_game_start_progression();
+                        tracing::info!("Game #{} started — entering town prep", self.game_count);
+                    } else if self.in_town_frames == 0
+                        && time_in_phase > Duration::from_secs(2)
+                    {
+                        // Bot started mid-dungeon (or returned here erroneously).
+                        // After 2 stable seconds of "in-game, not in town", go to Farming.
+                        self.phase = GamePhase::Farming;
+                        self.last_phase_change = Instant::now();
+                        self.game_start = Instant::now();
+                        self.game_count += 1;
+                        self.total_games += 1;
+                        self.runs_this_game = 0;
+                        self.run_index = 0;
+                        self.on_game_start_progression();
+                        tracing::info!(
+                            "Game #{} detected mid-dungeon — entering Farming directly",
+                            self.game_count
+                        );
+                    }
                 }
             }
             GamePhase::TownPrep => {
@@ -405,6 +424,17 @@ impl GameManager {
 
     fn handle_oog(&mut self, state: &FrameState) -> Decision {
         let now = Instant::now();
+
+        // If game HUD is visible (orbs rendering), we're inside an active game session —
+        // NOT at a menu. Stop clicking and let detect_phase_transitions find the phase.
+        if !state.at_menu && !state.loading_screen {
+            return Decision {
+                action: Action::Wait,
+                delay: Duration::from_millis(200),
+                priority: 0,
+                reason: "oog: game HUD visible, waiting for phase detection",
+            };
+        }
 
         // Rate-limit menu clicks to avoid double-clicking
         if now.duration_since(self.oog_click_cooldown) < Duration::from_millis(1500) {
@@ -1179,6 +1209,9 @@ mod tests {
         state.at_menu = false;
         state.loading_screen = false;
 
+        // Requires 3 consecutive in_town frames for stable_in_town (in_town_frames >= 3)
+        mgr.detect_phase_transitions(&state);
+        mgr.detect_phase_transitions(&state);
         mgr.detect_phase_transitions(&state);
         assert_eq!(mgr.phase(), GamePhase::TownPrep);
         assert_eq!(mgr.game_count(), 1);

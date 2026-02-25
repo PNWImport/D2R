@@ -461,6 +461,10 @@ impl CapturePipeline {
             state.loot_labels[i] = label.clone();
         }
 
+        // at_menu: the HP/mana orbs are only rendered during active gameplay.
+        // If both read <= 5 we're at a menu, loading screen, or character select.
+        state.at_menu = state.hp_pct <= 5 && state.mana_pct <= 5;
+
         // ─── Tier 2: Every 3rd frame (state transitions) ─────────
         if self.tick % 3 == 0 {
             // Detect town (stone floor colors vs dungeon/field)
