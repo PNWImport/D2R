@@ -43,10 +43,10 @@ if ($osType -eq "linux" -and (Test-Path "/proc/version")) {
 }
 
 if ($isWSL) {
-    Write-Host "[-] Running inside WSL — this installer must run in native Windows PowerShell." -ForegroundColor Red
+    Write-Host "[-] Running inside WSL - this installer must run in native Windows PowerShell." -ForegroundColor Red
     Write-Host ""
     Write-Host "    Open a PowerShell (Admin) window and run:" -ForegroundColor Yellow
-    Write-Host "      cd $($ScriptDir -replace '/mnt/c','C:' -replace '/','\')" -ForegroundColor Cyan
+    Write-Host "      cd $($ScriptDir -replace '/mnt/c','C:' -replace '/','\\' )" -ForegroundColor Cyan
     Write-Host "      .\install.ps1" -ForegroundColor Cyan
     exit 1
 }
@@ -110,7 +110,7 @@ function Write-Step($msg) {
 }
 
 function Write-Warn($msg) {
-    Write-Host "[!] $msg" -ForegroundColor Yellow
+    Write-Host "[WARN] $msg" -ForegroundColor Yellow
 }
 
 function Write-Err($msg) {
@@ -170,7 +170,7 @@ function Find-ExtensionId {
                 }
             }
         } catch {
-            # Preferences locked or malformed — skip this profile
+            # Preferences locked or malformed - skip this profile
             continue
         }
     }
@@ -190,7 +190,7 @@ function Write-Manifest($path, $hostName, $exePath, $extId) {
   ]
 }
 "@
-    # Use .NET to write UTF8 without BOM — avoids PowerShell double-escaping
+    # Use .NET to write UTF8 without BOM - avoids PowerShell double-escaping
     [System.IO.File]::WriteAllText($path, $json, [System.Text.UTF8Encoding]::new($false))
 }
 
@@ -285,14 +285,148 @@ if ($ExtensionOnly) {
 # =============================================
 Write-Banner "KZB Suite - Unified Installer"
 
-# ---- Step 1: Build binaries (longest step — do first) ----
+# ---- Step 1: Build binaries (longest step - do first) ----
 if (-not $SkipBuild) {
     Write-Host "Building binaries (release mode)..." -ForegroundColor Yellow
 
-    # Check for cargo
+    # Check for Rust/Cargo - install if missing
     if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
-        Write-Err "cargo not found! Install Rust from https://rustup.rs"
-        exit 1
+        Write-Warn "Rust not found - installing..."
+        Write-Host "    Downloading Rust installer (rustup)..." -ForegroundColor Gray
+
+        $rustupPath = Join-Path $env:TEMP "rustup-init.exe"
+
+        try {
+            # Download rustup-init
+            Invoke-WebRequest -Uri "https://win.rustup.rs/x86_64" -OutFile $rustupPath -UseBasicParsing
+
+            # Install Rust (default settings: stable toolchain, default host triple)
+            Write-Host "    Installing Rust toolchain (this may take a few minutes)..." -ForegroundColor Gray
+            & $rustupPath -y --default-toolchain stable --profile default
+
+            # Update PATH for current session
+            $cargoPath = "$env:USERPROFILE\.cargo\bin"
+            if (Test-Path $cargoPath) {
+                $env:PATH = "$cargoPath;$env:PATH"
+            }
+
+            Write-Step "Rust installed successfully"
+
+            # Verify installation
+            if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
+                Write-Err "Rust installation completed but cargo not found in PATH"
+                Write-Host "    Please restart your terminal and run the installer again." -ForegroundColor Yellow
+                exit 1
+            }
+
+        } catch {
+            Write-Err "Failed to install Rust: $_"
+            Write-Host "    Please install manually from: https://rustup.rs" -ForegroundColor Yellow
+            exit 1
+        } finally {
+            if (Test-Path $rustupPath) {
+                Remove-Item $rustupPath -Force -ErrorAction SilentlyContinue
+            }
+        }
+    } else {
+        Write-Host "    Rust/Cargo detected" -ForegroundColor Gray
+    }
+
+    # Check for MSVC linker (required for Rust on Windows)
+    # Look for VS installation directories as a more reliable check
+    $vsPaths = @(
+        "${env:ProgramFiles}\Microsoft Visual Studio",
+        "${env:ProgramFiles(x86)}\Microsoft Visual Studio"
+    )
+    $vsInstalled = $false
+    foreach ($vsPath in $vsPaths) {
+        if (Test-Path $vsPath) {
+            $buildToolsPath = Get-ChildItem -Path $vsPath -Filter "VC" -Recurse -Depth 3 -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($buildToolsPath) {
+                $vsInstalled = $true
+                break
+            }
+        }
+    }
+
+    if (-not $vsInstalled) {
+        Write-Warn "Visual Studio Build Tools not detected"
+        Write-Host "    Rust requires Visual Studio Build Tools to compile on Windows." -ForegroundColor Gray
+        Write-Host "    Downloading and installing Build Tools (this may take 5-10 minutes)..." -ForegroundColor Yellow
+
+        $buildToolsExe = Join-Path $env:TEMP "vs_BuildTools.exe"
+
+        try {
+            # Download VS Build Tools
+            Write-Host "    [1/2] Downloading from https://aka.ms/vs/17/release/vs_BuildTools.exe" -ForegroundColor Gray
+            Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vs_BuildTools.exe" -OutFile $buildToolsExe -UseBasicParsing
+
+            # Install with C++ workload
+            Write-Host "    [2/2] Installing C++ Build Tools (requires admin, may prompt UAC)..." -ForegroundColor Gray
+            $installArgs = @(
+                "--add", "Microsoft.VisualStudio.Workload.VCTools",
+                "--includeRecommended",
+                "--passive",
+                "--wait"
+            )
+            Start-Process -FilePath $buildToolsExe -ArgumentList $installArgs -Verb RunAs -Wait
+
+            Write-Step "Visual Studio Build Tools installed"
+            Write-Host ""
+            Write-Host "    [!] IMPORTANT: Close this window and open a NEW PowerShell/Terminal." -ForegroundColor Yellow
+            Write-Host "        Then navigate back to: $ScriptDir" -ForegroundColor Yellow
+            Write-Host "        And run: .\install.ps1" -ForegroundColor Yellow
+            Write-Host ""
+            Read-Host "Press Enter to exit"
+            exit 0
+
+        } catch {
+            Write-Err "Failed to install Visual Studio Build Tools: $_"
+            Write-Host "    Please install manually from: https://visualstudio.microsoft.com/visual-cpp-build-tools/" -ForegroundColor Yellow
+            Write-Host "    Select 'Desktop development with C++' workload during installation." -ForegroundColor Gray
+            exit 1
+        } finally {
+            if (Test-Path $buildToolsExe) {
+                Remove-Item $buildToolsExe -Force -ErrorAction SilentlyContinue
+            }
+        }
+    } else {
+        Write-Host "    Visual Studio Build Tools detected" -ForegroundColor Gray
+
+        # Set up MSVC environment for this session
+        Write-Host "    Setting up MSVC environment..." -ForegroundColor Gray
+
+        # Find vcvarsall.bat
+        $vcvarsall = $null
+        foreach ($vsPath in $vsPaths) {
+            if (Test-Path $vsPath) {
+                $vcvarsall = Get-ChildItem -Path $vsPath -Filter "vcvarsall.bat" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+                if ($vcvarsall) { break }
+            }
+        }
+
+        if ($vcvarsall) {
+            # Run vcvarsall.bat and capture environment variables
+            $tempFile = [System.IO.Path]::GetTempFileName()
+            cmd /c "`"$($vcvarsall.FullName)`" x64 && set > `"$tempFile`""
+
+            # Parse and apply environment variables
+            Get-Content $tempFile | ForEach-Object {
+                if ($_ -match '^([^=]+)=(.*)$') {
+                    $name = $matches[1]
+                    $value = $matches[2]
+                    # Update critical build environment variables
+                    if ($name -match '^(PATH|INCLUDE|LIB|LIBPATH)$') {
+                        [System.Environment]::SetEnvironmentVariable($name, $value, 'Process')
+                    }
+                }
+            }
+            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+            Write-Host "    MSVC environment configured" -ForegroundColor Gray
+        } else {
+            Write-Warn "Could not find vcvarsall.bat - linker may not be available"
+            Write-Host "    If build fails, please restart your terminal and try again." -ForegroundColor Yellow
+        }
     }
 
     # Build vision agent

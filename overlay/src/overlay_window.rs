@@ -40,7 +40,12 @@ mod win_impl {
     use std::os::windows::ffi::OsStrExt;
 
     use winapi::shared::windef::{HWND, RECT, POINT};
-    use winapi::shared::minwindef::{BOOL, TRUE, FALSE, LPARAM, WPARAM, UINT, LRESULT, DWORD};
+
+    // Wrapper to make HWND Send-able between threads
+    // HWND is just a pointer value (handle) that can be safely copied between threads
+    struct SendableHwnd(HWND);
+    unsafe impl Send for SendableHwnd {}
+    use winapi::shared::minwindef::{LPARAM, WPARAM, UINT, LRESULT, DWORD};
     use winapi::um::winuser::*;
     use winapi::um::wingdi::*;
     use winapi::um::libloaderapi::GetModuleHandleW;
@@ -87,13 +92,13 @@ mod win_impl {
             let state_clone = Arc::clone(&state);
 
             // One-shot channel so we can get the HWND back from the window thread.
-            let (tx, rx) = std::sync::mpsc::channel::<HWND>();
+            let (tx, rx) = std::sync::mpsc::channel::<SendableHwnd>();
 
             let thread = std::thread::Builder::new()
                 .name("kzb_debug_overlay".into())
                 .spawn(move || {
                     let hwnd = unsafe { create_overlay_window() };
-                    let _ = tx.send(hwnd);
+                    let _ = tx.send(SendableHwnd(hwnd));
                     if hwnd.is_null() { return; }
 
                     // Store state pointer in window userdata for access in WndProc.
@@ -122,7 +127,7 @@ mod win_impl {
                 })
                 .ok()?;
 
-            let hwnd = rx.recv_timeout(std::time::Duration::from_secs(3)).ok()?;
+            let SendableHwnd(hwnd) = rx.recv_timeout(std::time::Duration::from_secs(3)).ok()?;
             if hwnd.is_null() { return None; }
 
             Some(OverlayWindow { hwnd, state, _thread: thread })
@@ -236,7 +241,7 @@ mod win_impl {
             DebugState::default()
         } else {
             match (*ptr).lock() {
-                Ok(s) => s.clone(),
+                Ok(s) => (*s).clone(),
                 Err(_) => DebugState::default(),
             }
         };
@@ -271,7 +276,7 @@ mod win_impl {
         DeleteDC(mem_dc);
     }
 
-    unsafe fn draw_debug_state(hdc: winapi::shared::windef::HDC, w: i32, h: i32, s: &DebugState) {
+    unsafe fn draw_debug_state(hdc: winapi::shared::windef::HDC, _w: i32, h: i32, s: &DebugState) {
         // ── HP bar indicator (left side, top) ──────────────────────────────────
         let hp_bar_w = ((s.hp_pct as i32) * 120 / 100).max(2);
         let hp_rect = RECT { left: 10, top: 10, right: 10 + hp_bar_w, bottom: 26 };

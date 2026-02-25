@@ -23,6 +23,7 @@ winapi = { version = "0.3", features = [
     "tlhelp32", "psapi", "winbase", "errhandlingapi",
     "wow64apiset", "libloaderapi", "consoleapi", "synchapi",
     "profileapi", "sysinfoapi", "fileapi", "winreg",
+    "winuser", "wingdi", "windef", "minwindef",
 ] }
 
 [profile.release]

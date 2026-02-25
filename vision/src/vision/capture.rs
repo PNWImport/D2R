@@ -1370,6 +1370,10 @@ pub struct DxgiCapturer {
     staging: Option<windows::Win32::Graphics::Direct3D11::ID3D11Texture2D>,
     width: u32,
     height: u32,
+    /// D2R game window handle (if found)
+    game_window: Option<windows::Win32::Foundation::HWND>,
+    /// Cached game window rect for cropping
+    game_rect: Option<(i32, i32, i32, i32)>, // (x, y, width, height)
 }
 
 #[cfg(windows)]
@@ -1413,6 +1417,20 @@ impl DxgiCapturer {
             let width = dup_desc.ModeDesc.Width;
             let height = dup_desc.ModeDesc.Height;
 
+            // Try to find D2R game window
+            let game_window = Self::find_d2r_window();
+            let game_rect = if let Some(hwnd) = game_window {
+                Self::get_window_rect(hwnd)
+            } else {
+                None
+            };
+
+            if game_window.is_some() {
+                tracing::info!("D2R window found — will crop to game area");
+            } else {
+                tracing::warn!("D2R window not found — capturing full desktop (may have wrong orb positions)");
+            }
+
             Ok(Self {
                 device,
                 context,
@@ -1420,6 +1438,8 @@ impl DxgiCapturer {
                 staging: None,
                 width,
                 height,
+                game_window,
+                game_rect,
             })
         }
     }
@@ -1474,13 +1494,96 @@ impl DxgiCapturer {
             self.context.Unmap(&staging, 0);
             self.duplication.ReleaseFrame()?;
 
+            // Crop to game window if found
+            let (final_pixels, final_width, final_height, final_stride) = if let Some((_x, _y, _w, _h)) = self.game_rect {
+                // Update game rect in case window moved
+                if let Some(hwnd) = self.game_window {
+                    self.game_rect = Self::get_window_rect(hwnd);
+                }
+
+                // Crop the desktop capture to game window area
+                if let Some((x, y, w, h)) = self.game_rect {
+                    if x >= 0 && y >= 0 && (x + w) as u32 <= self.width && (y + h) as u32 <= self.height {
+                        let cropped = Self::crop_frame(&pixels, self.width, self.height, stride, x, y, w, h);
+                        (cropped, w as u32, h as u32, w as u32 * 4)
+                    } else {
+                        (pixels, self.width, self.height, stride)
+                    }
+                } else {
+                    (pixels, self.width, self.height, stride)
+                }
+            } else {
+                (pixels, self.width, self.height, stride)
+            };
+
             Ok(CapturedFrame {
-                pixels,
-                width: self.width,
-                height: self.height,
-                stride,
+                pixels: final_pixels,
+                width: final_width,
+                height: final_height,
+                stride: final_stride,
                 timestamp: Instant::now(),
             })
         }
+    }
+
+    /// Find D2R game window by title
+    unsafe fn find_d2r_window() -> Option<windows::Win32::Foundation::HWND> {
+        use windows::Win32::UI::WindowsAndMessaging::*;
+        use windows::Win32::Foundation::*;
+        use windows::core::w;
+
+        // Try common D2R window titles
+        let titles = [
+            w!("Diablo II: Resurrected"),
+            w!("Diablo II"),
+        ];
+
+        for title in &titles {
+            let hwnd = FindWindowW(None, *title).unwrap_or(HWND(std::ptr::null_mut()));
+            if !hwnd.0.is_null() {
+                return Some(hwnd);
+            }
+        }
+
+        None
+    }
+
+    /// Get window client rect (position and size)
+    unsafe fn get_window_rect(hwnd: windows::Win32::Foundation::HWND) -> Option<(i32, i32, i32, i32)> {
+        use windows::Win32::UI::WindowsAndMessaging::*;
+        use windows::Win32::Foundation::*;
+
+        let mut rect = RECT::default();
+        if GetClientRect(hwnd, &mut rect).is_ok() {
+            let mut point = POINT { x: 0, y: 0 };
+            // ClientToScreen converts client coords to screen coords
+            if windows::Win32::Graphics::Gdi::ClientToScreen(hwnd, &mut point).as_bool() {
+                let width = rect.right - rect.left;
+                let height = rect.bottom - rect.top;
+                return Some((point.x, point.y, width, height));
+            }
+        }
+        None
+    }
+
+    /// Crop a frame to a specific rectangle
+    fn crop_frame(pixels: &[u8], _src_width: u32, src_height: u32, src_stride: u32, x: i32, y: i32, width: i32, height: i32) -> Vec<u8> {
+        let mut cropped = Vec::with_capacity((width * height * 4) as usize);
+
+        for row in 0..height {
+            let src_y = (y + row) as u32;
+            if src_y >= src_height {
+                break;
+            }
+
+            let src_offset = (src_y * src_stride + x as u32 * 4) as usize;
+            let row_bytes = (width * 4) as usize;
+
+            if src_offset + row_bytes <= pixels.len() {
+                cropped.extend_from_slice(&pixels[src_offset..src_offset + row_bytes]);
+            }
+        }
+
+        cropped
     }
 }

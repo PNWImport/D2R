@@ -17,10 +17,29 @@ use std::time::{Duration, Instant};
 use stealth::*;
 use vision::{CaptureConfig, CapturePipeline, ShardedFrameBuffer};
 
+#[cfg(windows)]
+use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_F12};
+
 // ═══════════════════════════════════════════════════════════════
 // PRODUCTION AGENT BINARY
 // Launched by Chrome via native messaging. Runs until pipe EOF.
 // ═══════════════════════════════════════════════════════════════
+
+/// Check if the kill hotkey (F12) is pressed
+/// F12 is chosen because D2R doesn't use it and it works even when game has focus
+#[cfg(windows)]
+fn check_kill_hotkey() -> bool {
+    unsafe {
+        let f12_state = GetAsyncKeyState(VK_F12.0 as i32);
+        // Check if key is currently pressed (high-order bit)
+        f12_state as u16 & 0x8000 != 0
+    }
+}
+
+#[cfg(not(windows))]
+fn check_kill_hotkey() -> bool {
+    false // Non-Windows: no hotkey support yet
+}
 
 #[tokio::main]
 async fn main() {
@@ -180,7 +199,9 @@ async fn main() {
     let loop_cadence = Arc::clone(&cadence);
 
     let agent_loop = tokio::task::spawn_blocking(move || {
-        let mut game_mgr = GameManager::new(loop_config.clone());
+        // Enable progression mode for leveling/quest scripts
+        let quest_state_path = data_dir().join("quest_state.json");
+        let mut game_mgr = GameManager::with_progression(loop_config.clone(), quest_state_path);
         let _capture_timing = CaptureTiming::new(capture_timing_config);
         let logger = training::TrainingLogger::new(data_dir().join("training_logs"));
 
@@ -197,6 +218,13 @@ async fn main() {
 
         while !loop_shutdown.load(Ordering::Acquire) {
             let tick_start = Instant::now();
+
+            // Check for kill hotkey (F12)
+            if check_kill_hotkey() {
+                tracing::info!("Kill hotkey (F12) detected — shutting down");
+                loop_shutdown.store(true, Ordering::Release);
+                break;
+            }
 
             // Check for Chrome commands
             while let Ok(cmd) = cmd_rx.try_recv() {

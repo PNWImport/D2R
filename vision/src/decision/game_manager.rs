@@ -175,6 +175,8 @@ pub struct GameManager {
 
     // Phase tracking
     phase: GamePhase,
+    last_phase_change: Instant,
+    in_town_frames: u8, // Counter for stable in_town detection
     town_task: TownTask,
     town_task_started: Instant,
     town_npc_walk_time: Duration,
@@ -225,6 +227,8 @@ impl GameManager {
             cache,
             rng: StdRng::from_entropy(),
             phase: GamePhase::OutOfGame,
+            last_phase_change: now,
+            in_town_frames: 0,
             town_task: TownTask::Heal,
             town_task_started: now,
             town_npc_walk_time: Duration::from_millis(800),
@@ -313,11 +317,26 @@ impl GameManager {
     // ─── Phase Transition Detection ──────────────────────────────
 
     fn detect_phase_transitions(&mut self, state: &FrameState) {
+        // Stable in_town detection: require 3+ consecutive frames before trusting it
+        // This prevents flickering vision from causing rapid phase cycling
+        if state.in_town {
+            self.in_town_frames = self.in_town_frames.saturating_add(1);
+        } else {
+            self.in_town_frames = 0;
+        }
+        let stable_in_town = self.in_town_frames >= 3;
+
+        // Hysteresis: prevent rapid phase cycling due to flickering vision state.
+        // Require at least 1.5s between phase changes (except for critical transitions).
+        let min_phase_duration = Duration::from_millis(1500);
+        let time_in_phase = self.last_phase_change.elapsed();
+
         match self.phase {
             GamePhase::OutOfGame => {
                 // Transitioned into game (loading done, we see town)
-                if state.in_town && !state.at_menu && !state.loading_screen {
+                if stable_in_town && !state.at_menu && !state.loading_screen {
                     self.phase = GamePhase::TownPrep;
+                    self.last_phase_change = Instant::now();
                     self.town_task = TownTask::Heal;
                     self.game_start = Instant::now();
                     self.game_count += 1;
@@ -330,37 +349,44 @@ impl GameManager {
             }
             GamePhase::TownPrep => {
                 // If we somehow left town during prep (chicken, etc.)
-                if !state.in_town && !state.at_menu && !state.loading_screen {
+                if self.in_town_frames == 0 && !state.at_menu && !state.loading_screen && time_in_phase > min_phase_duration {
                     self.phase = GamePhase::Farming;
+                    self.last_phase_change = Instant::now();
                 }
             }
             GamePhase::LeavingTown => {
                 // Arrived at farming area
-                if !state.in_town && !state.loading_screen {
+                if self.in_town_frames == 0 && !state.loading_screen && time_in_phase > Duration::from_millis(500) {
                     self.phase = GamePhase::Farming;
+                    self.last_phase_change = Instant::now();
                     tracing::info!("Arrived at farming area");
                 }
             }
             GamePhase::Farming => {
                 // Returned to town (TP, chicken, or walked back)
-                if state.in_town {
+                // CRITICAL: Only transition if in_town is stable AND we've been farming for at least 1.5s
+                if stable_in_town && time_in_phase > min_phase_duration {
                     self.phase = GamePhase::Returning;
-                    tracing::info!("Back in town — checking if more runs needed");
+                    self.last_phase_change = Instant::now();
+                    tracing::info!("Back in town — checking if more runs needed (stable detection)");
                 }
-                // Got kicked to menu (disconnect, crash)
+                // Got kicked to menu (disconnect, crash) — immediate transition
                 if state.at_menu {
                     self.phase = GamePhase::OutOfGame;
+                    self.last_phase_change = Instant::now();
                 }
             }
             GamePhase::Returning => {
                 // Still in town, decide what to do
                 if state.at_menu {
                     self.phase = GamePhase::OutOfGame;
+                    self.last_phase_change = Instant::now();
                 }
             }
             GamePhase::ExitingGame => {
                 if state.at_menu {
                     self.phase = GamePhase::InterGameDelay;
+                    self.last_phase_change = Instant::now();
                     self.last_game_exit = Instant::now();
                     self.exit_step = 0;
                     self.on_game_end_progression();
@@ -561,6 +587,7 @@ impl GameManager {
                 {
                     // No more scripts — exit game
                     self.phase = GamePhase::ExitingGame;
+                    self.last_phase_change = Instant::now();
                     return Decision {
                         action: Action::Wait,
                         delay: Duration::from_millis(500),
@@ -572,6 +599,7 @@ impl GameManager {
                 // Resume executor — it will handle WP navigation, walking, etc.
                 tracing::info!("Town prep complete — resuming script executor");
                 self.phase = GamePhase::LeavingTown;
+                self.last_phase_change = Instant::now();
                 // First tick of the executor from LeavingTown
                 self.drive_executor(state)
             }
@@ -609,6 +637,7 @@ impl GameManager {
         if self.should_return_to_town(state) {
             tracing::info!("Town trigger hit — casting TP");
             self.phase = GamePhase::Returning;
+            self.last_phase_change = Instant::now();
             return Decision {
                 action: Action::TownPortal,
                 delay: Duration::from_millis(100),
@@ -622,6 +651,7 @@ impl GameManager {
         if max_mins > 0 && self.game_start.elapsed() > Duration::from_secs(max_mins as u64 * 60) {
             tracing::info!("Max game time reached — exiting");
             self.phase = GamePhase::ExitingGame;
+            self.last_phase_change = Instant::now();
             return Decision {
                 action: Action::Wait,
                 delay: Duration::ZERO,
@@ -638,6 +668,7 @@ impl GameManager {
                 Action::ChickenQuit => {
                     self.total_chickens += 1;
                     self.phase = GamePhase::ExitingGame;
+                    self.last_phase_change = Instant::now();
                     return survival;
                 }
                 Action::DrinkPotion { .. } | Action::TownPortal | Action::Dodge { .. } => {
@@ -662,6 +693,7 @@ impl GameManager {
                 // Try to load next script
                 if !self.select_next_script() {
                     self.phase = GamePhase::ExitingGame;
+                    self.last_phase_change = Instant::now();
                     return Decision {
                         action: Action::Wait,
                         delay: Duration::from_millis(500),
@@ -675,6 +707,7 @@ impl GameManager {
                 if matches!(decision.action, Action::ChickenQuit) {
                     self.total_chickens += 1;
                     self.phase = GamePhase::ExitingGame;
+                    self.last_phase_change = Instant::now();
                 }
                 return decision;
             }
@@ -684,6 +717,7 @@ impl GameManager {
         if let Some(ScriptStep::TownChores) = self.executor.current_step() {
             self.executor.skip_step(); // Mark TownChores as handled
             self.phase = GamePhase::TownPrep;
+            self.last_phase_change = Instant::now();
             self.town_task = TownTask::Heal;
             self.town_task_started = Instant::now();
             tracing::info!("Script step: TownChores — entering town prep");
@@ -712,6 +746,7 @@ impl GameManager {
                 // Try to select next script
                 if !self.select_next_script() {
                     self.phase = GamePhase::ExitingGame;
+                    self.last_phase_change = Instant::now();
                 }
                 return Decision {
                     action: Action::Wait,
@@ -796,6 +831,7 @@ impl GameManager {
                 // Run town chores first, then resume
                 self.executor.skip_step();
                 self.phase = GamePhase::TownPrep;
+                self.last_phase_change = Instant::now();
                 self.town_task = TownTask::Heal;
                 self.town_task_started = Instant::now();
                 tracing::info!("Back in town — running script TownChores");
@@ -804,6 +840,7 @@ impl GameManager {
 
             // Resume executor directly (e.g. for TalkToNpc steps in town)
             self.phase = GamePhase::LeavingTown;
+            self.last_phase_change = Instant::now();
             tracing::info!("Back in town — resuming script executor");
             return self.drive_executor(state);
         }
@@ -831,6 +868,7 @@ impl GameManager {
                 self.runs_this_game
             );
             self.phase = GamePhase::ExitingGame;
+            self.last_phase_change = Instant::now();
             return Decision {
                 action: Action::Wait,
                 delay: Duration::from_millis(500),
@@ -841,6 +879,7 @@ impl GameManager {
 
         // More runs/scripts to do — start town prep
         self.phase = GamePhase::TownPrep;
+        self.last_phase_change = Instant::now();
         self.town_task = TownTask::Heal;
         self.town_task_started = Instant::now();
         self.run_index += 1;
@@ -910,6 +949,7 @@ impl GameManager {
         if self.last_game_exit.elapsed() >= total_delay {
             tracing::info!("Inter-game delay complete — starting new game");
             self.phase = GamePhase::OutOfGame;
+            self.last_phase_change = Instant::now();
             return Decision {
                 action: Action::Wait,
                 delay: Duration::ZERO,
