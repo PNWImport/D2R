@@ -127,6 +127,17 @@ pub struct FrameState {
     pub stat_screen_open: bool,      // Character stat screen is open (for auto-stat)
     pub quest_log_open: bool,        // Quest log UI is open
 
+    // ─── Minimap navigation (pure vision — zero memory reads) ────
+    // D2R minimap (top-right HUD) shows exit chevrons in bright gold and
+    // waypoints in cyan. Detecting their screen position gives direction
+    // to navigate without touching D2R process memory at all.
+    pub minimap_has_exit:      bool,
+    pub minimap_exit_screen_x: u16, // screen X of exit marker centroid
+    pub minimap_exit_screen_y: u16, // screen Y of exit marker centroid
+    pub minimap_has_waypoint:  bool,
+    pub minimap_wp_screen_x:   u16, // screen X of waypoint marker centroid
+    pub minimap_wp_screen_y:   u16, // screen Y of waypoint marker centroid
+
     // Difficulty detected from char select or game (0=normal, 1=nightmare, 2=hell)
     pub difficulty: u8,
 
@@ -183,6 +194,12 @@ impl Default for FrameState {
             skill_screen_open: false,
             stat_screen_open: false,
             quest_log_open: false,
+            minimap_has_exit:      false,
+            minimap_exit_screen_x: 0,
+            minimap_exit_screen_y: 0,
+            minimap_has_waypoint:  false,
+            minimap_wp_screen_x:   0,
+            minimap_wp_screen_y:   0,
             difficulty: 0,
             tick: 0,
             tick_phase_ms: 0,

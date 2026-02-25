@@ -38,7 +38,7 @@ It reads from one and can write to both. Currently it only relays:
 
 | Detection | Status | Notes |
 |---|---|---|
-| HP orb % | ✅ Working | Fixed 2025-02 — cx was 5.3% from edge, now 16.6% |
+| HP orb % | ✅ Working | Fixed 2026-02 — cx was 5.3% from edge, now 16.6% |
 | Mana orb % | ✅ Working | Same fix |
 | at_menu | ✅ Working | Derived from hp_pct<=5 && mana_pct<=5 |
 | Enemy count + position | ✅ Working | Scans for red HP bars |
@@ -112,6 +112,52 @@ msg.map = { pois: [ { x, y, poi_type, label, target_area } ] }
 ```
 
 The vision agent's game_manager receives NONE of this. It navigates blind.
+
+### ❌ REJECTED: Map host → vision agent relay
+
+Forwarding `ReadProcessMemory` data into the vision agent defeats the whole point.
+The vision agent uses DXGI screen capture specifically to avoid opening handles on
+D2R.exe. Feeding it memory-read data doesn't make it safer — it just adds the
+detection risk of the map host on top.
+
+**The map host (`chrome_map_helper.exe`) is OPTIONAL and RISKY:**
+- Opens `OpenProcess(D2R.exe)`
+- Reads `ReadProcessMemory` for offsets
+- Detectable by any AC that scans handle tables
+- Useful for the visual overlay canvas (minimap rendering in Chrome tab)
+- Should NOT be the navigation data source for the vision agent
+
+### ✅ Solution: Minimap visual detection (implemented)
+
+D2R's minimap (top-right HUD) shows exit chevrons as bright gold/yellow and
+waypoints as cyan. The vision pipeline can detect these with pixel color analysis —
+no memory reads, just the same DXGI frame that everything else uses.
+
+**Flow:**
+```
+DXGI frame → detect_minimap_markers() → minimap_exit_screen_x/y
+                                       → minimap_wp_screen_x/y
+game_manager.navigate_toward_minimap_exit(frame) → screen teleport target
+```
+
+**Color signatures:**
+- Exit chevron : R>210, G>160, B<90, R-B>140 (gold/yellow)
+- Waypoint dot : B>180, G>130, R<130, B-R>80 (cyan/teal)
+- Minimap region: circle at ~89.8% x, ~15.9% y, radius ~7.4% of frame width
+
+**Navigation math:**
+```
+mm_cx, mm_cy = minimap center (player position in minimap space)
+dx = exit_marker_x - mm_cx   (direction to exit in minimap pixels)
+dy = exit_marker_y - mm_cy
+target_x = player_screen_x + dx * 20   (scale 20 = ~25% of full minimap scale)
+target_y = player_screen_y + dy * 20
+→ Teleport there. Repeat until loading screen triggers.
+```
+
+Scale calibration: minimap radius ~95px covers ~240 tiles → 0.4px/tile.
+Screen ~40 tiles at 1280px → 32px/tile. Full scale = 80. Step scale = 20.
+TODO: calibrate actual scale in-game, may need tuning.
 
 ### What needs to happen (in order):
 
@@ -201,3 +247,6 @@ Community sources for current offsets:
 | 2026-02-25 | Fix test_oog_to_town_transition: needs 3 calls for stability counter |
 | 2026-02-25 | Fix install.ps1 PowerShell parentheses syntax errors |
 | 2026-02-25 | Adjust all coords from 800x600 to 1280x720 baseline |
+| 2026-02-25 | Wire maphack→vision relay then REVERTED: RPM data in vision defeats detection avoidance |
+| 2026-02-25 | Add minimap exit/WP detection (pure DXGI pixel scan, gold/cyan centroids) |
+| 2026-02-25 | Add navigate_toward_minimap_exit/waypoint — screen-space nav from marker offset |

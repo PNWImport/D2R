@@ -499,9 +499,115 @@ impl CapturePipeline {
 
             // Experience bar: thin strip at very bottom of screen
             state.xp_bar_pct = self.read_xp_bar(frame);
+
+            // Minimap exit/waypoint markers (top-right HUD) — pure pixel detection,
+            // zero D2R memory reads. Exit = gold chevron. Waypoint = cyan dot.
+            let (exit_pos, wp_pos) = self.detect_minimap_markers(frame);
+            if let Some((ex, ey)) = exit_pos {
+                state.minimap_has_exit      = true;
+                state.minimap_exit_screen_x = ex as u16;
+                state.minimap_exit_screen_y = ey as u16;
+            } else {
+                state.minimap_has_exit = false;
+            }
+            if let Some((wx, wy)) = wp_pos {
+                state.minimap_has_waypoint  = true;
+                state.minimap_wp_screen_x   = wx as u16;
+                state.minimap_wp_screen_y   = wy as u16;
+            } else {
+                state.minimap_has_waypoint = false;
+            }
         }
 
         state
+    }
+
+    // ─── Minimap Marker Detection ──────────────────────────────
+
+    /// Detect exit chevrons and waypoint markers on the D2R minimap (top-right HUD).
+    ///
+    /// Returns (exit_centroid, waypoint_centroid) in screen pixel coordinates.
+    /// Each centroid is None if no qualifying pixels were found.
+    ///
+    /// Color signatures (D2R minimap, alpha-blended on dark background):
+    ///   Exit marker : bright gold   — R>210, G>160, B<90,  R-B>140
+    ///   Waypoint    : cyan/teal     — B>180, G>130, R<130, B-R>80
+    ///
+    /// The minimap is a circular overlay centered at ~89.8% x, ~15.9% y with
+    /// radius ~7.4% of frame width. We scan the bounding rectangle and weight
+    /// by distance from center to discard stray UI pixels outside the circle.
+    fn detect_minimap_markers(&self, frame: &CapturedFrame) -> (Option<(u32, u32)>, Option<(u32, u32)>) {
+        // Minimap circle bounds (fractional, resolution-independent)
+        let mm_cx = (frame.width  as f32 * 0.898) as u32;
+        let mm_cy = (frame.height as f32 * 0.159) as u32;
+        let mm_r  = (frame.width  as f32 * 0.074) as u32;
+        let mm_r2 = (mm_r * mm_r) as i64;
+
+        let x_start = mm_cx.saturating_sub(mm_r);
+        let x_end   = (mm_cx + mm_r).min(frame.width.saturating_sub(1));
+        let y_start = mm_cy.saturating_sub(mm_r);
+        let y_end   = (mm_cy + mm_r).min(frame.height.saturating_sub(1));
+
+        let (mut ex_sx, mut ex_sy, mut ex_n) = (0u64, 0u64, 0u32);
+        let (mut wp_sx, mut wp_sy, mut wp_n) = (0u64, 0u64, 0u32);
+
+        // Sample every 2nd pixel (performance: ~50% of pixels, quality fine for centroids)
+        let mut y = y_start;
+        while y <= y_end {
+            let mut x = x_start;
+            while x <= x_end {
+                // Skip pixels outside the circular minimap area
+                let dx = x as i64 - mm_cx as i64;
+                let dy = y as i64 - mm_cy as i64;
+                if dx * dx + dy * dy <= mm_r2 {
+                    let offset = (y * frame.width + x) as usize * 4;
+                    if offset + 2 < frame.data.len() {
+                        let b = frame.data[offset];     // BGRA layout (DXGI default)
+                        let g = frame.data[offset + 1];
+                        let r = frame.data[offset + 2];
+
+                        // Exit marker: gold/yellow chevron
+                        if r > 210 && g > 160 && b < 90
+                            && (r as i16 - b as i16) > 140
+                        {
+                            ex_sx += x as u64;
+                            ex_sy += y as u64;
+                            ex_n  += 1;
+                        }
+                        // Waypoint: cyan/teal dot
+                        if b > 180 && g > 130 && r < 130
+                            && (b as i16 - r as i16) > 80
+                        {
+                            wp_sx += x as u64;
+                            wp_sy += y as u64;
+                            wp_n  += 1;
+                        }
+                    }
+                }
+                x += 2;
+            }
+            y += 2;
+        }
+
+        // Require at least 4 matching pixels to suppress noise
+        let exit_pos = if ex_n >= 4 {
+            Some((
+                (ex_sx / ex_n as u64) as u32,
+                (ex_sy / ex_n as u64) as u32,
+            ))
+        } else {
+            None
+        };
+        let wp_pos = if wp_n >= 4 {
+            Some((
+                (wp_sx / wp_n as u64) as u32,
+                (wp_sy / wp_n as u64) as u32,
+            ))
+        } else {
+            None
+        };
+
+        (exit_pos, wp_pos)
     }
 
     // ─── Orb Reading ───────────────────────────────────────────

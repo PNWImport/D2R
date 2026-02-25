@@ -380,6 +380,49 @@ impl GameManager {
         ""
     }
 
+    /// Navigate toward the minimap exit chevron (pure vision, no memory reads).
+    ///
+    /// The minimap center = player position. The exit marker offset tells us which
+    /// direction to move. We return a screen-pixel teleport target (incremental
+    /// step — call repeatedly until the exit loads).
+    ///
+    /// Scale: minimap radius ≈ 95px shows ~240 tiles. Screen ≈ 40 tiles wide at
+    /// 1280×720 → scale ≈ 80px/minimap-px. We use scale=20 (25% per step).
+    pub fn navigate_toward_minimap_exit(&self, frame: &crate::vision::FrameState) -> Option<(i32, i32)> {
+        if !frame.minimap_has_exit { return None; }
+
+        let fw = frame.frame_width  as f32;
+        let fh = frame.frame_height as f32;
+        let mm_cx = (fw * 0.898) as i32;
+        let mm_cy = (fh * 0.159) as i32;
+
+        let dx = frame.minimap_exit_screen_x as i32 - mm_cx;
+        let dy = frame.minimap_exit_screen_y as i32 - mm_cy;
+        if dx.abs() < 5 && dy.abs() < 5 { return None; } // spurious center hit
+
+        let target_x = (frame.char_screen_x as i32 + dx * 20).clamp(80, fw as i32 - 80);
+        let target_y = (frame.char_screen_y as i32 + dy * 20).clamp(80, fh as i32 - 80);
+        Some((target_x, target_y))
+    }
+
+    /// Navigate toward the minimap waypoint marker (pure vision).
+    pub fn navigate_toward_minimap_waypoint(&self, frame: &crate::vision::FrameState) -> Option<(i32, i32)> {
+        if !frame.minimap_has_waypoint { return None; }
+
+        let fw = frame.frame_width  as f32;
+        let fh = frame.frame_height as f32;
+        let mm_cx = (fw * 0.898) as i32;
+        let mm_cy = (fh * 0.159) as i32;
+
+        let dx = frame.minimap_wp_screen_x as i32 - mm_cx;
+        let dy = frame.minimap_wp_screen_y as i32 - mm_cy;
+        if dx.abs() < 5 && dy.abs() < 5 { return None; }
+
+        let target_x = (frame.char_screen_x as i32 + dx * 20).clamp(80, fw as i32 - 80);
+        let target_y = (frame.char_screen_y as i32 + dy * 20).clamp(80, fh as i32 - 80);
+        Some((target_x, target_y))
+    }
+
     /// Current game phase
     pub fn phase(&self) -> GamePhase {
         self.phase
