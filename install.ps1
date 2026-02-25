@@ -54,7 +54,7 @@ if ($isWSL) {
 if ($osType -ne "windows") {
     Write-Host "[-] Unsupported OS: $osType" -ForegroundColor Red
     Write-Host "    This installer requires native Windows (registry, ProgramData, Chrome)." -ForegroundColor Yellow
-    Write-Host "    The Rust crates (vision, overlay) also require Windows APIs (DXGI, Win32)." -ForegroundColor Gray
+    Write-Host "    The Rust crates [vision, overlay] also require Windows APIs [DXGI, Win32]." -ForegroundColor Gray
     exit 1
 }
 
@@ -66,7 +66,7 @@ $isAdmin = ([Security.Principal.WindowsPrincipal] `
 ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if (-not $isAdmin -and -not $ExtensionOnly) {
-    Write-Host "[!] Administrator privileges required. Requesting elevation..." -ForegroundColor Yellow
+    Write-Host "[ADMIN] Administrator privileges required. Requesting elevation..." -ForegroundColor Yellow
 
     # Rebuild the argument list so the elevated instance keeps all flags
     $relaunchArgs = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$PSCommandPath`"")
