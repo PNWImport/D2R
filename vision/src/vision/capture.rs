@@ -1707,22 +1707,37 @@ impl DxgiCapturer {
     unsafe fn find_d2r_window() -> Option<windows::Win32::Foundation::HWND> {
         use windows::Win32::UI::WindowsAndMessaging::*;
         use windows::Win32::Foundation::*;
-        use windows::core::w;
 
-        // Try common D2R window titles
-        let titles = [
-            w!("Diablo II: Resurrected"),
-            w!("Diablo II"),
-        ];
-
-        for title in &titles {
-            let hwnd = FindWindowW(None, *title).unwrap_or(HWND(std::ptr::null_mut()));
-            if !hwnd.0.is_null() {
-                return Some(hwnd);
-            }
+        // Use EnumWindows with a prefix match so we find the game whether it's
+        // running bare or inside Sandboxie (which appends " [BoxName]" to titles).
+        // Prefix matching covers both "Diablo II: Resurrected" and
+        // "Diablo II: Resurrected [DefaultBox]" without any extra config.
+        struct State {
+            found: HWND,
         }
 
-        None
+        unsafe extern "system" fn enum_cb(hwnd: HWND, lparam: LPARAM) -> BOOL {
+            let state = &mut *(lparam.0 as *mut State);
+            let mut buf = [0u16; 256];
+            let len = GetWindowTextW(hwnd, &mut buf);
+            if len > 0 {
+                let title = String::from_utf16_lossy(&buf[..len as usize]);
+                if title.starts_with("Diablo II: Resurrected") || title.starts_with("Diablo II") {
+                    state.found = hwnd;
+                    return BOOL(0); // stop enumeration
+                }
+            }
+            BOOL(1) // continue
+        }
+
+        let mut state = State { found: HWND(std::ptr::null_mut()) };
+        let _ = EnumWindows(Some(enum_cb), LPARAM(&mut state as *mut State as isize));
+
+        if !state.found.0.is_null() {
+            Some(state.found)
+        } else {
+            None
+        }
     }
 
     /// Get window client rect (position and size)
