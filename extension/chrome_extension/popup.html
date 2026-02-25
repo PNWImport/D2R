@@ -1617,6 +1617,19 @@
     </div>
 
     <div class="section">
+      <div class="section-title">Vision Calibration</div>
+      <p style="font-size:11px; color:#aaa; margin:0 0 6px 0;">
+        On next startup, samples screen colors at orb/UI positions and logs
+        detected vs expected ranges. Review output to verify D2R brightness
+        and gamma settings match vision thresholds.
+      </p>
+      <label class="check">
+        <input type="checkbox" data-cfg="calibration.enabled">
+        <span>Run Calibration on Next Start</span>
+      </label>
+    </div>
+
+    <div class="section">
       <div class="section-title">Cache Statistics</div>
       <button id="btn-cache-stats" class="btn">Get Cache Stats</button>
     </div>

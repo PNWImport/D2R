@@ -4,7 +4,7 @@
 
 > **Production-ready game farming bot built in Rust**
 >
-> Vision-based automation • Zero game memory access • Chrome control panel • 294 tests (100% passing)
+> Vision-based automation • Zero game memory access • Chrome control panel • 310 tests (100% passing)
 
 ---
 
@@ -80,7 +80,7 @@ OutOfGame → TownPrep → LeavingTown → Farming → Returning → ExitGame �
 - **Humanization**: Reaction variance, missed actions, idle pauses
 
 ### ⚙️ Configuration System
-- **18 config sections**: Survival, Combat, Loot, Town, Buffs, Cubing, Gambling, Leveling, etc.
+- **19 config sections**: Survival, Combat, Loot, Town, Buffs, Cubing, Gambling, Leveling, Calibration, etc.
 - **8 character presets**: Sorceress (Blizzard/Meteorb), Paladin (Hammerdin), Amazon (Javazon), Necromancer (Fishymancer), Assassin (Trapsin), Barbarian (Whirlwind), Druid (Wind)
 - **YAML-based**: Human-readable, backward-compatible (serde defaults)
 - **Hot-reload**: Change config, bot picks it up on next game
@@ -120,8 +120,8 @@ notepad C:\ProgramData\DisplayCalibration\configs\sorceress_blizzard.yaml
 | Metric | Value |
 |--------|-------|
 | **Source Code** | 11,400 LOC Rust + 3,100 LOC JS/CSS/HTML |
-| **Tests** | 294 total (136 library, 150 integration, 8 stress) — **100% passing** |
-| **Config Sections** | 18 (Survival, Combat, Loot, Town, Buffs, Session, Farming, etc.) |
+| **Tests** | 310 total (144 library, 158 integration, 8 stress) — **100% passing** |
+| **Config Sections** | 19 (Survival, Combat, Loot, Town, Buffs, Session, Farming, Calibration, etc.) |
 | **Character Presets** | 8 (Sorceress, Paladin, Amazon, Necromancer, Assassin, Barbarian, Druid) |
 | **NPC Locations** | 35 across 5 acts |
 | **Attack Skill Slots** | 7 (Preattack, Boss/Mob/Immune × 2 variants) |
@@ -176,7 +176,8 @@ cargo run --bin vision_bench --release 30 ../extension/vision_bench_out.json
 ```
 src/
 ├── main.rs                          Entry point, config loading, dual-drain main loop
-├── config/                          AgentConfig (YAML, 18 sections)
+├── config/                          AgentConfig (YAML, 19 sections)
+├── training/                        JSONL training logger (OpenClaw)
 ├── decision/
 │   ├── engine.rs                    DecisionEngine (1200 LOC) — combat, survival, loot
 │   ├── game_manager.rs              GameManager (900 LOC) — 7-phase lifecycle
@@ -240,6 +241,7 @@ chrome_extension/
 | **[STRUCTURE.md](STRUCTURE.md)** | Complete codebase walkthrough | 20 min |
 | **[CHANGELOG.md](CHANGELOG.md)** | Version history + roadmap | 10 min |
 | **[LATENCY_ANALYSIS.md](LATENCY_ANALYSIS.md)** | Config pipeline latency deep-dive | 10 min |
+| **[docs/skills.md](docs/skills.md)** | OpenClaw RL domain knowledge scaffold | 15 min |
 | **[extension/cpu_proof_demo.html](extension/cpu_proof_demo.html)** | Live Hz counter + rolling chart (screen-recordable) | — |
 | **[extension/vision_perf.html](extension/vision_perf.html)** | Real benchmark results (wire to vision_bench output) | — |
 
@@ -280,11 +282,11 @@ combat:                                       # Combat settings
   attack_slots:                               # 7 skill slots
     preattack: 'e'
     boss_primary: 'f'
-    boss_secondary: 'f'
+    boss_untimed: 'f'
     mob_primary: 'h'
-    mob_secondary: 'h'
+    mob_untimed: 'h'
     immune_primary: 'r'
-    immune_secondary: 'r'
+    immune_untimed: 'r'
   dodge: true                                 # Dodge at low HP
   static_field: true                          # Cast static field
 
@@ -366,14 +368,16 @@ farming:                                      # Farming sequence
 - ✅ **Unified Installer** — One PowerShell script + Leatrix TCP optimization
 - ✅ **QuadCache Acceleration** — Four-lane O(1) decision cache (~22 KB)
 - ✅ **Vision Pipeline Benchmarks** — `vision_bench` binary + CPU proof demo page
-- ✅ **Full Test Suite** — 294 tests (unit, integration, stress)
-- ✅ **10 Documentation Files** — INDEX, QUICKSTART, INSTALL, STRUCTURE, CHANGELOG, LATENCY_ANALYSIS, ISSUES_BACKLOG + 3 archived in `docs/`
+- ✅ **Training Logger** — JSONL session logs for OpenClaw RL integration
+- ✅ **Vision Calibration** — Manual diagnostic mode for display threshold verification
+- ✅ **Full Test Suite** — 310 tests (unit, integration, stress)
+- ✅ **11 Documentation Files** — INDEX, QUICKSTART, INSTALL, STRUCTURE, CHANGELOG, LATENCY_ANALYSIS, ISSUES_BACKLOG, skills.md + 3 archived in `docs/`
 
 ---
 
 ## ⚠️ Known Limitations
 
-- **Fixed resolution**: Hardcoded 800x600 scaling (adjustable via math)
+- **Resolution base**: NPC coordinates defined at 800x600, auto-scaled to any resolution; orb layouts optimized for 1280x720, 1920x1080, 2560x1440
 - **Game offsets**: If patches change memory layout, overlay needs offset update
 - **No advanced pathfinding**: Uses vision-detected obstacles, not A* on full map
 - **Windows-only stealth**: Stealth features are Windows-specific
@@ -389,7 +393,8 @@ farming:                                      # Farming sequence
 | Chrome Extension | ✅ Production-Ready | Control panel, stats, pause/resume |
 | 8 Character Configs | ✅ Complete | All major builds supported |
 | Installation | ✅ Unified Script | Works on Windows PowerShell |
-| Documentation | ✅ Comprehensive | 10 guides, 400+ KB documentation |
+| Training Logger | ✅ Production-Ready | JSONL session logs for RL integration |
+| Documentation | ✅ Comprehensive | 11 guides, 400+ KB documentation |
 
 ---
 
@@ -480,11 +485,14 @@ This tool is for educational and personal entertainment purposes.
 - [x] Act 4 seal plan logic fix + Action::Click variant
 - [x] Waypoint tracking for all 30+ areas (Acts 1-5)
 - [ ] Advanced pathfinding (A* on vision-detected map)
-- [ ] Multi-resolution scaling (dynamic resolution detection)
+- [x] Multi-resolution orb layouts (1280x720, 1920x1080, 2560x1440 + fractional fallback)
+- [x] OpenClaw domain knowledge scaffold (skills.md) + JSONL training logger
+- [x] Vision calibration diagnostic mode (manual checkbox in control panel)
+- [ ] Dynamic resolution auto-detection at runtime
 - [ ] Game offset updates (when patches release)
 - [ ] Linux/Mac stealth variant (process disguise)
 - [ ] Streaming mode (bot controls visible on stream)
-- [ ] openclaw LLM strategic wrapper (run selection, config suggestions)
+- [ ] OpenClaw RL integration (imitation learning → threshold tuning → skill selection)
 
 ---
 
@@ -505,6 +513,6 @@ Special thanks to:
 
 ### 🎯 Ready to farm? Start with [QUICKSTART.md](QUICKSTART.md)
 
-**v1.6.0** — Production Release — [Documentation](INDEX.md) — MIT License
+**v1.7.0** — Production Release — [Documentation](INDEX.md) — MIT License
 
 </div>

@@ -38,6 +38,8 @@ pub struct AgentConfig {
     pub inventory: InventoryConfig,
     #[serde(default)]
     pub game_display: GameDisplayConfig,
+    #[serde(default)]
+    pub calibration: CalibrationConfig,
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -693,6 +695,31 @@ impl Default for GameDisplayConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// CALIBRATION — manual vision threshold diagnostic
+// ═══════════════════════════════════════════════════════════════
+
+/// Vision calibration diagnostic mode.
+///
+/// When enabled, the capture pipeline samples screen colors at known
+/// positions (orbs, UI anchors) on the first frame and logs detected
+/// vs expected color ranges. The user reviews the output and adjusts
+/// D2R display settings (brightness, gamma) if needed.
+///
+/// This is a manual diagnostic — not auto-correction.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
+pub struct CalibrationConfig {
+    /// Whether calibration sampling runs on next startup.
+    pub enabled: bool,
+}
+
+impl Default for CalibrationConfig {
+    fn default() -> Self {
+        Self { enabled: false }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // HUMANIZATION
 // ═══════════════════════════════════════════════════════════════
 
@@ -801,6 +828,7 @@ impl Default for AgentConfig {
             merc: MercConfig::default(),
             inventory: InventoryConfig::default(),
             game_display: GameDisplayConfig::default(),
+            calibration: CalibrationConfig::default(),
         }
     }
 }
@@ -859,6 +887,7 @@ mod tests {
         assert!(yaml.contains("runewords"));
         assert!(yaml.contains("game_display"));
         assert!(yaml.contains("monster_hp_bars"));
+        assert!(yaml.contains("calibration"));
         assert!(yaml.contains("gambling"));
         assert!(yaml.contains("class_specific"));
         assert!(yaml.contains("monster_skip"));
