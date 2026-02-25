@@ -99,6 +99,8 @@ mod platform {
         }
 
         pub fn is_attached(&self) -> bool { self.attached }
+        pub fn current_offsets(&self) -> Offsets { self.offsets.clone() }
+        pub fn sig_scan_complete(&self) -> bool { self.sig_done }
 
         pub fn attach(&mut self) -> Result<(), String> {
             if self.attached && self.process_alive() {
@@ -543,6 +545,8 @@ mod platform {
             Self { offsets, attached: false }
         }
         pub fn is_attached(&self) -> bool { self.attached }
+        pub fn current_offsets(&self) -> Offsets { self.offsets.clone() }
+        pub fn sig_scan_complete(&self) -> bool { false } // no sig-scan on non-Windows
         pub fn attach(&mut self) -> Result<(), String> {
             self.attached = true;
             Ok(())

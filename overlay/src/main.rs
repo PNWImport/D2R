@@ -314,11 +314,21 @@ fn handle_message(msg: &serde_json::Value, state: &mut MapHelperState) -> Result
         }
 
         InboundCommand::GetOffsets => {
-            let off = offsets::Offsets::default();
+            let off = state.reader.current_offsets();
+            let sig_done = state.reader.sig_scan_complete();
+            let valid = off.validate().is_ok();
             let _ = send_response("offsets", json!({
                 "offsets": off,
-                "version": "kzb-compat-2026",
-                "note": "Static fallback offsets. Sig-scan overrides on attach.",
+                "sig_scan_complete": sig_done,
+                "offsets_valid": valid,
+                "demo_mode": state.demo_mode,
+                "note": if valid {
+                    "Offsets resolved — ready for memory reads."
+                } else if sig_done {
+                    "Sig-scan ran but critical fields unresolved. Check offsets.json."
+                } else {
+                    "Sig-scan not yet run. Attach to D2R first."
+                },
             }));
         }
 
