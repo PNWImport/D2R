@@ -52,22 +52,23 @@ pub struct OrbLayout {
 
 impl OrbLayout {
     /// Derive orb layout from frame dimensions.
-    /// D2R globes sit at ~5.3% from each side edge and ~7.5% up from the bottom.
-    /// Radius is ~4.9% of screen height.
+    /// D2R globes are large circular bowls inset ~16.6% from each horizontal edge
+    /// and centered at ~92.8% down from the top.
+    /// Radius is ~6.9% of screen height.
     pub fn for_resolution(w: u32, h: u32) -> Self {
         // Exact measured positions for known D2R resolutions; fall back to
         // fractional estimates for anything else.
         match (w, h) {
-            (1280, 720) => OrbLayout { hp_cx: 68,  hp_cy: 666, mana_cx: 1212, mana_cy: 666, radius: 35 },
-            (1920, 1080) => OrbLayout { hp_cx: 102, hp_cy: 999, mana_cx: 1818, mana_cy: 999, radius: 52 },
-            (2560, 1440) => OrbLayout { hp_cx: 136, hp_cy: 1332, mana_cx: 2424, mana_cy: 1332, radius: 70 },
-            (800, 600) => OrbLayout { hp_cx: 43,  hp_cy: 554, mana_cx: 757,  mana_cy: 554, radius: 29 },
+            (1280, 720)  => OrbLayout { hp_cx: 213,  hp_cy: 668,  mana_cx: 1067, mana_cy: 668,  radius: 50 },
+            (1920, 1080) => OrbLayout { hp_cx: 320,  hp_cy: 1002, mana_cx: 1600, mana_cy: 1002, radius: 75 },
+            (2560, 1440) => OrbLayout { hp_cx: 427,  hp_cy: 1336, mana_cx: 2133, mana_cy: 1336, radius: 100 },
+            (800, 600)   => OrbLayout { hp_cx: 134,  hp_cy: 557,  mana_cx: 666,  mana_cy: 557,  radius: 42 },
             _ => {
-                // Fractional fallback: ~5.3% inset, ~7.5% from bottom, ~4.9% radius
-                let cx_left  = (w as f32 * 0.053) as u32;
+                // Fractional fallback: ~16.6% inset, ~92.8% from top, ~6.9% radius
+                let cx_left  = (w as f32 * 0.166) as u32;
                 let cx_right = w - cx_left;
-                let cy       = (h as f32 * 0.925) as u32;
-                let r        = (h as f32 * 0.049).max(20.0) as u32;
+                let cy       = (h as f32 * 0.928) as u32;
+                let r        = (h as f32 * 0.069).max(25.0) as u32;
                 OrbLayout { hp_cx: cx_left, hp_cy: cy, mana_cx: cx_right, mana_cy: cy, radius: r }
             }
         }

@@ -276,59 +276,69 @@ mod win_impl {
         DeleteDC(mem_dc);
     }
 
-    unsafe fn draw_debug_state(hdc: winapi::shared::windef::HDC, _w: i32, h: i32, s: &DebugState) {
-        // ── HP bar indicator (left side, top) ──────────────────────────────────
-        let hp_bar_w = ((s.hp_pct as i32) * 120 / 100).max(2);
-        let hp_rect = RECT { left: 10, top: 10, right: 10 + hp_bar_w, bottom: 26 };
-        let hp_brush = CreateSolidBrush(COLOR_HP) as HBRUSH;
+    unsafe fn draw_debug_state(hdc: winapi::shared::windef::HDC, w: i32, h: i32, s: &DebugState) {
+        // D2R orb centers are at ~16.6% from each horizontal edge, ~92.8% from top.
+        // Draw indicators just ABOVE each orb so they don't cover the globe itself.
+        let hp_orb_cx  = (w as f32 * 0.166) as i32;
+        let mp_orb_cx  = (w as f32 * 0.834) as i32;
+        let bar_top    = (h as f32 * 0.870) as i32; // just above the orbs
+        let bar_bottom = bar_top + 14;
+        let bar_w      = 100i32; // 100px = full bar width
+
+        // ── HP bar (bottom-left, above HP orb) ─────────────────────────────────
+        let hp_filled = (s.hp_pct as i32 * bar_w / 100).max(2);
+        let hp_left   = hp_orb_cx - bar_w / 2;
+        let hp_rect   = RECT { left: hp_left, top: bar_top, right: hp_left + hp_filled, bottom: bar_bottom };
+        let hp_brush  = CreateSolidBrush(COLOR_HP) as HBRUSH;
         FillRect(hdc, &hp_rect, hp_brush);
         DeleteObject(hp_brush as _);
-        draw_text_at(hdc, 135, 10, &format!("HP {}%", s.hp_pct), COLOR_HP);
+        draw_text_at(hdc, hp_left, bar_top - 16, &format!("HP {}%", s.hp_pct), COLOR_HP);
 
-        // ── MP bar indicator ────────────────────────────────────────────────────
-        let mp_bar_w = ((s.mp_pct as i32) * 120 / 100).max(2);
-        let mp_rect = RECT { left: 10, top: 30, right: 10 + mp_bar_w, bottom: 46 };
-        let mp_brush = CreateSolidBrush(COLOR_MP) as HBRUSH;
-        FillRect(hdc, &mp_rect, mp_brush);
-        DeleteObject(mp_brush as _);
-        draw_text_at(hdc, 135, 30, &format!("MP {}%", s.mp_pct), COLOR_MP);
-
-        // ── Chicken threshold line ──────────────────────────────────────────────
+        // ── Chicken threshold tick on HP bar ────────────────────────────────────
         if s.chicken_hp_pct > 0 {
-            let chick_x = 10 + (s.chicken_hp_pct as i32 * 120 / 100);
+            let tick_x = hp_left + (s.chicken_hp_pct as i32 * bar_w / 100);
             let pen = CreatePen(PS_SOLID as i32, 1, COLOR_CHICK);
             let old_pen = SelectObject(hdc, pen as _);
-            MoveToEx(hdc, chick_x, 8, std::ptr::null_mut());
-            LineTo(hdc, chick_x, 28);
+            MoveToEx(hdc, tick_x, bar_top - 2, std::ptr::null_mut());
+            LineTo(hdc, tick_x, bar_bottom + 2);
             SelectObject(hdc, old_pen);
             DeleteObject(pen as _);
+        }
+
+        // ── MP bar (bottom-right, above mana orb) ──────────────────────────────
+        let mp_filled = (s.mp_pct as i32 * bar_w / 100).max(2);
+        let mp_left   = mp_orb_cx - bar_w / 2;
+        let mp_rect   = RECT { left: mp_left, top: bar_top, right: mp_left + mp_filled, bottom: bar_bottom };
+        let mp_brush  = CreateSolidBrush(COLOR_MP) as HBRUSH;
+        FillRect(hdc, &mp_rect, mp_brush);
+        DeleteObject(mp_brush as _);
+        draw_text_at(hdc, mp_left, bar_top - 16, &format!("MP {}%", s.mp_pct), COLOR_MP);
+
+        // ── Merc HP (small text just below the HP bar) ─────────────────────────
+        if s.merc_hp_pct < 100 {
+            draw_text_at(hdc, hp_left, bar_bottom + 2, &format!("Merc {}%", s.merc_hp_pct), COLOR_TEXT);
         }
 
         // ── Nearest enemy crosshair ─────────────────────────────────────────────
         if s.enemy_count > 0 {
             let ex = s.nearest_enemy_x as i32;
             let ey = s.nearest_enemy_y as i32;
-            let cr = 12i32; // crosshair radius
+            let cr = 12i32;
             let pen = CreatePen(PS_SOLID as i32, 2, COLOR_ENEMY);
             let old_pen = SelectObject(hdc, pen as _);
             MoveToEx(hdc, ex - cr, ey, std::ptr::null_mut());
             LineTo(hdc, ex + cr, ey);
             MoveToEx(hdc, ex, ey - cr, std::ptr::null_mut());
             LineTo(hdc, ex, ey + cr);
-            // Enemy count label
             draw_text_at(hdc, ex + cr + 4, ey - 8, &format!("{}e {}%hp", s.enemy_count, s.nearest_enemy_hp_pct), COLOR_ENEMY);
             SelectObject(hdc, old_pen);
             DeleteObject(pen as _);
         }
 
-        // ── Merc HP ────────────────────────────────────────────────────────────
-        if s.merc_hp_pct < 100 {
-            draw_text_at(hdc, 10, 50, &format!("Merc {}%", s.merc_hp_pct), COLOR_TEXT);
-        }
-
-        // ── Area name ──────────────────────────────────────────────────────────
-        if !s.area_name.is_empty() {
-            draw_text_at(hdc, 10, h - 20, &s.area_name, COLOR_TEXT);
+        // ── Area name (top-center — matches where D2R displays it) ─────────────
+        if !s.area_name.is_empty() && s.area_name != "_banner_detected" {
+            let text_x = w / 2 - (s.area_name.len() as i32 * 4); // rough center
+            draw_text_at(hdc, text_x, 8, &s.area_name, COLOR_TEXT);
         }
     }
 
