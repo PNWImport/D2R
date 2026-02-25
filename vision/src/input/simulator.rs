@@ -29,8 +29,8 @@ impl InputSimulator {
         Self {
             rng: StdRng::from_entropy(),
             key_hold_dist: Normal::new(55.0, 18.0).unwrap(),
-            cursor_x: 400,
-            cursor_y: 300,
+            cursor_x: 640,
+            cursor_y: 360,
         }
     }
 

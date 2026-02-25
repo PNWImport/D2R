@@ -156,8 +156,8 @@ impl Default for FrameState {
             boss_present: false,
             champion_present: false,
             immune_detected: false,
-            nearest_enemy_x: 400,
-            nearest_enemy_y: 220,
+            nearest_enemy_x: 640,
+            nearest_enemy_y: 264,
             nearest_enemy_hp_pct: 0,
             in_town: true,
             current_act: 1,
@@ -165,8 +165,8 @@ impl Default for FrameState {
             at_menu: false,
             loading_screen: false,
             inventory_full: false,
-            char_screen_x: 400,
-            char_screen_y: 300,
+            char_screen_x: 640,
+            char_screen_y: 360,
             loot_label_count: 0,
             loot_labels: Default::default(),
             active_buffs: 0,
@@ -189,8 +189,8 @@ impl Default for FrameState {
             phase_confidence: 0.0,
             capture_time_ns: 0,
             phash: 0,
-            frame_width: 800,
-            frame_height: 600,
+            frame_width: 1280,
+            frame_height: 720,
         }
     }
 }

@@ -561,8 +561,8 @@ mod tests {
             } else {
                 100
             };
-            state.char_screen_x = 400;
-            state.char_screen_y = 300;
+            state.char_screen_x = 640;
+            state.char_screen_y = 360;
             buffer.push(state);
 
             engine.last_attack = Instant::now() - Duration::from_secs(5);

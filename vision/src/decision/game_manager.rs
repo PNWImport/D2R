@@ -73,10 +73,10 @@ impl TownTask {
 // ═══════════════════════════════════════════════════════════════
 // NPC COORDINATES — per-act town NPC screen positions
 // kolbot: Town.js lines 15-101 hardcoded coordinates
-// These are approximate screen coordinates at 800x600 for key NPCs.
+// Base coordinates at 800×600, scaled to actual resolution via scale_npc_pos().
 // ═══════════════════════════════════════════════════════════════
 
-/// Town NPC positions per act (screen coordinates at 800x600 base resolution)
+/// Town NPC positions per act (base coordinates at 800×600, scaled at runtime)
 struct TownNpcs {
     healer: (i32, i32),
     stash: (i32, i32),
@@ -407,10 +407,13 @@ impl GameManager {
         // Generic "advance through menu" click at the primary action area
         // The exact coordinates depend on which menu screen we're on.
         // Vision pipeline will eventually provide more granular screen detection.
+        // Scale from 800×600 base coords to actual frame resolution.
+        let fw = state.frame_width;
+        let fh = state.frame_height;
         Decision {
             action: Action::MoveTo {
-                screen_x: 400,
-                screen_y: 340,
+                screen_x: (400.0 * fw as f32 / 800.0) as i32,
+                screen_y: (340.0 * fh as f32 / 600.0) as i32,
             },
             delay: Duration::from_millis(self.rng.gen_range(300..800)),
             priority: 0,
@@ -476,11 +479,13 @@ impl GameManager {
                 }
                 // Close stash (Esc)
                 self.advance_town_task();
+                let cx = (state.frame_width / 2) as i32;
+                let cy = (state.frame_height / 2) as i32;
                 Decision {
                     action: Action::CastSkill {
                         key: '\x1b', // Escape
-                        screen_x: 400,
-                        screen_y: 300,
+                        screen_x: cx,
+                        screen_y: cy,
                     },
                     delay: Duration::from_millis(200),
                     priority: 1,
@@ -850,7 +855,9 @@ impl GameManager {
     // ─── Exit Game Handler ───────────────────────────────────────
     // Equivalent to kolbot's game exit sequence: Esc → Save & Exit
 
-    fn handle_exit(&mut self, _state: &FrameState) -> Decision {
+    fn handle_exit(&mut self, state: &FrameState) -> Decision {
+        let fw = state.frame_width;
+        let fh = state.frame_height;
         match self.exit_step {
             0 => {
                 self.exit_step = 1;
@@ -858,8 +865,8 @@ impl GameManager {
                 Decision {
                     action: Action::CastSkill {
                         key: '\x1b',
-                        screen_x: 400,
-                        screen_y: 300,
+                        screen_x: (fw / 2) as i32,
+                        screen_y: (fh / 2) as i32,
                     },
                     delay: Duration::from_millis(300),
                     priority: 0,
@@ -869,10 +876,11 @@ impl GameManager {
             1 => {
                 self.exit_step = 2;
                 // Click "Save and Exit Game" button
+                // Scale from 800×600 base coords to actual frame resolution
                 Decision {
                     action: Action::MoveTo {
-                        screen_x: 400,
-                        screen_y: 280, // approximate Save & Exit button position
+                        screen_x: (400.0 * fw as f32 / 800.0) as i32,
+                        screen_y: (280.0 * fh as f32 / 600.0) as i32,
                     },
                     delay: Duration::from_millis(500),
                     priority: 0,
@@ -1167,8 +1175,8 @@ mod tests {
         state.mana_pct = 80;
         state.enemy_count = 3;
         state.in_combat = true;
-        state.nearest_enemy_x = 400;
-        state.nearest_enemy_y = 220;
+        state.nearest_enemy_x = 640;
+        state.nearest_enemy_y = 264;
         state.nearest_enemy_hp_pct = 100;
 
         let decision = mgr.decide(&state);

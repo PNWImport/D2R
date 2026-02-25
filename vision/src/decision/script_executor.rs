@@ -21,7 +21,8 @@ use std::time::{Duration, Instant};
 
 // ═══════════════════════════════════════════════════════════════
 // WAYPOINT COORDINATES — screen positions for WP area list entries
-// D2R 800×600: waypoint panel is ~300px wide, centered, with area
+// Base coordinates at 800×600, scaled to actual resolution via sx()/sy().
+// Waypoint panel is ~300px wide (at base), centered, with area
 // names listed vertically. Each act has a tab at the top.
 // ═══════════════════════════════════════════════════════════════
 
@@ -875,8 +876,8 @@ impl ScriptExecutor {
                         return Some(Decision {
                             action: Action::CastSkill {
                                 key: '\x1b',
-                                screen_x: 400,
-                                screen_y: 300,
+                                screen_x: (state.frame_width / 2) as i32,
+                                screen_y: (state.frame_height / 2) as i32,
                             },
                             delay: Duration::from_millis(self.rng.gen_range(300..600)),
                             priority: 3,
@@ -1113,8 +1114,8 @@ fn object_click_position(name: &str, state: &FrameState) -> (i32, i32) {
         // Journal in Arcane Sanctuary
         "Journal" => (cx + sx(10, w), cy - sy(30, h)),
 
-        // Default: slightly above character
-        _ => (cx, cy - 30),
+        // Default: slightly above character (scaled to resolution)
+        _ => (cx, cy - sy(30, h)),
     }
 }
 
@@ -1141,8 +1142,8 @@ mod tests {
         s.in_town = true;
         s.at_menu = false;
         s.loading_screen = false;
-        s.char_screen_x = 400;
-        s.char_screen_y = 300;
+        s.char_screen_x = 640;
+        s.char_screen_y = 360;
         s
     }
 
@@ -1151,8 +1152,8 @@ mod tests {
         s.in_town = false;
         s.at_menu = false;
         s.loading_screen = false;
-        s.char_screen_x = 400;
-        s.char_screen_y = 300;
+        s.char_screen_x = 640;
+        s.char_screen_y = 360;
         s.hp_pct = 90;
         s.mana_pct = 80;
         s.set_area_name(area);
@@ -1282,8 +1283,8 @@ mod tests {
         let mut state = field_state("Den of Evil");
         state.enemy_count = 3;
         state.in_combat = true;
-        state.nearest_enemy_x = 420;
-        state.nearest_enemy_y = 250;
+        state.nearest_enemy_x = 672;
+        state.nearest_enemy_y = 300;
         state.nearest_enemy_hp_pct = 80;
 
         engine.last_attack = std::time::Instant::now() - Duration::from_secs(5);

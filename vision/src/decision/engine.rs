@@ -939,9 +939,9 @@ mod tests {
         s.enemy_count = enemies;
         s.in_combat = enemies > 0;
         s.in_town = false;
-        // Set nearest enemy to a sensible position
-        s.nearest_enemy_x = 400;
-        s.nearest_enemy_y = 220;
+        // Set nearest enemy to a sensible position (1280×720 coords)
+        s.nearest_enemy_x = 640;
+        s.nearest_enemy_y = 264;
         s.nearest_enemy_hp_pct = 100;
         s
     }
