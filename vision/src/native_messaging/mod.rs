@@ -124,6 +124,20 @@ pub enum AgentCommand {
     Resume,
     Shutdown,
     UpdateConfig(Value),
+    /// Game state + POI list relayed from the maphack overlay host.
+    /// Gives the vision agent real area name, player world coords, and
+    /// exit/waypoint positions for pathfinding.
+    UpdateMapState {
+        area_id:   u32,
+        area_name: String,
+        player_x:  i32,
+        player_y:  i32,
+        map_seed:  u32,
+        difficulty: u8,
+        /// Points of interest: exits, waypoints, stairs, etc.
+        /// Each entry: { "x": i32, "y": i32, "poi_type": str, "label": str, "target_area": u32? }
+        pois:      Value,
+    },
 }
 
 impl NativeMessagingHost {
@@ -266,6 +280,23 @@ impl NativeMessagingHost {
                 } else {
                     Some(json!({ "cmd": "error", "message": "missing data field" }))
                 }
+            }
+
+            // Relayed from the maphack map host via Chrome extension.
+            // Delivers real area name, player world position, and POI list
+            // (exits, waypoints, stairs) that the game_manager uses for navigation.
+            "update_map_state" => {
+                let area_id   = msg.get("area_id").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
+                let area_name = msg.get("area_name").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                let player_x  = msg.get("player_x").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
+                let player_y  = msg.get("player_y").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
+                let map_seed  = msg.get("map_seed").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
+                let difficulty = msg.get("difficulty").and_then(|v| v.as_u64()).unwrap_or(0) as u8;
+                let pois      = msg.get("pois").cloned().unwrap_or_else(|| Value::Array(vec![]));
+                let _ = self.agent_cmd_tx.send(AgentCommand::UpdateMapState {
+                    area_id, area_name, player_x, player_y, map_seed, difficulty, pois,
+                });
+                Some(json!({ "cmd": "ack", "action": "map_state_updated" }))
             }
 
             // Returns the most recent FrameState for the debug overlay relay.

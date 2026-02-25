@@ -246,6 +246,13 @@ async fn main() {
                             game_mgr.reload_config(new_config);
                         }
                     }
+                    AgentCommand::UpdateMapState {
+                        area_id, area_name, player_x, player_y, map_seed, difficulty, pois,
+                    } => {
+                        game_mgr.apply_map_state(
+                            area_id, area_name, player_x, player_y, map_seed, difficulty, &pois,
+                        );
+                    }
                 }
             }
 
@@ -409,6 +416,13 @@ async fn main() {
                         if let Ok(new_config) = serde_json::from_value::<AgentConfig>(data) {
                             game_mgr.reload_config(new_config);
                         }
+                    }
+                    AgentCommand::UpdateMapState {
+                        area_id, area_name, player_x, player_y, map_seed, difficulty, pois,
+                    } => {
+                        game_mgr.apply_map_state(
+                            area_id, area_name, player_x, player_y, map_seed, difficulty, &pois,
+                        );
                     }
                     _ => {} // Pause/Resume handled at tick start
                 }

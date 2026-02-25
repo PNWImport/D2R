@@ -163,6 +163,17 @@ fn npcs_for_act(act: u8) -> TownNpcs {
 // GAME MANAGER
 // ═══════════════════════════════════════════════════════════════
 
+/// A point of interest relayed from the maphack overlay host.
+/// Coordinates are in D2R world (game) space, not screen pixels.
+#[derive(Debug, Clone)]
+pub struct MapPoi {
+    pub x:           i32,
+    pub y:           i32,
+    pub poi_type:    String, // "Exit", "Waypoint", "Staircase", "Shrine", etc.
+    pub label:       String,
+    pub target_area: Option<u32>, // For exits: which area they lead to
+}
+
 pub struct GameManager {
     config: AgentConfig,
     engine: DecisionEngine,
@@ -214,6 +225,21 @@ pub struct GameManager {
     // ─── Script Executor ──────────────────────────────────────
     /// Drives ScriptStep plans into per-frame Actions.
     executor: ScriptExecutor,
+
+    // ─── Map State (relayed from maphack overlay host) ────────
+    /// Real area ID read from D2R memory. 0 = unknown.
+    map_area_id: u32,
+    /// Real area name — replaces vision's "_banner_detected" placeholder.
+    map_area_name: String,
+    /// Player world coordinates (game-space, updated each map poll).
+    player_world_x: i32,
+    player_world_y: i32,
+    /// Map seed from D2R memory (used to generate collision/POI data).
+    map_seed: u32,
+    /// Difficulty: 0=Normal, 1=Nightmare, 2=Hell.
+    map_difficulty: u8,
+    /// Points of interest for the current area (exits, WPs, stairs).
+    map_pois: Vec<MapPoi>,
 }
 
 impl GameManager {
@@ -248,6 +274,13 @@ impl GameManager {
             script_step_index: 0,
             step_started: now,
             executor: ScriptExecutor::new(),
+            map_area_id: 0,
+            map_area_name: String::new(),
+            player_world_x: 0,
+            player_world_y: 0,
+            map_seed: 0,
+            map_difficulty: 0,
+            map_pois: Vec::new(),
         }
     }
 
@@ -258,6 +291,93 @@ impl GameManager {
         let mut mgr = Self::new(config);
         mgr.progression = Some(ProgressionEngine::new(class, state_path));
         mgr
+    }
+
+    /// Apply map state relayed from the maphack overlay host.
+    /// Called whenever Chrome forwards a `read_state` response to the vision agent.
+    pub fn apply_map_state(
+        &mut self,
+        area_id:    u32,
+        area_name:  String,
+        player_x:   i32,
+        player_y:   i32,
+        map_seed:   u32,
+        difficulty: u8,
+        pois:       &serde_json::Value,
+    ) {
+        self.map_area_id    = area_id;
+        self.player_world_x = player_x;
+        self.player_world_y = player_y;
+        self.map_seed       = map_seed;
+        self.map_difficulty = difficulty;
+
+        if !area_name.is_empty() {
+            self.map_area_name = area_name;
+        }
+
+        if let Some(arr) = pois.as_array() {
+            self.map_pois = arr
+                .iter()
+                .filter_map(|p| {
+                    Some(MapPoi {
+                        x:           p.get("x")?.as_i64()? as i32,
+                        y:           p.get("y")?.as_i64()? as i32,
+                        poi_type:    p.get("poi_type")?.as_str()?.to_string(),
+                        label:       p.get("label").and_then(|l| l.as_str()).unwrap_or("").to_string(),
+                        target_area: p.get("target_area").and_then(|t| t.as_u64()).map(|t| t as u32),
+                    })
+                })
+                .collect();
+        }
+
+        tracing::debug!(
+            "map_state: area_id={} name={:?} player=({},{}) seed={:#x} pois={}",
+            self.map_area_id, self.map_area_name,
+            self.player_world_x, self.player_world_y,
+            self.map_seed, self.map_pois.len()
+        );
+    }
+
+    /// Convert D2R world coordinates to screen pixel coordinates.
+    ///
+    /// D2R uses an isometric projection. The player is always rendered at
+    /// roughly the screen center (char_screen_x/y from FrameState).
+    /// Each world unit maps to ~16 horizontal and ~8 vertical screen pixels
+    /// in the default view — calibrate these if the bot overshoots/undershoots.
+    pub fn world_to_screen(&self, world_x: i32, world_y: i32, frame: &crate::vision::FrameState) -> (i32, i32) {
+        let dx = world_x - self.player_world_x;
+        let dy = world_y - self.player_world_y;
+        let cx = frame.char_screen_x as i32;
+        let cy = frame.char_screen_y as i32;
+        // Isometric projection: x-axis goes right-down, y-axis goes left-down
+        let screen_x = cx + (dx - dy) * 16;
+        let screen_y = cy + (dx + dy) * 8;
+        (screen_x, screen_y)
+    }
+
+    /// Find the nearest exit/staircase POI, optionally filtering by target area.
+    pub fn next_exit_poi(&self, target_area: Option<u32>) -> Option<&MapPoi> {
+        self.map_pois.iter().find(|p| {
+            (p.poi_type == "Exit" || p.poi_type == "Staircase")
+                && target_area.map_or(true, |ta| p.target_area == Some(ta))
+        })
+    }
+
+    /// Find the waypoint POI for the current area, if any.
+    pub fn waypoint_poi(&self) -> Option<&MapPoi> {
+        self.map_pois.iter().find(|p| p.poi_type == "Waypoint")
+    }
+
+    /// Best-effort area name: maphack name takes priority, falls back to vision banner.
+    pub fn current_area_name<'a>(&'a self, frame: &'a crate::vision::FrameState) -> &'a str {
+        if !self.map_area_name.is_empty() {
+            return &self.map_area_name;
+        }
+        let banner = frame.area_name_str();
+        if banner != "_banner_detected" {
+            return banner;
+        }
+        ""
     }
 
     /// Current game phase

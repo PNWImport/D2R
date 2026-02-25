@@ -1,0 +1,203 @@
+# KZB — Integration Memory
+
+Living doc. Update this whenever something gets wired, fixed, or discovered broken.
+Treat it as ground truth for "what actually works right now."
+
+---
+
+## Architecture Overview
+
+```
+Chrome Extension (background.js)
+    │
+    ├── Native Messaging → vision/chrome_helper.exe    (vision + input agent)
+    └── Native Messaging → overlay/chrome_map_helper.exe  (maphack + Win32 overlay)
+
+chrome_helper.exe
+    ├── DXGI capture thread (25 Hz)  →  CapturePipeline  →  ShardedFrameBuffer
+    ├── Decision loop (25 Hz)        →  GameManager  →  ProgressionEngine
+    └── ThreadRotatedInput           →  actual Win32 input (keypress / click)
+
+chrome_map_helper.exe
+    ├── ReadProcessMemory → D2R.exe  (area_id, player_x/y, map_seed, difficulty)
+    ├── mapgen backend (d2-map.exe)  →  MapData + MapPOI (exits, WP, shrines)
+    └── Win32 layered overlay window →  draw_debug_state (HP/MP bars, enemy crosshair)
+```
+
+**The Chrome extension is the broker between both native hosts.**
+It reads from one and can write to both. Currently it only relays:
+- vision agent → map host (via `update_debug_state` every 100ms)
+- map host → tabs/content scripts (via `MAP_UPDATE` broadcast)
+- map host → **vision agent** = **NOT WIRED** ← THIS IS THE GAP
+
+---
+
+## Component Status
+
+### Vision Pipeline (`vision/src/vision/capture.rs`)
+
+| Detection | Status | Notes |
+|---|---|---|
+| HP orb % | ✅ Working | Fixed 2025-02 — cx was 5.3% from edge, now 16.6% |
+| Mana orb % | ✅ Working | Same fix |
+| at_menu | ✅ Working | Derived from hp_pct<=5 && mana_pct<=5 |
+| Enemy count + position | ✅ Working | Scans for red HP bars |
+| Boss/champion detection | ✅ Working | Bar width heuristic |
+| Immune detection | ✅ Working | Cyan text color scan |
+| Loot label detection | ✅ Working | 6 quality colors |
+| Town detection | ✅ Working | Stone floor color heuristic |
+| Merc alive/HP | ✅ Working | Portrait bar at top-left |
+| Area name banner | ⚠️ Stub | Returns `"_banner_detected"` — no OCR |
+| Quest complete banner | ✅ Working | Gold pixel density check |
+| XP bar % | ✅ Working | Yellow strip at screen bottom |
+| Belt potion columns | ✅ Working | Brightness scan at belt area |
+| loading_screen | ❌ Not implemented | Always false |
+| inventory_full | ❌ Not implemented | Always false |
+| char_level | ❌ Not implemented | Always 0 |
+
+### Phase Machine (`vision/src/decision/game_manager.rs`)
+
+| Phase | Status | Notes |
+|---|---|---|
+| OutOfGame → TownPrep | ✅ Working | Requires 3 stable in_town frames |
+| OOG menu clicking | ✅ Working | Only clicks when at_menu=true |
+| OOG mid-dungeon fallback | ✅ Working | Transitions to Farming after 2s |
+| TownPrep → Farming | ✅ Working | After heal/sell/ID/restock sequence |
+| Farming → Returning | ✅ Working | On run complete or chicken |
+| Returning → TownPrep | ✅ Working | On in_town stable |
+| Any → OutOfGame | ✅ Working | On at_menu=true (game crash/exit) |
+
+### Progression Engine (`vision/src/decision/progression.rs`)
+
+| Feature | Status | Notes |
+|---|---|---|
+| Quest state persistence | ✅ Working | JSON at `C:\ProgramData\DisplayCalibration\quest_state.json` |
+| Act 1-5 script queue | ✅ Working | Full sequence defined |
+| shouldRun / skipIf logic | ✅ Working | Level thresholds, quest gates |
+| Area name constants | ✅ Defined | All areas defined as string constants |
+| Area inference from quest state | ❌ Not implemented | Needs `infer_current_area()` |
+| Script executor navigation | ⚠️ Partial | Has move/attack but no pathfinding |
+
+### Maphack / Map Host (`overlay/`)
+
+| Feature | Status | Notes |
+|---|---|---|
+| D2R memory reading | ✅ Working | area_id, player_x/y, map_seed, difficulty |
+| area_id → area_name | ✅ Working | 136 area IDs mapped in offsets.rs |
+| Map generation (POIs/collision) | ✅ Working | Requires d2-map.exe backend |
+| Exit/waypoint positions | ✅ Available | MapPOI with game coordinates |
+| Win32 debug overlay | ✅ Working | HP/MP bars now near actual orbs |
+| D2R offsets | ⚠️ Stale | Static offsets from D2R 2.x — game is on 3.x |
+| Auto-discovery fallback | ✅ Working | Signature scan + heuristics in discovery.rs |
+
+### Chrome Extension (`extension/chrome_extension/background.js`)
+
+| Data Flow | Status | Notes |
+|---|---|---|
+| Extension → vision agent (config/pause/resume) | ✅ Working | |
+| Extension → map host (read_state poll 500ms) | ✅ Working | When map active |
+| Vision agent → extension (frame_state 100ms) | ✅ Working | |
+| Extension → map host (update_debug_state) | ✅ Working | Relays vision frame state |
+| **Map host → extension (game_state + POIs)** | ✅ Working | Handled in handleMapMessage |
+| **Extension → vision agent (map state + POIs)** | ❌ **NOT WIRED** | **← THE GAP** |
+
+---
+
+## The Gap: Map Data → Vision Agent
+
+The map host already delivers every tick:
+```js
+msg.game_state = { area_id, area_name, player_x, player_y, map_seed, difficulty, in_game, is_town }
+msg.map = { pois: [ { x, y, poi_type, label, target_area } ] }
+```
+
+The vision agent's game_manager receives NONE of this. It navigates blind.
+
+### What needs to happen (in order):
+
+1. **`background.js`** — in `handleMapMessage("state")`, forward map state to vision agent:
+   ```js
+   agentPort.postMessage({ cmd: "update_map_state", game_state: msg.game_state, pois: msg.map?.pois ?? [] })
+   ```
+
+2. **`vision/src/native_messaging/mod.rs`** — add `"update_map_state"` command handler
+   → sends `AgentCommand::UpdateMapState { area_id, area_name, player_x, player_y, pois }`
+
+3. **`vision/src/decision/game_manager.rs`** — store `MapState`, use `area_name` from it
+   (replaces the `"_banner_detected"` placeholder)
+
+4. **`vision/src/decision/game_manager.rs`** — navigation: use POI coordinates
+   - Convert game-coords → screen-coords via isometric projection
+   - Use `Teleport` action targeting exit POI position
+
+### Isometric Coordinate Conversion (D2R)
+
+D2R uses an isometric projection. Converting game (world) coords to screen:
+```
+// At 1280x720, player is at screen center (640, 360)
+// D2R isometric: each world tile = ~32px wide, ~16px tall on screen
+dx_world = target_x - player_x
+dy_world = target_y - player_y
+screen_x = 640 + (dx_world - dy_world) * 16
+screen_y = 360 + (dx_world + dy_world) * 8
+```
+The scale factors (16, 8) depend on zoom level. At default zoom these are approximate.
+TODO: Calibrate exact scale values from in-game measurement.
+
+---
+
+## Andariel Navigation (Act 1 Boss)
+
+The problem: D2R maps are randomly generated each game.
+The bot cannot hardcode "go to (X,Y) for the stairs."
+
+### Required flow:
+1. Map host reads: `area_id=Jail Level 1 (17)`, `seed=0xABCD`, `difficulty=0`
+2. Map host calls d2-map.exe backend → gets `MapData` with `MapPOI` list
+3. POIs include: `{ type: Staircase, x: 112, y: 87, target_area: 18 }` (stairs to Jail 2)
+4. Background.js relays POIs → vision agent
+5. Game manager converts (112, 87) to screen coords → teleports there
+6. Repeat for Jail 2→3, then Inner Cloister, Catacombs 1→4
+7. In Catacombs 4: no exit, just kill everything → Andariel spawns at center
+
+### Current state:
+- Steps 1-2: ✅ Map host can do this
+- Step 3: ✅ MapPOI types exist
+- Step 4: ❌ Not wired (the gap above)
+- Step 5: ❌ No isometric coord conversion
+- Step 6-7: ❌ No multi-level navigation logic
+
+### Waypoint shortcut:
+Once WP is unlocked for Jail Level 1, the bot can skip Outer Cloister entirely.
+The script_executor should use WP when available (quest_state tracks WP unlocks).
+
+---
+
+## D2R Offset Status
+
+**WARNING**: Static offsets in `overlay/src/offsets.rs` are from D2R 2.x era.
+Current game version: 3.x ("Reign of the Warlock" patch series).
+
+The auto-discovery system in `overlay/src/discovery.rs` attempts to find offsets
+via signature scanning and heuristics — use this as the primary resolution path.
+If discovery fails, offsets.json override file can be populated with current values.
+
+Community sources for current offsets:
+- D2RMH GitHub issues
+- MapAssist community fork patch notes
+- Slashdiablo/d2r modding Discord
+
+---
+
+## Changelog
+
+| Date | Change |
+|---|---|
+| 2026-02-25 | Fix orb coordinates: hp_cx was 5.3% from edge (wrong), now 16.6% |
+| 2026-02-25 | Fix overlay HP/MP draw position: was (10,10) top-left, now near orbs |
+| 2026-02-25 | Add at_menu detection via orb visibility (hp<=5 && mana<=5) |
+| 2026-02-25 | Fix handle_oog: stop clicking center-screen when in-game HUD visible |
+| 2026-02-25 | Fix phase transition: OutOfGame→Farming after 2s mid-dungeon |
+| 2026-02-25 | Fix test_oog_to_town_transition: needs 3 calls for stability counter |
+| 2026-02-25 | Fix install.ps1 PowerShell parentheses syntax errors |
+| 2026-02-25 | Adjust all coords from 800x600 to 1280x720 baseline |

@@ -125,7 +125,25 @@ function handleMapMessage(msg) {
     case "pong":
       break;
     case "state":
-      if (msg.game_state) updateMapOverlay(msg.game_state, msg.map);
+      if (msg.game_state) {
+        updateMapOverlay(msg.game_state, msg.map);
+        // ── Relay maphack state to vision agent ──────────────────────────────
+        // The vision agent has no way to read D2R memory itself. Every 500ms
+        // the map host gives us real area name, player world coords, and POIs
+        // (exits, waypoints, stairs). Forward it so the agent can navigate.
+        if (agentPort && msg.game_state.in_game) {
+          agentPort.postMessage({
+            cmd:        "update_map_state",
+            area_id:    msg.game_state.area_id    ?? 0,
+            area_name:  msg.game_state.area_name  ?? "",
+            player_x:   msg.game_state.player_x   ?? 0,
+            player_y:   msg.game_state.player_y   ?? 0,
+            map_seed:   msg.game_state.map_seed   ?? 0,
+            difficulty: msg.game_state.difficulty ?? 0,
+            pois:       msg.map?.pois             ?? [],
+          });
+        }
+      }
       break;
     case "map_data":
       broadcastToTabs({ type: "MAP_RENDER", mapData: msg, opacity: mapOpacity });
