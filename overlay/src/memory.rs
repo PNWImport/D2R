@@ -246,44 +246,101 @@ mod platform {
             let mut buf = vec![0u8; scan_size];
             let read = self.read_bytes(self.base, &mut buf)?;
             let data = &buf[..read];
-            let mut found = 0u32;
 
-            if let Some(off) = sig_find(data, &SIG_UNIT_HASH_TABLE) {
-                let resolved = resolve_sig(data, self.base, off, &SIG_UNIT_HASH_TABLE);
-                self.offsets.player_hash_table = resolved - self.base;
-                eprintln!("[map] sig UnitHashTable -> {:#X} (rva {:#X})", resolved, self.offsets.player_hash_table);
-                found += 1;
-            }
-            if let Some(off) = sig_find(data, &SIG_UI_SETTINGS) {
-                let resolved = resolve_sig(data, self.base, off, &SIG_UI_SETTINGS);
-                self.offsets.ui_settings = resolved - self.base;
-                eprintln!("[map] sig UISettings -> {:#X}", resolved);
-                found += 1;
-            }
-            if let Some(off) = sig_find(data, &SIG_EXPANSION) {
-                let resolved = resolve_sig(data, self.base, off, &SIG_EXPANSION);
-                eprintln!("[map] sig Expansion -> {:#X}", resolved);
-                found += 1;
-            }
-            if let Some(off) = sig_find(data, &SIG_ROSTER_DATA) {
-                let resolved = resolve_sig(data, self.base, off, &SIG_ROSTER_DATA);
-                eprintln!("[map] sig RosterData -> {:#X}", resolved);
-                found += 1;
-            }
-            if let Some(off) = sig_find(data, &SIG_GAME_INFO) {
-                let resolved = resolve_sig(data, self.base, off, &SIG_GAME_INFO);
-                eprintln!("[map] sig GameInfo -> {:#X}", resolved);
-                found += 1;
-            }
-            if let Some(off) = sig_find(data, &SIG_MAP_SEED) {
-                let resolved = resolve_sig(data, self.base, off, &SIG_MAP_SEED);
-                eprintln!("[map] sig MapSeed -> {:#X}", resolved);
-                found += 1;
+            // (sig, is_critical)
+            // Critical = must be resolved for any reading to work.
+            // Non-critical = useful but not required.
+            let sigs: &[(&SigPattern, bool)] = &[
+                (&SIG_UNIT_HASH_TABLE, true),
+                (&SIG_UI_SETTINGS,     true),
+                (&SIG_EXPANSION,       false),
+                (&SIG_ROSTER_DATA,     false),
+                (&SIG_GAME_INFO,       false),
+                (&SIG_MAP_SEED,        false),
+            ];
+
+            let mut ok_count = 0u32;
+            let mut report  = Vec::<String>::new();
+
+            for &(sig, critical) in sigs {
+                // Skip patterns disabled by offsets.json
+                if self.offsets.disabled_sigs.iter().any(|n| n == sig.name) {
+                    report.push(format!("  {:20} DISABLED (skipped per offsets.json)", sig.name));
+                    continue;
+                }
+
+                let (first, count) = sig_find_unique(data, sig);
+                match (first, count) {
+                    (Some(off), 1) => {
+                        let resolved = resolve_sig(data, self.base, off, sig);
+                        // Wire critical results into offsets
+                        match sig.name {
+                            "UnitHashTable" => {
+                                self.offsets.player_hash_table = resolved - self.base;
+                            }
+                            "UISettings" => {
+                                self.offsets.ui_settings = resolved - self.base;
+                            }
+                            _ => {}
+                        }
+                        report.push(format!("  {:20} OK  -> {:#X}", sig.name, resolved));
+                        ok_count += 1;
+                    }
+                    (None, _) => {
+                        let flag = if critical { "FAILED (CRITICAL)" } else { "FAILED" };
+                        report.push(format!("  {:20} {}", sig.name, flag));
+                    }
+                    (Some(off), n) => {
+                        // Ambiguous: log loudly, still use first match
+                        let resolved = resolve_sig(data, self.base, off, sig);
+                        match sig.name {
+                            "UnitHashTable" => self.offsets.player_hash_table = resolved - self.base,
+                            "UISettings"    => self.offsets.ui_settings = resolved - self.base,
+                            _ => {}
+                        }
+                        report.push(format!("  {:20} AMBIGUOUS ({} matches) — using first -> {:#X}",
+                            sig.name, n, resolved));
+                        ok_count += 1;
+                    }
+                }
             }
 
-            eprintln!("[map] sig-scan: {}/6 patterns matched", found);
-            if found == 0 {
-                return Err("No sig patterns matched".into());
+            // Runtime sanity check on the hash-table pointer: read the first bucket
+            // and verify it looks like a plausible process pointer (non-zero, user-space).
+            if self.offsets.player_hash_table != 0 {
+                let table_va = self.base + self.offsets.player_hash_table;
+                match self.read_u64(table_va) {
+                    Ok(first_bucket) if first_bucket == 0 => {
+                        // Bucket 0 null is normal (empty), scan a few more
+                        let any_nonnull = (1..16u64).any(|i| {
+                            self.read_u64(table_va + i * 8).ok().map_or(false, |v| v != 0)
+                        });
+                        if !any_nonnull {
+                            report.push(format!("  {:20} WARNING: all first 16 buckets null — wrong address or not in-game",
+                                "UnitHashTable"));
+                        }
+                    }
+                    Ok(first_bucket) => {
+                        // Non-null: check pointer looks like a user-space VA
+                        let plausible = first_bucket > 0x10000 && first_bucket < 0x0008_0000_0000_0000;
+                        if !plausible {
+                            report.push(format!("  {:20} WARNING: bucket[0]={:#X} looks invalid (kernel/zero VA)",
+                                "UnitHashTable", first_bucket));
+                        }
+                    }
+                    Err(e) => {
+                        report.push(format!("  {:20} WARNING: sanity RPM failed: {}", "UnitHashTable", e));
+                    }
+                }
+            }
+
+            eprintln!("[map] sig-scan report ({}/{} matched):", ok_count, sigs.len());
+            for line in &report { eprintln!("[map]{}", line); }
+
+            // Validate that critical fields were resolved
+            if let Err(e) = self.offsets.validate() {
+                eprintln!("[map] CRITICAL: {}", e);
+                return Err(e);
             }
             Ok(())
         }
@@ -427,17 +484,23 @@ mod platform {
         Ok(module as u64)
     }
 
-    fn sig_find(buf: &[u8], sig: &SigPattern) -> Option<usize> {
-        let pat = sig.pattern;
+    /// Scan `buf` for all occurrences of `sig`.
+    /// Returns (first_match_offset, total_match_count).
+    /// A count > 1 means the pattern is ambiguous — caller should log a warning.
+    fn sig_find_unique(buf: &[u8], sig: &SigPattern) -> (Option<usize>, usize) {
+        let pat  = sig.pattern;
         let mask = sig.mask.as_bytes();
-        if buf.len() < pat.len() { return None; }
+        if buf.len() < pat.len() { return (None, 0); }
+        let mut first: Option<usize> = None;
+        let mut count = 0usize;
         'outer: for i in 0..buf.len() - pat.len() {
             for j in 0..pat.len() {
                 if mask[j] == b'x' && buf[i + j] != pat[j] { continue 'outer; }
             }
-            return Some(i);
+            if first.is_none() { first = Some(i); }
+            count += 1;
         }
-        None
+        (first, count)
     }
 
     fn resolve_sig(buf: &[u8], scan_base: u64, match_offset: usize, sig: &SigPattern) -> u64 {

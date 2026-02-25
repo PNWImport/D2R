@@ -1,14 +1,30 @@
 {
     "_comment": "D2R Map Helper - Offset Overrides",
-    "_version": "Static fallback values from D2R ~2.7/2.8. Sig-scan overrides these automatically at attach time.",
-    "_howto": "Place this file next to chrome_map_helper.exe. Only include fields you want to override. Sig-scan runs first; these are fallbacks only. Values can be hex strings (0x...) or integers.",
-    "_sig_scan": "UnitHashTable pattern: 48 03 C7 49 8B 8C C6 (community-validated, patch-resilient). Used by MapAssist and our code identically. If sig-scan fails, provide player_hash_table below from CE/IDA.",
+    "_version": "Sig-scan patterns are the primary source. This file overrides/supplements them.",
+    "_howto": "Place this file next to chrome_map_helper.exe. Sig-scan runs first and fills most values automatically. Only add entries here when sig-scan fails for a specific field after a patch.",
+    "_sig_patterns": {
+        "UnitHashTable": "48 03 C7 49 8B 8C C6 (community-validated, same as MapAssist)",
+        "UISettings":    "48 89 45 B7 4C 8D 35 ?? ?? ?? ??  (community-validated)"
+    },
+
+    "_workflow": [
+        "1. Launch the tool — sig-scan runs automatically on attach.",
+        "2. Check stderr log: 'sig-scan report' shows OK/FAILED/AMBIGUOUS per pattern.",
+        "3. If a critical pattern fails: find the new address in CE/IDA and add it below.",
+        "4. If a pattern matches multiple times (AMBIGUOUS): add its name to disable_sigs and hardcode the correct address.",
+        "5. Remove entries from this file once the sig is repaired."
+    ],
+
+    "_patch_day_example": "If UnitHashTable fails after a D2R patch, add: \"disable_sigs\": [\"UnitHashTable\"] and set \"player_hash_table\" to the CE-found value.",
 
     "player_hash_table": "0x2028E60",
-    "ui_settings": "0x20AD5F0",
+    "ui_settings":       "0x20AD5F0",
+
+    "_disable_sigs_usage": "List sig names to skip during pattern scan. Use when a pattern breaks and you need to supply a static/JSON value temporarily.",
+    "disable_sigs": [],
 
     "act_misc": {
-        "map_seed": "0x840",
+        "map_seed":   "0x840",
         "difficulty": "0x830"
     }
 }

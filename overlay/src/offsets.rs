@@ -14,18 +14,14 @@
 //
 // STRUCT LAYOUTS (UnitAnyOffsets, PathOffsets, etc.) are generally stable
 // across patches — the engine data structures change rarely.
-// What changes is the STATIC BASE ADDRESS of the hash tables.
-//
-// STRUCT LAYOUTS (field offsets within structs) are generally stable
-// across patches because the engine data structures don't change much.
-// What DOES change is the STATIC BASE ADDRESS of the hash tables and
+// What changes is the STATIC BASE ADDRESS of the hash tables and
 // global pointers. Sig-scan handles this.
 //
 // TO UPDATE FOR A NEW PATCH:
 //   Option A: Run sig-scan (built-in, automatic on attach)
 //   Option B: Place offsets.json next to the exe with:
 //     { "player_hash_table": "0x2028E60", "ui_settings": "0x20AD5F0" }
-//   Option C: CE/IDA dump new statics, update the consts below
+//   Option C: CE/IDA dump new statics, add to offsets.json + add "disable_sigs" for broken patterns
 //
 // Sources:
 //   - OwnedCore community research
@@ -42,11 +38,14 @@ use serde::{Deserialize, Serialize};
 // ---------------------------------------------------------------------------
 
 /// Player Unit Hash Table (128 buckets of linked UnitAny*)
-/// Sig-scan SIG_UNIT_HASH_TABLE finds the live address; this is the fallback.
-pub const PLAYER_UNIT_HASH_TABLE: u64 = 0x2028E60;
+/// 0 = "unresolved" — sig-scan or offsets.json MUST provide the real value.
+/// Historical 2.7/2.8 fallback was 0x2028E60; retained in offsets.json.example only.
+pub const PLAYER_UNIT_HASH_TABLE: u64 = 0;
 
 /// UI Settings base (menu state, automap toggle)
-pub const UI_SETTINGS_BASE: u64 = 0x20AD5F0;
+/// 0 = "unresolved" — sig-scan or offsets.json MUST provide the real value.
+/// Historical 2.7/2.8 fallback was 0x20AD5F0; retained in offsets.json.example only.
+pub const UI_SETTINGS_BASE: u64 = 0;
 
 /// Expansion check (LoD vs Classic)
 pub const EXPANSION_CHECK: u64 = 0x20AD3B0;
@@ -387,8 +386,18 @@ pub struct Offsets {
     pub room1: Room1Offsets,
     pub room2: Room2Offsets,
     pub level: LevelOffsets,
+    /// RVA of the 128-bucket UnitAny* hash table, relative to module base.
+    /// 0 = unresolved. Must be filled by sig-scan or offsets.json before use.
     pub player_hash_table: u64,
+    /// RVA of the UI settings block, relative to module base.
+    /// 0 = unresolved. Must be filled by sig-scan or offsets.json before use.
     pub ui_settings: u64,
+    /// SigPattern names listed here are skipped during sig-scan.
+    /// Use in offsets.json when a pattern breaks mid-patch and you need to
+    /// supply a static value temporarily:
+    ///   "disable_sigs": ["UnitHashTable"]
+    #[serde(default)]
+    pub disabled_sigs: Vec<String>,
 }
 
 impl Default for Offsets {
@@ -401,8 +410,30 @@ impl Default for Offsets {
             room1: Room1Offsets::default(),
             room2: Room2Offsets::default(),
             level: LevelOffsets::default(),
+            // 0 = unresolved — sig-scan or offsets.json must fill these before use.
             player_hash_table: PLAYER_UNIT_HASH_TABLE,
             ui_settings: UI_SETTINGS_BASE,
+            disabled_sigs: Vec::new(),
+        }
+    }
+}
+
+impl Offsets {
+    /// Verify all critical fields have been resolved (non-zero).
+    /// Call after sig-scan + JSON overrides are complete.
+    /// Returns Err with a human-readable reason if any critical field is unset.
+    pub fn validate(&self) -> Result<(), String> {
+        let mut missing = Vec::new();
+        if self.player_hash_table == 0 { missing.push("player_hash_table"); }
+        if self.ui_settings == 0       { missing.push("ui_settings"); }
+        if missing.is_empty() {
+            Ok(())
+        } else {
+            Err(format!(
+                "Unresolved offsets after sig-scan + JSON: [{}]. \
+                 Run sig-scan or provide values in offsets.json.",
+                missing.join(", ")
+            ))
         }
     }
 }
@@ -443,6 +474,14 @@ impl Offsets {
             }
         }
 
+        // Sig names to skip during sig-scan (use JSON/static value instead)
+        if let Some(arr) = json.get("disable_sigs").and_then(|v| v.as_array()) {
+            self.disabled_sigs = arr.iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                .collect();
+            eprintln!("[map]   disable_sigs = {:?}", self.disabled_sigs);
+        }
+
         // Override top-level statics
         if let Some(v) = parse_hex(&json["player_hash_table"]) {
             self.player_hash_table = v;
@@ -450,6 +489,7 @@ impl Offsets {
         }
         if let Some(v) = parse_hex(&json["ui_settings"]) {
             self.ui_settings = v;
+            eprintln!("[map]   ui_settings = {:#X}", v);
         }
 
         // Override struct field offsets
