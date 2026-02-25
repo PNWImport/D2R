@@ -16,6 +16,7 @@ let agentPort = null;
 let agentReconnectTimer = null;
 let agentHeartbeatTimer = null;
 let agentAttempts = 0;
+let agentPaused = false;
 
 function connectToAgent() {
   agentAttempts++;
@@ -26,6 +27,7 @@ function connectToAgent() {
 
     agentPort.onDisconnect.addListener(() => {
       agentPort = null;
+      agentPaused = false;
       if (agentHeartbeatTimer) {
         clearInterval(agentHeartbeatTimer);
         agentHeartbeatTimer = null;
@@ -273,6 +275,17 @@ chrome.action.onClicked.addListener(async () => {
 
 chrome.commands.onCommand.addListener((command) => {
   switch (command) {
+    case "toggle-pause":
+      if (agentPort) {
+        if (agentPaused) {
+          agentPort.postMessage({ cmd: "resume" });
+          agentPaused = false;
+        } else {
+          agentPort.postMessage({ cmd: "pause", reason: "hotkey" });
+          agentPaused = true;
+        }
+      }
+      break;
     case "toggle-map":
       mapEnabled = !mapEnabled;
       if (mapPort) mapPort.postMessage({ cmd: "toggle_map", enabled: mapEnabled });

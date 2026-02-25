@@ -23,6 +23,10 @@
     }
   ],
   "commands": {
+    "toggle-pause": {
+      "suggested_key": { "default": "Ctrl+Shift+P" },
+      "description": "Toggle pause/resume bot (emergency stop)"
+    },
     "toggle-map": {
       "suggested_key": { "default": "Ctrl+Shift+M" },
       "description": "Toggle map overlay"
