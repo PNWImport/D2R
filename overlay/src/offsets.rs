@@ -4,17 +4,17 @@
 // =============================================================================
 //
 // !! PATCH STATUS !!
-// D2R is currently on v3.1.1 "Reign of the Warlock" (Feb 19, 2026).
-// This is a MASSIVE update: new Warlock class, new areas, loot filter, etc.
-// The binary has changed significantly from the 2.x era.
+// STATIC OFFSETS below are from D2R ~2.7/2.8 era.
+// They are retained as documentation/last-resort fallbacks only.
 //
-// STATIC OFFSETS BELOW ARE FROM 2.x ERA AND WILL NOT WORK ON 3.x.
-// They are retained as documentation only.
-//
-// The CORRECT approach for 3.x:
-//   1. Sig-scan patterns (most resilient - survive minor patches)
+// The CORRECT approach for any patch version:
+//   1. Sig-scan patterns (most resilient — patch-resilient, same patterns as MapAssist)
 //   2. offsets.json config file (user-provided from CE/IDA/community)
-//   3. Static offsets as absolute last resort (will fail on 3.x)
+//   3. Static offsets as absolute last resort (stale, will fail if binary shifts)
+//
+// STRUCT LAYOUTS (UnitAnyOffsets, PathOffsets, etc.) are generally stable
+// across patches — the engine data structures change rarely.
+// What changes is the STATIC BASE ADDRESS of the hash tables.
 //
 // STRUCT LAYOUTS (field offsets within structs) are generally stable
 // across patches because the engine data structures don't change much.

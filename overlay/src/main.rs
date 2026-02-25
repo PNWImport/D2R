@@ -65,7 +65,10 @@ impl MapHelperState {
             poll_count: 0,
             map_active: true,
             map_active_until: None,
-            demo_mode: false,
+            // Start in demo mode so the Chrome overlay can be verified without working offsets.
+            // Disable via SetDemoMode command from extension, or set to false here once memory
+            // reading is confirmed working on the target D2R version.
+            demo_mode: true,
             debug_overlay: None,
         }
     }
