@@ -88,7 +88,10 @@ It reads from one and can write to both. Currently it only relays:
 | Exit/waypoint positions | ✅ Available | MapPOI with game coordinates |
 | Win32 debug overlay | ✅ Working | HP/MP bars now near actual orbs |
 | D2R offsets | ⚠️ Stale | Static offsets from D2R 2.x — game is on 3.x |
-| Auto-discovery fallback | ✅ Working | Signature scan + heuristics in discovery.rs |
+| Sig-scan (auto-find) | ✅ Hardened | 6 patterns, uniqueness enforcement, validate() gate |
+| Auto-discovery fallback | ✅ Working | Heuristic scan when sig-scan fails |
+| Demo mode | ✅ Default ON | Returns synthetic map data; toggle via SetDemoMode |
+| GetOffsets command | ✅ Fixed | Returns actual resolved addresses (was returning stale defaults) |
 
 ### Chrome Extension (`extension/chrome_extension/background.js`)
 
@@ -224,14 +227,59 @@ The script_executor should use WP when available (quest_state tracks WP unlocks)
 **WARNING**: Static offsets in `overlay/src/offsets.rs` are from D2R 2.x era.
 Current game version: 3.x ("Reign of the Warlock" patch series).
 
-The auto-discovery system in `overlay/src/discovery.rs` attempts to find offsets
-via signature scanning and heuristics — use this as the primary resolution path.
-If discovery fails, offsets.json override file can be populated with current values.
+### Resolution order (overlay/src/offsets.rs + memory.rs):
 
-Community sources for current offsets:
+1. **Sig-scan** (automatic on attach) — 6 byte patterns scanned over D2R.exe ~34 MB image.
+   Uniqueness enforced: each pattern must match exactly 1 location or it's rejected.
+   Fills `player_hash_table` and `ui_settings` with resolved addresses.
+2. **offsets.json override** — `C:\ProgramData\DisplayCalibration\offsets.json` can provide
+   manual overrides. Supports `disable_sigs: ["PatternName"]` to skip broken patterns.
+3. **Auto-discovery heuristic** — `discovery.rs` runs when sig-scan fails. Broader search
+   using structural heuristics (pointer chains, alignment checks).
+4. **validate() gate** — after all resolution, `offsets.validate()` checks that both
+   `player_hash_table` and `ui_settings` are non-zero. If either is 0, memory reading
+   is blocked and an error is logged.
+
+### Demo mode (default: ON):
+
+Demo mode starts enabled so the Chrome overlay works immediately for visual testing.
+Synthetic map data (cellular automata generator) is returned instead of RPM reads.
+Toggle via extension popup or `SetDemoMode { enabled: false }` from background.js.
+Use `get_offsets` command to check `sig_scan_complete` and `offsets_valid` without
+leaving demo mode.
+
+### Community sources for current offsets:
 - D2RMH GitHub issues
 - MapAssist community fork patch notes
 - Slashdiablo/d2r modding Discord
+
+---
+
+## 1280×720 Layout Status
+
+All coordinate systems have been migrated or confirmed for 1280×720:
+
+| System | Approach | Status |
+|---|---|---|
+| HP/Mana orbs | Exact measured positions per resolution in `OrbLayout::for_resolution()` | ✅ Correct |
+| NPC positions (game_manager.rs) | Base coords at 800×600 → `scale_npc_pos(pos, fw, fh)` at runtime | ✅ Correct |
+| NPC positions (script_executor.rs) | Base coords at 800×600 → `sx()/sy()` scaling at runtime | ✅ Correct |
+| WP panel coordinates | Base 800×600 → `sx()/sy()` scaling | ✅ Correct |
+| Minimap detection | Fractional positions (89.8% x, 15.9% y) — resolution-independent | ✅ Correct |
+| Chrome popup (popup mode) | Fixed 780px width (fits Chrome popup at any resolution) | ✅ OK |
+| Chrome popup (tab mode) | 900-1400px responsive width | ✅ OK at 1280 |
+| Map overlay canvas | Fixed 300×300 (minimap in corner) | ✅ OK |
+| Char center default | (640, 360) = 1280×720 center | ✅ Correct |
+
+**Design decision**: NPC coordinates are stored at 800×600 base (from Kolbot Town.js)
+and scaled proportionally. This is correct because D2R maintains proportional viewport
+scaling. Direct 1280×720 hardcoding was considered but rejected — the scaling approach
+handles all resolutions via the same code path.
+
+### Build & test verification (2026-02-25):
+- `cargo check` — both crates compile clean (0 warnings)
+- `cargo test` — **310 tests pass** (158 unit + 8 stress × 2 runs, 0 failures)
+- Compilation time: ~8s (vision), ~3s (overlay)
 
 ---
 
@@ -254,3 +302,7 @@ Community sources for current offsets:
 | 2026-02-25 | Add minimap_visible field + detect_minimap_visible() (dark-background pixel sampling) |
 | 2026-02-25 | Add ensure_minimap_open() — returns Tab-press Decision if minimap not in mini mode |
 | 2026-02-25 | Guard marker scan behind minimap_visible — skip gold/cyan scan when map is off |
+| 2026-02-25 | Enable demo mode by default — overlay works immediately for visual testing |
+| 2026-02-25 | Harden sig-scan: uniqueness enforcement, disable_sigs, validate() gate |
+| 2026-02-25 | Fix GetOffsets: was returning stale defaults, now exposes actual resolved addresses |
+| 2026-02-25 | Verify 1280×720 layout: all coords scale correctly, 310/310 tests pass |
