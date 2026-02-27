@@ -74,6 +74,29 @@ mod win_impl {
         OsStr::new(s).encode_wide().chain(std::iter::once(0)).collect()
     }
 
+    /// Find the game window using prefix matching on the title.
+    /// Works whether the game is running bare or inside Sandboxie
+    /// (which appends " [BoxName]" to every window title).
+    unsafe fn find_game_window() -> HWND {
+        unsafe extern "system" fn enum_cb(hwnd: HWND, lparam: LPARAM) -> winapi::shared::minwindef::BOOL {
+            let out = &mut *(lparam as *mut HWND);
+            let mut buf = [0u16; 256];
+            let len = GetWindowTextW(hwnd, buf.as_mut_ptr(), buf.len() as i32);
+            if len > 0 {
+                let title = String::from_utf16_lossy(&buf[..len as usize]);
+                if title.starts_with("Diablo II: Resurrected") || title.starts_with("Diablo II") {
+                    *out = hwnd;
+                    return 0; // stop enumeration
+                }
+            }
+            1 // continue
+        }
+
+        let mut found: HWND = std::ptr::null_mut();
+        EnumWindows(Some(enum_cb), &mut found as *mut HWND as LPARAM);
+        found
+    }
+
     /// Handle to the overlay window thread.
     pub struct OverlayWindow {
         hwnd: HWND,
@@ -169,9 +192,10 @@ mod win_impl {
         };
         RegisterClassExW(&wc);
 
-        // Find D2R window to size/position overlay
-        let d2r_name = wide("Diablo II: Resurrected");
-        let d2r_hwnd = FindWindowW(std::ptr::null(), d2r_name.as_ptr());
+        // Find D2R window to size/position overlay.
+        // Use EnumWindows with prefix matching so we also find Sandboxie windows
+        // whose titles look like "Diablo II: Resurrected [DefaultBox]".
+        let d2r_hwnd = find_game_window();
         let (x, y, w, h) = if !d2r_hwnd.is_null() {
             let mut rect: RECT = std::mem::zeroed();
             GetClientRect(d2r_hwnd, &mut rect);
