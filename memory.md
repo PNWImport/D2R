@@ -90,7 +90,7 @@ It reads from one and can write to both. Currently it only relays:
 | D2R offsets | ⚠️ Stale | Static offsets from D2R 2.x — game is on 3.x |
 | Sig-scan (auto-find) | ✅ Hardened | 6 patterns, uniqueness enforcement, validate() gate |
 | Auto-discovery fallback | ✅ Working | Heuristic scan when sig-scan fails |
-| Demo mode | ✅ Default ON | Returns synthetic map data; toggle via SetDemoMode |
+| Demo mode | ✅ Default OFF | Returns synthetic map data when enabled; toggle via SetDemoMode |
 | GetOffsets command | ✅ Fixed | Returns actual resolved addresses (was returning stale defaults) |
 
 ### Chrome Extension (`extension/chrome_extension/background.js`)
@@ -240,13 +240,12 @@ Current game version: 3.x ("Reign of the Warlock" patch series).
    `player_hash_table` and `ui_settings` are non-zero. If either is 0, memory reading
    is blocked and an error is logged.
 
-### Demo mode (default: ON):
+### Demo mode (default: OFF):
 
-Demo mode starts enabled so the Chrome overlay works immediately for visual testing.
-Synthetic map data (cellular automata generator) is returned instead of RPM reads.
-Toggle via extension popup or `SetDemoMode { enabled: false }` from background.js.
-Use `get_offsets` command to check `sig_scan_complete` and `offsets_valid` without
-leaving demo mode.
+Demo mode is off by default so the map helper attaches to the real game process.
+Enable via extension popup or `SetDemoMode { enabled: true }` from background.js
+to get synthetic map data for visual testing without working offsets.
+Use `get_offsets` command to check `sig_scan_complete` and `offsets_valid`.
 
 ### Community sources for current offsets:
 - D2RMH GitHub issues
